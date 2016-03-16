@@ -1,0 +1,33 @@
+<a href="#"><i class="icon-fixed-width icon-heart"></i> 与我联系</a>
+<div id="contacts-list">
+  {% if site.author.email %}
+  <a href="mailto:{{ site.author.email }}" target="_blank" title="Gmail">
+    <i class="icon-large icon-fixed-width icon-envelope"></i>
+  </a>
+  {% endif %}
+  {% if site.author.github %}
+  <a href="https://github.com/{{ site.author.github }}" target="_blank" title="GitHub">
+    <i class="icon-large icon-fixed-width icon-github"></i>
+  </a>
+  {% endif %}
+  {% if site.author.weibo %}
+  <a href="http://weibo.com/{{ site.author.weibo }}" target="_blank" title="新浪微博">
+    <i class="icon-large icon-fixed-width icon-weibo"></i>
+  </a>
+  {% endif %}
+  {% if site.author.v2ex %}
+  <a href="http://v2ex.com/member/{{ site.author.v2ex }}" target="_blank" title="V2EX">
+    <i class="icon-large icon-fixed-width icon-v2ex"></i>
+  </a>
+  {% endif %}
+  {% if site.author.googleplus %}
+  <a href="https://plus.google.com/{{ site.author.googleplus }}" target="_blank" title="Google+">
+    <i class="icon-large icon-fixed-width icon-google-plus"></i>
+  </a>
+  {% endif %}
+  {% if site.author.twitter %}
+  <a href="https://twitter.com/{{ site.author.twitter }}" target="_blank" title="Twitter">
+    <i class="icon-large icon-fixed-width icon-twitter"></i>
+  </a>
+  {% endif %}
+</div>

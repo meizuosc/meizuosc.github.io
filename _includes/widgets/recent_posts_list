@@ -1,0 +1,6 @@
+<a href="{{ HOME_PATH }}" title="查看最近发表"><i class="icon-fixed-width icon-edit"></i> 最近发表</a>
+<ul>
+{% for post in site.posts limit:10 %}
+  <li><a href="{{ post.url }}" title="查看《{{ post.title }}》">{{ post.title }}</a></li>
+{% endfor %}
+</ul>

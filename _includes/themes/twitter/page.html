@@ -1,0 +1,17 @@
+<section id="content">
+  <article class="page">
+
+    <header>
+      <h1>{{ page.title }}{% if page.tagline %} <small>{{ page.tagline }}</small>{% endif %}</h1>
+    </header>
+
+    <section>
+      {{ content }}
+    </section>
+
+  </article>
+</section>
+
+<section id="comments">
+  {% include JB/comments %}
+</section>

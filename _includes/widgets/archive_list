@@ -1,0 +1,14 @@
+<a href="{{ site.JB.archive_path }}" title="查看所有存档"><i class="icon-fixed-width icon-file-text"></i> 文章存档</a>
+<span title="文章总数">{{ site.posts | size }}</span>
+<ul>
+{% assign count = 0 %}
+{% for post in site.posts %}
+  {% capture this_month %}{{ post.date | date: "%Y 年 %m 月" }}{% endcapture %}
+  {% capture next_month %}{{ post.previous.date | date: "%Y 年 %m 月" }}{% endcapture %}
+  {% assign count = count | plus: 1 %}
+  {% if forloop.last or this_month != next_month %}
+    <li><a href="{{ site.JB.archive_path }}#{{ post.date | date: "%B-%Y" }}">{{ this_month }} ({{ count }})</a></li>
+    {% assign count = 0 %}
+  {% endif %}
+{% endfor %}
+</ul>

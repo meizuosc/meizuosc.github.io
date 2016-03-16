@@ -1,0 +1,8 @@
+<span id="share">
+  <a class="wechat" target="_blank" title="分享到微信" href="http://chart.apis.google.com/chart?cht=qr&amp;chs=300x300&amp;chl={{ site.production_url }}{{ page.url }}"><i class="icon-large icon-wechat"></i></a>
+  <a class="weibo" target="_blank" title="分享到微博" href="http://service.weibo.com/share/share.php?title={{ page.title }} - {{ site.title }}&amp;url={{ site.production_url }}{{ page.url }}&amp;type=3&amp;searchPic=1"><i class="icon-large icon-weibo"></i></a>
+  <a class="qzone" target="_blank" title="分享到 QQ 空间" href="http://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url={{ site.production_url }}{{ page.url }}&amp;title={{ page.title }} - {{ site.title }}&amp;summary={{ page.description }}&amp;site={{ site.production_url }}"><i class="icon-large icon-qzone"></i></a>
+  <a class="twitter" target="_blank" title="Share to Twitter" href="https://twitter.com/intent/tweet?url={{ site.production_url }}{{ page.url }}&amp;text={{ page.title }} - {{ site.title }}&amp;via={{ site.author.twitter }}"><i class="icon-large icon-twitter"></i></a>
+  <a class="facebook" target="_blank" title="Share to Facebook" href="http://www.facebook.com/sharer.php?u={{ site.production_url }}{{ page.url }}&amp;t={{ page.title }} - {{ site.title }}"><i class="icon-large icon-facebook-sign"></i></a>
+  <a class="googleplus" target="_blank" title="Share to Google+" href="https://plus.google.com/share?url={{ site.production_url }}{{ page.url }}"><i class="icon-large icon-google-plus-sign"></i></a>
+</span>

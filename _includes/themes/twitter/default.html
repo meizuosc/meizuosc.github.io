@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--[if IE 7 ]>    <html lang="zh-CN" class="ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="zh-CN" class="ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="zh-CN" class="ie9"> <![endif]-->
+<!--[if (gte IE 10)|!(IE)]><!--> <html lang="zh-CN"> <!--<![endif]-->
+
+<head>
+  <meta charset="UTF-8">
+
+  <title>{{ page.title }}{% if page.url != HOME_PATH %} - {{ site.title }}{% endif %}</title>
+  {% if page.keywords %}<meta name="keywords" content="{{ page.keywords | join: "," }}">{% endif %}
+  {% if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
+  <meta name="author" content="{{ site.author.name }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="{{ BASE_PATH }}/favicon.ico">
+
+  <!-- Feed -->
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="{{ site.JB.rss_path }}">
+  <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="{{ site.JB.atom_path }}">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="{{ ASSET_PATH }}/css/style.css?ver=20151125">
+  <link rel="stylesheet" href="{{ ASSET_PATH }}/css/font-awesome.min.css?ver=20151122">
+  <!--[if IE 7 ]><link rel="stylesheet" href="{{ ASSET_PATH }}/css/font-awesome-ie7.min.css?ver=20151122"><![endif]-->
+
+  <!-- Scripts -->
+  <script type="text/javascript" src="{{ ASSET_PATH }}/js/jquery-1.11.1.min.js"></script>
+  <!--[if lt IE 9]><script src="{{ ASSET_PATH }}/js/html5shiv.min.js"></script><![endif]-->
+</head>
+
+<body>
+
+  <div id="wrap">
+    <header id="top">
+      <!-- Home Link -->
+      <a id="logo" href="{{ HOME_PATH }}" title="回到首页">
+        <img src="{{ ASSET_PATH }}/img/logo.png" alt="{{ site.title }}">
+      </a>
+      <!-- Navigation Bar -->
+      <nav id="navbar">
+        <ul>
+          <li{% if page.url == HOME_PATH %} class="active"{% endif %}>
+            <a href="{{ HOME_PATH }}" title="首页">首页</a>
+          </li>
+          <li{% if page.url == site.JB.categories_path %} class="active"{% endif %}>
+            <a href="{{ site.JB.categories_path }}" title="分类">分类</a>
+          </li>
+          <li{% if page.url == site.JB.tags_path %} class="active"{% endif %}>
+            <a href="{{ site.JB.tags_path }}" title="标签">标签</a>
+          </li>
+	  {% if site.JB.messages_path %}
+          <li{% if page.url == site.JB.messages_path %} class="active"{% endif %}>
+            <a href="{{ site.JB.messages_path }}" title="留言板">留言板</a>
+          </li>
+	  {% endif %}
+          <li id="about-link" {% if page.url == site.JB.about_path %} class="active"{% endif %}>
+            <a href="{{ site.JB.about_path }}" title="关于我">关于我</a>
+          </li>
+          <li id="rss-link">
+            <a href="{{ site.JB.rss_path }}" title="订阅 RSS"><i class="icon-large icon-fixed-width icon-rss"></i></a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <section id="main">
+
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <section id="search-box">
+          {% include widgets/search_box %}
+        </section>
+        <section{% if page.date or page.title == site.title %} class="active"{% endif %}>
+          {% include widgets/recent_posts_list %}
+        </section>
+        <section{% if page.title == '存档' %} class="active"{% endif %}>
+          {% include widgets/archive_list %}
+        </section>
+        <section{% if page.title == '分类' %} class="active"{% endif %}>
+          {% include widgets/categories_list %}
+        </section>
+        <section{% if page.title == '标签' %} class="active"{% endif %}>
+          {% include widgets/tag_cloud %}
+        </section>
+        {% include widgets/fixed_container %}
+      </aside>
+
+      <!-- Main Content -->
+      <div id="main-inner">
+        <div id="loader"><img src="{{ ASSET_PATH }}/img/loading.gif" alt="请稍侯"></div>
+        <div id="main-content">
+          {{ content }}
+        </div>
+      </div>
+
+      {% include widgets/back_top_button %}
+
+    </section>
+
+    <footer id="bottom">
+      <p align="center">&copy; {{ site.time | date: '%Y' }} {{ site.author.name }}
+        with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+        and <a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a>
+      </p>
+    </footer>
+  </div>
+
+  <script type="text/javascript">
+    $('article.post a').attr('target', '_blank');
+    if (navigator.appVersion.indexOf("Mac") != -1) {
+      $('code, pre').css('font-family', 'Courier, monospace');
+    }
+  </script>
+  {% include JB/analytics %}
+  
+</body>
+</html>

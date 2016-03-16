@@ -1,0 +1,40 @@
+<form id="search-form">
+  <input id="query" type="text" placeholder="正则搜索"></input>
+  <button class="blue" type="submit"><i class="icon-search"></i></button>
+</form>
+<script type="text/javascript">
+$(document).ready(function() {
+  $('#search-form').submit(function() {
+    $('#query').blur().attr('disabled', true);
+    $('#main-content').hide();
+    $('#loader').show();
+    $.ajax({url: '/atom.xml?r=' + (Math.random() * 999999), dataType: 'xml', success: function(data) {
+      var rq = new RegExp($('#query').val(), 'im');
+      var rl = /\/([^\/]+)\.html$/;
+      var html = '';
+      $(data).find('entry').each(function(index, entry) {
+        var title = $(entry).find('title').text();
+        var link = $(entry).find('link').attr('href');
+        var title_en = rl.exec(link)[1].replace('-', ' ');
+        var content = $(entry).find('content').text();
+        if (rq.test(title) || rq.test(title_en) || rq.test(content)) {
+          var parts = $(entry).find('updated').text().split(/[-T:+]/g);
+          var months = [ "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December" ];
+          date = parts[2] + ' ' + months[parts[1] - 1] + ' ' + parts[0];
+          html += '<article class="nested">';
+          html += '<header><h2><a href="' + link + '">' + title + '</a></h2></header>';
+          html += '<section><p>' + content + '</p></section>';
+          html += '<footer><p>更新日期：' + date + '</p></footer>';
+          html += '</article>';
+        }
+      });
+      $('#main-content').html(html);
+      $('#loader').hide();
+      $('#main-content').show();
+    }});
+    $('#query').blur().attr('disabled', false);
+    return false;
+  });
+});
+</script>

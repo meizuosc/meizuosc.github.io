@@ -1,0 +1,72 @@
+<section id="content">
+  <article class="post">
+
+    <header>
+      <h1>{{ page.title }}{% if page.tagline %} <small>{{ page.tagline }}</small>{% endif %}</h1>
+    </header>
+
+    <section>
+      <div class="post-extra">
+        <div class="pull-left">
+          <span>{{ page.date | date_to_long_string }}</span>
+        </div>
+        <div class="pull-right">
+          {% include JB/sharing %}
+        </div>
+      </div>
+      {{ content }}
+      {% if page.license != false %}
+      <footer>
+        <p>
+          本作品由 <a href="mailto:{{ site.author.email }}">{{ site.author.name }}</a> 创作，采用
+          <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" title="查看协议详细信息" target="_blank">CC BY-NC-SA 3.0 许可协议</a>
+          进行许可。
+        </p>
+      </footer>
+      {% endif %}
+    </section>
+
+  </article>
+</section>
+
+<section>
+
+  <div class="tag-box-wrapper">
+    {% unless page.categories == empty %}
+    <ul class="tag-box inline">
+      <li><i class="icon-large icon-folder-open"></i></li>
+      {% assign categories_list = page.categories %}
+      {% include JB/categories_list %}
+    </ul>
+    {% endunless %}
+
+    {% unless page.tags == empty %}
+    <ul class="tag-box inline">
+      <li><i class="icon-large icon-tags"></i></li>
+      {% assign tags_list = page.tags %}
+      {% include JB/tags_list %}
+    </ul>
+    {% endunless %}
+  </div>
+
+  <div class="pagination">
+    <ul>
+      {% if page.previous %}
+      <li class="prev"><a href="{{ BASE_PATH }}{{ page.previous.url }}" title="{{ page.previous.title }}">&larr; 上一篇</a></li>
+      {% else %}
+      <li class="prev disabled"><a>&larr; 上一篇</a></li>
+      {% endif %}
+      <li><a href="{{ BASE_PATH }}{{ site.JB.archive_path }}">文章列表</a></li>
+      {% if page.next %}
+      <li class="next"><a href="{{ BASE_PATH }}{{ page.next.url }}" title="{{ page.next.title }}">下一篇 &rarr;</a></li>
+      {% else %}
+      <li class="next disabled"><a>下一篇 &rarr;</a></li>
+      {% endif %}
+    </ul>
+  </div>
+
+</section>
+
+<section id="comments">
+  {% include JB/comments %}
+</section>

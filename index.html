@@ -1,0 +1,87 @@
+---
+layout: default
+title: "mzkernel's blog"
+tagline: "Free as the wind."
+description: "一个程序员的技术博客，分享折腾的点点滴滴"
+---
+{% include JB/setup %}
+
+<!-- Recent Posts  -->
+<section>
+  {% for post in paginator.posts %}
+  <article class="nested">
+
+    <header>
+      <h2><a href="{{ post.url }}" title="查看《{{ post.title }}》">{{ post.title }}</a></h2>
+    </header>
+
+    <section>
+      <p>
+        {{ post.content | strip_html | truncate:150 }}
+      </p>
+    </section>
+
+    <footer>
+      <p>
+        发表日期：<a href="{{ site.JB.archive_path }}#{{ post.date | date: '%B-%Y' }}" title="查看此月所有文章">{{ post.date | date: "%d %B %Y" }}</a>，
+        作者：<a href="mailto:{{ site.author.email }}" title="向作者发送邮件">{{ site.author.name }}</a>，
+        类别：<a href="{{ site.JB.categories_path }}#{{ post.category }}-ref" title="查看此类别下的所有文章">{{ post.category }}</a>{% if site.JB.comments.provider == 'duoshuo' %}，
+        评论：<a href="{{ post.url }}#ds-thread" title="查看此文章的评论"><span class="ds-thread-count" data-thread-key="{{ post.title }}" data-count-type="comments"></span></a>{% elsif site.JB.comments.provider == 'disqus' %}，
+        评论：<a href="{{ post.url }}#disqus_thread" title="查看此文章的评论"></a>{% endif %}
+      </p>
+    </footer>
+
+  </article>
+  {% endfor %}
+
+  {% if site.JB.comments.provider == 'duoshuo' %}
+    {% include JB/comments-providers/duoshuo type='count' %}
+  {% elsif site.JB.comments.provider == 'disqus' %}
+    {% include JB/comments-providers/disqus type='count' %}
+  {% endif %}
+
+</section>
+
+<!-- Pagination Links -->
+<section class="pagination pagination-centered">
+  <ul>
+    <!-- First Page -->
+    {% if paginator.previous_page %}
+    <li><a href="/index.html">&laquo;&laquo;</a></li>
+    {% else %}
+    <li class="disabled"><a href="#">&laquo;&laquo;</a></li>
+    {% endif %}
+
+    <!-- Previous Page -->
+    {% if paginator.previous_page %}
+    <li>
+      {% if paginator.previous_page == 1 %}
+      <a href="/index.html">&laquo;</a>
+      {% else %}
+      <a href="/page{{ paginator.previous_page }}">&laquo;</a>
+      {% endif %}
+    </li>
+    {% else %}
+    <li class="disabled"><a href="#">&laquo;</a></li>
+    {% endif %}
+
+    <!-- Current Page -->
+    <li class="active">
+      <span class="page_number ">第 {{ paginator.page }}/{{ paginator.total_pages }} 页</span>
+    </li>
+
+    <!-- Next Page -->
+    {% if paginator.next_page %}
+    <li><a href="/page{{paginator.next_page}}">&raquo;</a></li>
+    {% else %}
+    <li class="disabled"><a href="#">&raquo;</a></li>
+    {% endif %}
+
+    <!-- Last Page -->
+    {% if paginator.next_page %}
+    <li><a href="/page{{ paginator.total_pages }}">&raquo;&raquo;</a></li>
+    {% else %}
+    <li class="disabled"><a href="#">&raquo;&raquo;</a></li>
+    {% endif %}
+  </ul>
+</section>
