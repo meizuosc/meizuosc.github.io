@@ -801,7 +801,7 @@ pre code {
 /*  Responsive UI  */
 @media (max-width: 999px) {
   #wrap { width: 100%; }
-  #logo, #about-link, #rss-link { display: none; }
+  #logo, #rss-link { display: none; }
   #navbar { margin-top: 0; }
   #sidebar { display: none; }
   #main { background: none; }
