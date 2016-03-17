@@ -15,11 +15,11 @@ redcarpet:
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
 #
-title : mzkernel's blog
-tagline: Free as the wind.
+title : 魅族内核团队
+tagline: 致力于打造极致 Linux 产品
 contacts_list: true
 author :
-  name : MEIZUOSC
+  name : 魅族内核团队
   email : patchwork@meizu.com
   github : meizuosc
   twitter :
