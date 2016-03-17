@@ -2,12 +2,12 @@
 <div id="contacts-list">
   {% if site.author.email %}
   <a href="mailto:{{ site.author.email }}" target="_blank" title="email">
-    <i class="icon-large icon-fixed-width icon-mail"></i>
+    <i class="icon-large icon-fixed-width icon-mail-1"></i>
   </a>
   {% endif %}
   {% if site.author.github %}
   <a href="https://github.com/{{ site.author.github }}" target="_blank" title="GitHub">
-    <i class="icon-large icon-fixed-width icon-github"></i>
+    <i class="icon-large icon-fixed-width icon-github-1"></i>
   </a>
   {% endif %}
   {% if site.author.weibo %}

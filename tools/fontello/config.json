@@ -19,12 +19,6 @@
       "src": "entypo"
     },
     {
-      "uid": "9bba5df43e4e9419975336161e1810c3",
-      "css": "github",
-      "code": 59395,
-      "src": "zocial"
-    },
-    {
       "uid": "b6ef4443ecc502136135437837d9724b",
       "css": "mail-1",
       "code": 59396,
@@ -91,12 +85,6 @@
       "src": "fontawesome"
     },
     {
-      "uid": "034e645aa3bad56ce68389a816547c87",
-      "css": "up-hand",
-      "code": 59406,
-      "src": "fontawesome"
-    },
-    {
       "uid": "41087bc74d4b20b55059c60a33bf4008",
       "css": "edit",
       "code": 59407,
@@ -106,6 +94,30 @@
       "uid": "9854b94688e31450fc76aae4c2a45dff",
       "css": "weibo",
       "code": 59408,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "9dd9e835aebe1060ba7190ad2b2ed951",
+      "css": "search",
+      "code": 59409,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "5e0a374728ffa8d0ae1f331a8f648231",
+      "css": "github-1",
+      "code": 59410,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "85528017f1e6053b2253785c31047f44",
+      "css": "comment",
+      "code": 59395,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "4aad6bb50b02c18508aae9cbe14e784e",
+      "css": "share",
+      "code": 59406,
       "src": "fontawesome"
     }
   ]

@@ -1,4 +1,4 @@
-<a href="{{ site.JB.tags_path }}" title="查看所有标签"><i class="icon-fixed-width icon-tags"></i> 标签云</a>
+<a href="{{ site.JB.tags_path }}" title="查看所有标签"><i class="icon-fixed-width icon-tags-1"></i> 标签云</a>
 <span title="标签总数">{{ site.tags | size }}</span>
 <div id="tag-cloud">
 {% assign first = site.tags.first %}
