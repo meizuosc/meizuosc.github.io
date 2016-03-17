@@ -7,7 +7,6 @@ gems: ["jekyll-paginate"]
 exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md"]
 paginate: 10
 encoding: utf-8
-highlighter: rouge
 markdown: redcarpet
 redcarpet:
   extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", "tables"]
