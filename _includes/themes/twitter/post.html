@@ -17,11 +17,24 @@
       {{ content }}
       {% if page.license != false %}
       <footer>
+        {% assign author=site.data.people[page.author] %}
         <p>
-          本作品由 <a href="mailto:{{ site.author.email }}">{{ site.author.name }}</a> 创作，采用
-          <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" title="查看协议详细信息" target="_blank">CC BY-NC-SA 3.0 许可协议</a>
-          进行许可。
+          本作品由 <a href="mailto:{{ author.email }}">{{ page.author }}</a> 创作，采用 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" title="查看协议详细信息" target="_blank">CC BY-NC-SA 3.0 许可协议</a> 进行许可。
         </p>
+
+        <table>
+        <tr>
+         <td style="width:160px;"><a href="{% if author.site %}http://{{ author.site }}{% else %}#{% endif %}"><img src="/images/people/{{ author.nickname | downcase }}.jpg"></a></td>
+         <td style="text-align: left; padding-left: 20px; padding-right: 20px;">
+          {% if author.site %}<a href="http://{{ author.site }}">个站</a> | {% endif %}
+          {% if author.weibo %}<a href="http://weibo.com/{{ author.weibo }}">微博</a> | {% endif %}
+          {% if author.github %}<a href="http://github.com/{{ author.github }}">Github</a>{% endif %}
+          <hr>
+          <p style="margin-top: 20px;">{{ author.info }}</p>
+         </td>
+        </tr>
+        </table>
+
       </footer>
       {% endif %}
     </section>
