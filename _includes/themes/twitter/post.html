@@ -23,14 +23,14 @@
         </p>
 
         <table>
-        <tr>
-         <td style="width:160px;"><a href="{% if author.site %}http://{{ author.site }}{% else %}#{% endif %}"><img src="/images/people/{{ author.nickname | downcase }}.jpg"></a></td>
+        <tr style="height:120px">
+         <td style="width:120px; padding-bottom: 2px; padding-top: 2px;"><a href="{% if author.site %}http://{{ author.site }}{% else %}#{% endif %}"><img src="/images/people/{{ author.nickname | downcase }}.jpg"></a></td>
          <td style="text-align: left; padding-left: 20px; padding-right: 20px;">
           {% if author.site %}<a href="http://{{ author.site }}">个站</a> | {% endif %}
           {% if author.weibo %}<a href="http://weibo.com/{{ author.weibo }}">微博</a> | {% endif %}
           {% if author.github %}<a href="http://github.com/{{ author.github }}">Github</a>{% endif %}
           <hr>
-          <p style="margin-top: 20px;">{{ author.info }}</p>
+          <p style="margin-top: 10px;">{{ author.info }}</p>
          </td>
         </tr>
         </table>
