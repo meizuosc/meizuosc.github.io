@@ -1,4 +1,4 @@
-<a href="{{ site.JB.archive_path }}" title="查看所有存档"><i class="icon-fixed-width icon-file-text"></i> 文章存档</a>
+<a href="{{ site.JB.archive_path }}" title="查看所有存档"><i class="icon-fixed-width icon-archive"></i> 文章存档</a>
 <span title="文章总数">{{ site.posts | size }}</span>
 <ul>
 {% assign count = 0 %}
