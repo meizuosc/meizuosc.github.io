@@ -1,8 +1,8 @@
 <a href="#"><i class="icon-fixed-width icon-heart"></i> 与我联系</a>
 <div id="contacts-list">
   {% if site.author.email %}
-  <a href="mailto:{{ site.author.email }}" target="_blank" title="Gmail">
-    <i class="icon-large icon-fixed-width icon-envelope"></i>
+  <a href="mailto:{{ site.author.email }}" target="_blank" title="email">
+    <i class="icon-large icon-fixed-width icon-mail"></i>
   </a>
   {% endif %}
   {% if site.author.github %}

@@ -1,6 +1,6 @@
 <div id="back-top">
   <a href="#top" title="回到顶部">
-    <i class="icon-2x icon-arrow-up"></i>
+    <i class="icon-2x icon-fixed-width icon-up-big"></i>
   </a>
 </div>
 <script type="text/javascript">
