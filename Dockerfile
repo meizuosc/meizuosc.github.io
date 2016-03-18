@@ -23,7 +23,7 @@ RUN gem install iconv
 RUN gem install jekyll
 RUN gem install jekyll-paginate
 
-WORKDIR /tinylab.org/
+WORKDIR /jekyll/
 RUN rm -r /usr/share/nginx/html
 RUN ln -sf /jekyll/_site /usr/share/nginx/html
 
