@@ -78,7 +78,7 @@
           {% include widgets/search_box %}
         </section>
 	{% if page.author %}
-	<section{% if page.date or page.title == site.title %} class="active"{% endif %}>
+	<section id="sidebar-author-bio" {% if page.date or page.title == site.title %} class="active"{% endif %}>
           {% include widgets/contacts_list %}
 	</section>
 	{% endif %}

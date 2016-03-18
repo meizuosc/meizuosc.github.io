@@ -140,8 +140,8 @@ a:hover, a:active { outline: none; }
   float: left;
   font-size: 116%;
 }
-#sidebar section a { color: #444; text-decoration: none; }
-#sidebar section a:hover { color: #00c0fb; text-decoration: none; }
+#post-author-bio a, #sidebar section a { color: #444; text-decoration: none; }
+#post-author-bio a:hover, #sidebar section a:hover { color: #00c0fb; text-decoration: none; }
 #sidebar section >a {
   display: block;
   font-weight: bold;
@@ -172,7 +172,7 @@ a:hover, a:active { outline: none; }
   font-size: 86%;
   text-shadow: none;
 }
-#sidebar section span {
+#post-author-bio span, #sidebar section span {
   float: right;
   display: block;
   position: relative;
@@ -805,6 +805,7 @@ pre code {
   #navbar { margin-top: 0; }
   #sidebar { display: none; }
   #main { background: none; }
+  #post-author-bio { display: block ! important; }
   #main-inner {
     margin-left: 0;
     padding: 20px;
@@ -849,4 +850,18 @@ pre code {
 #contacts-list #links {
   margin-right: 0px;
   zoom: 1.2;
+}
+
+#contacts-list #links a {
+  margin: 0px 2px;
+}
+
+#post-author-bio {
+  display: none;
+  max-width: 400px;
+  min-width: 270px;
+}
+
+#post-author-bio #author-bio-title {
+  display: none;
 }

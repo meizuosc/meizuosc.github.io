@@ -1,6 +1,6 @@
 {% assign author = site.data.people[page.author] %}
 
-<a href="#"><i class="icon-fixed-width icon-user"></i>作者信息</a>
+<a id="author-bio-title" href="#"><i class="icon-fixed-width icon-user"></i>作者信息</a>
 <div id="contacts-list">
   <div id="desc">
   {% if author.avatar contains 'http' %}
