@@ -7,9 +7,9 @@ gems: ["jekyll-paginate"]
 exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md", "tools"]
 paginate: 10
 encoding: utf-8
-markdown: redcarpet
-redcarpet:
-  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", "tables"]
+# markdown: redcarpet
+# redcarpet:
+#  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", "tables"]
 
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
