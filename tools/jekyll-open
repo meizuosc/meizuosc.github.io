@@ -1,0 +1,10 @@
+# open the web lab via a browser
+
+browser=chromium-browser
+url=http://localhost
+
+which $browser 2>&1>/dev/null \
+    && ($browser $url 2>&1>/dev/null &) \
+    && exit 0
+
+echo "Usage: Please open $url"
