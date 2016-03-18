@@ -94,7 +94,11 @@
         <section{% if page.title == '标签' %} class="active"{% endif %}>
           {% include widgets/tag_cloud %}
         </section>
-        {% include widgets/fixed_container %}
+	{% if site.links_list %}
+        <section>
+          {% include widgets/links_list %}
+        </section>
+        {% endif %}
       </aside>
 
       <!-- Main Content -->
