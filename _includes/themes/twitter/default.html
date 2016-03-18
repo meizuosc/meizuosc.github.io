@@ -77,7 +77,12 @@
         <section id="search-box">
           {% include widgets/search_box %}
         </section>
-        <section{% if page.date or page.title == site.title %} class="active"{% endif %}>
+	{% if page.author %}
+	<section{% if page.date or page.title == site.title %} class="active"{% endif %}>
+          {% include widgets/contacts_list %}
+	</section>
+	{% endif %}
+        <section>
           {% include widgets/recent_posts_list %}
         </section>
         <section{% if page.title == '存档' %} class="active"{% endif %}>

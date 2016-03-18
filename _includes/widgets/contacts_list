@@ -1,33 +1,53 @@
-<a href="#"><i class="icon-fixed-width icon-heart"></i> 与我联系</a>
+{% assign author = site.data.people[page.author] %}
+
+<a href="#"><i class="icon-fixed-width icon-user"></i>作者信息</a>
 <div id="contacts-list">
-  {% if site.author.email %}
-  <a href="mailto:{{ site.author.email }}" target="_blank" title="email">
-    <i class="icon-large icon-fixed-width icon-mail-1"></i>
+  <div id="desc">
+  {% if author.avatar %}
+  {% if author.avatar contains 'http' %}
+    <img src="{{ author.avatar }}" class="bio-photo" alt="{{ author.name }} bio photo">
+  {% else %}
+    <img src="{{ site.url }}/images/people/{{ author.avatar }}" class="bio-photo" alt="{{ author.name }} bio photo">
+  {% endif %}
+  {% endif %}
+  <h3 id="name">{{ author.name }}</h3>
+  <p class="author-bio"> {{ author.bio }} </p>
+  </div>
+  <span id="links">
+  {% if author.email %}
+  <a href="mailto:{{ author.email }}" target="_blank" title="Gmail">
+    <i class="icon-large icon-fixed-width icon-envelope"></i>
   </a>
   {% endif %}
-  {% if site.author.github %}
-  <a href="https://github.com/{{ site.author.github }}" target="_blank" title="GitHub">
-    <i class="icon-large icon-fixed-width icon-github-1"></i>
+  {% if author.github %}
+  <a href="https://github.com/{{ author.github }}" target="_blank" title="GitHub">
+    <i class="icon-large icon-fixed-width icon-github"></i>
   </a>
   {% endif %}
-  {% if site.author.weibo %}
-  <a href="http://weibo.com/{{ site.author.weibo }}" target="_blank" title="新浪微博">
+  {% if author.weibo %}
+  <a href="http://weibo.com/{{ author.weibo }}" target="_blank" title="新浪微博">
     <i class="icon-large icon-fixed-width icon-weibo"></i>
   </a>
   {% endif %}
-  {% if site.author.v2ex %}
-  <a href="http://v2ex.com/member/{{ site.author.v2ex }}" target="_blank" title="V2EX">
+  {% if author.wechat %}
+  <a href="http://weibo.com/{{ author.weibo }}" target="_blank" title="新浪微博">
+    <i class="icon-large icon-fixed-width icon-weibo"></i>
+  </a>
+  {% endif %}
+  {% if author.v2ex %}
+  <a href="http://v2ex.com/member/{{ author.v2ex }}" target="_blank" title="V2EX">
     <i class="icon-large icon-fixed-width icon-v2ex"></i>
   </a>
   {% endif %}
-  {% if site.author.googleplus %}
-  <a href="https://plus.google.com/{{ site.author.googleplus }}" target="_blank" title="Google+">
+  {% if author.googleplus %}
+  <a href="https://plus.google.com/{{ author.googleplus }}" target="_blank" title="Google+">
     <i class="icon-large icon-fixed-width icon-google-plus"></i>
   </a>
   {% endif %}
-  {% if site.author.twitter %}
-  <a href="https://twitter.com/{{ site.author.twitter }}" target="_blank" title="Twitter">
+  {% if author.twitter %}
+  <a href="https://twitter.com/{{ author.twitter }}" target="_blank" title="Twitter">
     <i class="icon-large icon-fixed-width icon-twitter"></i>
   </a>
   {% endif %}
+  </span>
 </div>

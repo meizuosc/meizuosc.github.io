@@ -4,11 +4,6 @@
     {% include widgets/repos_list %}
   </section>
   {% endif %}
-  {% if site.contacts_list %}
-  <section>
-    {% include widgets/contacts_list %}
-  </section>
-  {% endif %}
   {% if site.links_list %}
   <section>
     {% include widgets/links_list %}
