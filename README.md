@@ -4,7 +4,7 @@
 
 0. 克隆仓库
 
-    首先去[这里](https://github.com/meizuosc/meizuosc.github.io) Fork 到自己账户下，然后下载到本地。
+    首先去 [Fork](https://github.com/meizuosc/meizuosc.github.io#fork-destination-box) 到自己账户下，然后下载到本地。
 
         $ git clone git@github.com:USER_NAME/meizuosc.github.io
 
