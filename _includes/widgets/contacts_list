@@ -3,12 +3,10 @@
 <a href="#"><i class="icon-fixed-width icon-user"></i>作者信息</a>
 <div id="contacts-list">
   <div id="desc">
-  {% if author.avatar %}
   {% if author.avatar contains 'http' %}
     <img src="{{ author.avatar }}" class="bio-photo" alt="{{ author.name }} bio photo">
   {% else %}
-    <img src="{{ site.url }}/images/people/{{ author.avatar }}" class="bio-photo" alt="{{ author.name }} bio photo">
-  {% endif %}
+    <img src="{{ site.url }}/images/people/{% if author.avatar %}{{ author.avatar }}{% else %}bio-photo.jpg{% endif %}" class="bio-photo" alt="{{ author.name }} bio photo">
   {% endif %}
   <h2 id="name">{{ author.name }}</h2>
   <p class="author-bio"> {{ author.bio }} </p>
