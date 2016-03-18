@@ -10,18 +10,18 @@
     <img src="{{ site.url }}/images/people/{{ author.avatar }}" class="bio-photo" alt="{{ author.name }} bio photo">
   {% endif %}
   {% endif %}
-  <h3 id="name">{{ author.name }}</h3>
+  <h2 id="name">{{ author.name }}</h2>
   <p class="author-bio"> {{ author.bio }} </p>
   </div>
   <span id="links">
   {% if author.email %}
   <a href="mailto:{{ author.email }}" target="_blank" title="Gmail">
-    <i class="icon-large icon-fixed-width icon-envelope"></i>
+    <i class="icon-large icon-fixed-width icon-mail-1"></i>
   </a>
   {% endif %}
   {% if author.github %}
   <a href="https://github.com/{{ author.github }}" target="_blank" title="GitHub">
-    <i class="icon-large icon-fixed-width icon-github"></i>
+    <i class="icon-large icon-fixed-width icon-github-1"></i>
   </a>
   {% endif %}
   {% if author.weibo %}
@@ -29,11 +29,13 @@
     <i class="icon-large icon-fixed-width icon-weibo"></i>
   </a>
   {% endif %}
+  <!--
   {% if author.wechat %}
-  <a href="http://weibo.com/{{ author.weibo }}" target="_blank" title="新浪微博">
-    <i class="icon-large icon-fixed-width icon-weibo"></i>
+  <a href="http://weibo.com/{{ author.wechat }}" target="_blank" title="微信">
+    <i class="icon-large icon-fixed-width icon-wechat"></i>
   </a>
   {% endif %}
+  -->
   {% if author.v2ex %}
   <a href="http://v2ex.com/member/{{ author.v2ex }}" target="_blank" title="V2EX">
     <i class="icon-large icon-fixed-width icon-v2ex"></i>

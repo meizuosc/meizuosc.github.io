@@ -835,12 +835,15 @@ pre code {
 #contacts-list #desc #name {
   margin-bottom: 10px;
   padding-top: 10px;
+  font-size: 1.2em;
 }
 
 #contacts-list #desc .author-bio {
   white-space: nowrap;
   overflow: hidden;
-  padding-left: 10px;
+  padding-left: 5px;
+  font-style: italic;
+  font-size: 0.5em;
 }
 
 #contacts-list #links {
