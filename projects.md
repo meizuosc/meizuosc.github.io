@@ -6,7 +6,7 @@ group: navigation
 comments: true
 ---
 
-## 魅族开放源码计划
+## 开放源码计划
 
 魅族多年如一日，持续遵守 GPL 协议，及时释放各产品 Linux 内核给社区和用户。
 
