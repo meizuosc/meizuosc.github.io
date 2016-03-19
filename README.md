@@ -1,4 +1,4 @@
-# [魅族内核团队博客网站](http://meizuosc.github.io)
+# [魅族内核团队博客](http://meizuosc.github.io)
 
 ## 快速上手
 
