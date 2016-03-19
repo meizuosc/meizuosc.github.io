@@ -865,3 +865,20 @@ pre code {
 #post-author-bio #author-bio-title {
   display: none;
 }
+
+#posts-list {
+  clear: both;
+}
+
+#posts-list h3 {
+  float: left;
+  line-height: 60px;
+  margin-left: 10px;
+  min-width: 150px;
+}
+
+#posts-list ul {
+  float: left;
+  margin-left: 50px;
+  margin-top: 20px;
+}
