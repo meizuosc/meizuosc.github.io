@@ -40,11 +40,6 @@ cdn_url :
 
 projects: false
 links_list: true
-friendurl:
-  - url: http://www.meizu.com
-    name: 魅族官网
-  - url: http://www.tinylab.org
-    name: 泰晓科技
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #

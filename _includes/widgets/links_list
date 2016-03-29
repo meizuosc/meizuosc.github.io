@@ -1,6 +1,6 @@
 <a href="#"><i class="icon-fixed-width icon-link"></i> 友情链接</a>
 <ul>
-  {% for link in site.friendurl %}
+  {% for link in site.data.links %}
   <li><a href="{{ link.url }}" target="_blank">{{ link.name }}</a></li>
   {% endfor %}
 </ul>
