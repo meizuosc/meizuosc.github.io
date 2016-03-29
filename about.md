@@ -27,7 +27,7 @@ comments: false
 * 源码仓库：[meizuosc.github.io](https://github.com/meizuosc/meizuosc.github.io)
 * 投稿须知：[README.md](https://github.com/meizuosc/meizuosc.github.io/blob/master/README.md)
 
-### 团队照片
+### 团队风采
 
 * 勇攀高峰
 
