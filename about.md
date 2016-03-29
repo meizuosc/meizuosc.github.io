@@ -24,7 +24,7 @@ comments: false
 ### 关于本站
 
 * 本站简介：托管在 [Github](http://github.com) 上，通过 [Markdown](http://wowubuntu.com/markdown/) 撰写，由 [Jekyll](http://jekyllrb.com/) 静态化。
-* 源码仓库：[github.com/meizuosc/meizuosc.github.io](https://github.com/meizuosc/meizuosc.github.io)
+* 源码仓库：[meizuosc.github.io](https://github.com/meizuosc/meizuosc.github.io)
 * 投稿须知：[README.md](https://github.com/meizuosc/meizuosc.github.io/blob/master/README.md)
 
 ### 团队照片
