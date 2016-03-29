@@ -1,6 +1,10 @@
 
 - url: http://www.meizu.com
   name: 魅族官网
+- url: http://blog.flyme.cn
+  name: Flyme博客
+- url: http://www.bigertech.com
+  name: 笔戈科技
 - url: http://www.tinylab.org
   name: 泰晓科技
 
