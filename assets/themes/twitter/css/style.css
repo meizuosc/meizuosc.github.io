@@ -166,6 +166,8 @@ a:hover, a:active { outline: none; }
   margin: 4px 0 4px;
   padding-left: 10px;
   background: url(../img/bgs/bg_all.png) no-repeat 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 #sidebar section ul li a {
   padding: 3px 0;
