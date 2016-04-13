@@ -1,0 +1,62 @@
+---
+layout: post
+title: "基于调度器的 CPU 调频机制"
+keywords: ["调度器", "cpufreq", "governor", "cpufreq_sched", "schedutil"]
+categories:
+  - "调度器"
+tags:
+  - "cpufreq"
+  - "schedutil"
+  - "EAS"
+author: Wen Pingbo
+---
+
+最近由于 Linaro 和 ARM 主导的 EAS(Energy Aware Scheduler) 日渐完善，属于 EAS 一部分的基于调度器的调频技术也获得了很多关注。本文主要介绍基于调度器的 CPU 调频策略的原理，以及当前上游社区在这一方面最新的进展。
+
+## 传统 CPU 调频策略
+
+传统 CPU 调频模块主要分为 3 块：CPUFreq 核心模块、CPUFreq 驱动和 CPUFreq Governor。核心模块主要是一些公共的逻辑和 API，CPUFreq 驱动是处理和平台相关的逻辑，比如设置 CPU 的频率和电压。而 Governor 就是我们今天要讲的主角，CPU 调频的策略。CPU 在什么样负载，什么样的场景下应该跑多少频率，都是通过 CPUFreq Governor 采取一定策略来决定的，然后调用 `cpufreq_driver->target()` 来设置要调整的频率。
+
+那么传统 CPUFreq Governor 是如何选择当前 CPU 的频率的呢？performance 和 powersave 这两个 governor 就不说了，一个是让 CPU 一直跑在最高频率，另外一个是让 CPU 跑在最低频率，所有的动作都在初始化的时候做了，本身也没有什么策略。userspace 只是实现了 scaling_setspeed 节点，主要策略在用户态，也没什么可讲的。而 ondemand 和 conservation 两个 governor 则是开启一个 timer，定期去计算各个 CPU 的负载。当 CPU 负载超过 80% 时，ondemand 就会把 CPU 频率调到最高，其他情况则会根据当前负载按比例计算频率。而对于 conservation 而言，CPU 负载超过 80% 时，默认会以 5% 的步伐递增；当 CPU 负载少于 20% 的时候，默认会以 5% 的步伐递减[^cpufreq_source]。
+
+Interactive governor 并没有合入到 mainline，它是在 Android 中引入的。现在几乎所有的 Android 手机用的都在用这个 governor。所不同的是，它在每一个 CPU 上都注册了一个 idle notifier。当 CPU 退出 idle 状态时，interactive 就会缩减采样频率，从而可以快速响应负载变化。其他情况下，会根据当前 CPU 负载调整频率，这一点和 ondemand 类似[^interactive]。
+
+总结起来，对于像 ondemand，conservation，interactive 含有调频逻辑的 governor，都包含一个共同的部分 - 负载采样，需要每隔一定时间就计算一次 CPU 负载。而这个共同点，就是今天这篇文章的关键。有些人认为，对于 CPU 的负载，没有谁比调度器还清楚的了。所以 cpufreq governor 完全没必要自己去做负载采样，应该从内核调度器那里获取。而基于调度器的 cpufreq governor 就是这样引出来的。
+
+## 基于调度器的 CPU 调频策略
+
+内核调度器中的 CFS 调度类是通过 PELT(per entity load tracking) 来统计各个 Task 的负载（capacity），并映射到 0 ~ 1024（最大值可在编译时指定）。内核当中的负载均衡就是通过这些统计值来平衡各个 CPU 之间的任务。而基于调度器的 cpufreq governor 的主要原理就是把各个 CPU 的 capacity 映射到 CPU 频率，来完成调频动作，capacity 越高，当前 CPU 负载越高，所以频率也调的很高。
+
+而当前内核社区中，已经有两个成形的方案。一个是 ARM 和 Linaro 主导的项目 - cpufreq_sched，属于 EAS 的一部分。而另外一个 Intel 主导的项目 - schedutil。
+
+### cpufreq_sched
+
+cpufreq_sched[^sched_freq] 本身逻辑比较简单，当 cfs, rt, deadline 3 个调度类中的 capacity 出现变化的时候，就调用 `update_cpu_capacity_request()` 来更新当前 policy 下 CPU 的频率。cpufreq 中的 policy 有可能包含多个 CPU，所以这里要选择其中最大的 capacity 来代表整个 policy 的负载。capacity 到 CPU 频率，是通过如下代码按比例转换的：
+
+```
+freq_new = capacity * policy->max >> SCHED_CAPACITY_SHIFT
+```
+
+`SCHED_CAPACITY_SHIFT` 一般是 10，即 capacity 的最大值 1024。假定当前 policy 允许的最大 CPU 频率是 1.2GHz，capacity 为 500，那么对应的频率是 586Mhz。如果我们直接把 CPU 设置在这个频率上，会导致一些性能上的下降。所以 cpufreq_sched 会在最终的 capacity 基础上，乘上 1.25，相当于在当前 capacity 的基础上增加 20%。
+
+从 cpufreq_sched 的实现，我们可以看到整个调频动作，都是从调度器中直接设置下来的，cpufreq_sched 自身并没有去统计各个 CPU 的负载。而这种做法也让 CPU 的频率可以快速的响应负载变化，理论上讲，当前平台的 cpufreq 驱动最小调频间隔是多少，那么 cpufreq_sched 就可以做到多少。相比于 interactive 20ms 的调频间隔，cpufreq_sched 不到 1ms 的调频间隔简直是天壤之别。下图分别是 interactive 和 sched 在不同负载下 CPU 频率图：
+
+- Interactive: ![Interactive](/images/posts/2016/04/interactive.png)
+- Cpufreq_sched: ![Sched](/images/posts/2016/04/sched.png)
+
+响应速度快，调频间隔短，固然是 cpufreq_sched 的优势，但是把整个调频动作都放到调度器里做，无疑会增加调度器的负担。调度器代码路径变长，也会增加调度器的延时。如果某个平台的 cpufreq 驱动在设置 CPU 频率的时候会导致系统睡眠，那么 cpufreq_sched 还需要在每一个 CPU 上额外开启一个线程，防止对调度器造成影响。
+
+### schedutil
+
+在介绍 schedutil 之前，我们首先得介绍一个内核社区最近出现的新机制 - utilization update callback[^capacity_callback]。其实就是一个各个 CPU 使用率变化时的一种回调机制。通过 `cpufreq_set_update_util_data()` 来注册回调函数，当 cfs, rt, deadline 3 个调度类的 capacity 出现变化时，调用 `cpufreq_update_util()` 来触发 hook，实现类似 notifier 的效果。
+
+而 schedutil[^schedutil] 就是利用这个负载变化回调机制，通过 `cpufreq_add_update_util_hook()` 注册回调函数，当 CPU 负载出现变化的时候，就会触发 schedutil `sugov_update` 进行调频动作。而剩下的调频实现，其实跟 cpufreq_sched 大同小异。
+
+目前来看，cpufreq_sched 好像已经被放弃，而 schedutil 有望在 Linux kenrel 4.7 版本中合入，到时候，内核 Cpufreq Governor 又要新添一名成员了。
+
+[^cpufreq_source]: [Cpufreq Governor 内核源码](http://lxr.free-electrons.com/source/drivers/cpufreq/)
+[^interactive]: [https://lwn.net/Articles/662209/](https://lwn.net/Articles/662209/)
+[^sched_freq]: [Cpufreq_sched 补丁](https://lkml.org/lkml/2016/2/22/1037)
+[^capacity_callback]: [utilization update callback](https://lkml.org/lkml/2016/2/15/734)
+[^schedutil]: [https://lkml.org/lkml/2016/3/29/1041](https://lkml.org/lkml/2016/3/29/1041)
+
