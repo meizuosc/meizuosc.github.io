@@ -54,6 +54,8 @@ freq_new = capacity * policy->max >> SCHED_CAPACITY_SHIFT
 
 目前来看，cpufreq_sched 好像已经被放弃，而 schedutil 有望在 Linux kenrel 4.7 版本中合入，到时候，内核 Cpufreq Governor 又要新添一名成员了。
 
+## 参考资料
+
 [^cpufreq_source]: [Cpufreq Governor 内核源码](http://lxr.free-electrons.com/source/drivers/cpufreq/)
 [^interactive]: [https://lwn.net/Articles/662209/](https://lwn.net/Articles/662209/)
 [^sched_freq]: [Cpufreq_sched 补丁](https://lkml.org/lkml/2016/2/22/1037)
