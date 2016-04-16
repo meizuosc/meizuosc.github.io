@@ -67,8 +67,8 @@ task :post do
     post.puts 'description: ""'
     post.puts 'categories: ""'
     post.puts 'tags: [""]'
+    post.puts "permalink: /#{slug}.html"
     post.puts "---"
-    post.puts "{% include JB/setup %}"
   end
 end # task :post
 
