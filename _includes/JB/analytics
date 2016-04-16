@@ -1,5 +1,6 @@
 {% if site.safe and site.JB.analytics.provider and page.JB.analytics != false %}
 
+<div id="analytics" style="display: none;">
 {% case site.JB.analytics.provider %}
 {% when "baidu" %}
   {% include JB/analytics-providers/baidu %}
@@ -12,5 +13,5 @@
 {% when "custom" %}
   {% include custom/analytics %}
 {% endcase %}
-
+</div>
 {% endif %}
