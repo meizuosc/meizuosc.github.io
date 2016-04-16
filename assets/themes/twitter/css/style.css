@@ -818,6 +818,10 @@ pre code {
   }
   article header h1 { font-size: 130%; }
   article header h2 { font-size: 130%; }
+  article section h2 { font-size: 125%; }
+  article section h3 { font-size: 120%; }
+  article section h4 { font-size: 115%; }
+  article section h5 { font-size: 110%; }
 }
 
 .icon-2x{font-size:2em;}.icon-2x.icon-border{border-width:2px;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;}
