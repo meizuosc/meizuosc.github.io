@@ -98,9 +98,9 @@ JB :
   # Set 'provider' to false to turn commenting off globally.
   #
   comments :
-    provider :
+    provider : duoshuo
     duoshuo :
-      short_name :
+      short_name : mzkernel
     disqus :
       short_name :
     livefyre :
