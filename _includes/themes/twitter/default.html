@@ -119,7 +119,10 @@
   </div>
 
   <script type="text/javascript">
-    $('article.post a').attr('target', '_blank');
+    $('article.post a').each(function() {
+      if (this.hostname != window.location.hostname) {
+        this.target = '_blank';
+      }});
     if (navigator.appVersion.indexOf("Mac") != -1) {
       $('code, pre').css('font-family', 'Courier, monospace');
     }
