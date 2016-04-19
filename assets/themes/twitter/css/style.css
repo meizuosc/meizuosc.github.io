@@ -834,6 +834,7 @@ pre code {
   border-radius: 150px;
   float: left;
   max-width: 100px;
+  margin-bottom: 20px;
 }
 
 #contacts-list #desc {
