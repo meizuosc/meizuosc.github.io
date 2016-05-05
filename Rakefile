@@ -103,6 +103,12 @@ task :preview do
   system "jekyll --auto --server"
 end # task :preview
 
+desc "Optimize images"
+task :image do
+  name = ENV["path"]
+  system "echo #{name} | imageoptim --image-alpha --quit --no-color"
+end # task :image
+
 # Public: Alias - Maintains backwards compatability for theme switching.
 task :switch_theme => "theme:switch"
 
