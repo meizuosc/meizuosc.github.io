@@ -53,6 +53,9 @@
           <li{% if page.url == site.JB.tags_path %} class="active"{% endif %}>
             <a href="{{ site.JB.tags_path }}" title="标签">标签</a>
           </li>
+          <li{% if page.url == site.JB.jobs_path %} class="active"{% endif %}>
+            <a href="{{ site.JB.jobs_path }}" title="工作">工作</a>
+          </li>
 	  {% if site.JB.project_path %}
           <li{% if page.url == site.JB.project_path %} class="active"{% endif %}>
             <a href="{{ site.JB.project_path }}" title="代码">代码</a>
