@@ -69,9 +69,6 @@
           <li id="about-link" {% if page.url == site.JB.about_path %} class="active"{% endif %}>
             <a href="{{ site.JB.about_path }}" title="关于">关于</a>
           </li>
-          <li id="rss-link">
-            <a href="{{ site.JB.rss_path }}" title="订阅 RSS"><i class="icon-large icon-fixed-width icon-rss"></i></a>
-          </li>
         </ul>
       </nav>
     </header>
@@ -103,6 +100,9 @@
 	{% if site.links_list %}
         <section>
           {% include widgets/links_list %}
+        </section>
+        <section>
+            <a href="{{ site.JB.rss_path }}" title="订阅 RSS"><i class="icon-fixed-width icon-rss"></i>订阅 RSS</a>
         </section>
         {% endif %}
       </aside>
