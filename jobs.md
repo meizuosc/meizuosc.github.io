@@ -3,7 +3,6 @@ layout: page
 title: "工作"
 group: navigation
 description: "魅族内核团队招聘系统优化工程师（包括 Android、Linux ）、Linux 驱动开发工程师、Linux 测试开发工程师和 Linux 测试工程师"
-comments: false
 ---
 
 [魅族（MEIZU）科技](http://www.meizu.com) 成立于 2003 年 3 月，是一家国内知名智能手机厂商，总部位于中国广东省珠海市。公司致力于向消费者提供国际一流性能和品质的电子产品，并立足于中高端市场。致力于制造设计优雅、简单易用的智能手机。

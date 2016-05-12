@@ -3,7 +3,6 @@ layout: page
 title: "关于"
 description: "魅族内核团队官方博客"
 group: navigation
-comments: false
 ---
 {% include JB/setup %}
 
