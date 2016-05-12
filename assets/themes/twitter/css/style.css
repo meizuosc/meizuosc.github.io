@@ -859,6 +859,7 @@ pre code {
 #contacts-list #links {
   margin-right: 0px;
   zoom: 1.2;
+  display: none;
 }
 
 #contacts-list #links a {
