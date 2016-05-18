@@ -25,7 +25,7 @@ description: "魅族内核团队的官方博客。"
       {% assign author=site.data.people[post.author] %}
       {% assign post_author_name = post.author | replace:' ','-' %}
       <p>
-      <a href="authors.html#{{ post_author_name }}" title="向作者发送邮件">{{ author.nickname }}</a> 发表于
+      <a href="authors.html#{{ post_author_name }}" title="向作者发送邮件">{{ author.nickname }}</a> 发表于 
         <a href="{{ site.JB.archive_path }}#{{ post.date | date: '%B-%Y' }}" title="查看此月所有文章">{{ post.date | date: "%Y/%m/%d" }}</a>，
         类别：{% for category in post.categories %}<a href="{{ site.JB.categories_path }}#{{ category }}-ref" style="text-transform:capitalize;" title="查看此类别下的所有文章">{{ category }}</a>{% unless forloop.last %}, {% endunless %}{% endfor %}
 
