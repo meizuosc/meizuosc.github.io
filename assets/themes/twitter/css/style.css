@@ -399,6 +399,15 @@ article img {
   max-width: 100%;
 }
 
+.post .caption {
+  color: #999;
+  display: block;
+  font-size: 0.9em;
+  margin-top: 0.5em;
+  position: relative;
+  text-align: center;
+}
+
 /*  Input  */
 input {
   background-color: #fcfcfc;

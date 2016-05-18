@@ -124,16 +124,10 @@
     </footer>
   </div>
 
-  <script type="text/javascript">
-    $('article.post a').each(function() {
-      if (this.hostname != window.location.hostname) {
-        this.target = '_blank';
-      }});
-    if (navigator.appVersion.indexOf("Mac") != -1) {
-      $('code, pre').css('font-family', 'Courier, monospace');
-    }
-  </script>
   {% include JB/analytics %}
-  
+
+  <link rel="stylesheet" href="{{ ASSET_PATH }}/fancybox/jquery.fancybox.css">
+  <script src="{{ ASSET_PATH }}/fancybox/jquery.fancybox.pack.js"></script>
+  <script src="{{ ASSET_PATH }}/js/style.js"></script>
 </body>
 </html>
