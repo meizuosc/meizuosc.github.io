@@ -280,7 +280,7 @@ Kernel 在启动完成后，会执行 init 程序，该程序接着解析 init.r
 
 在 SensorService 的 onFirstRef 接口中，会创建 SensorDevice 的实例。在 SensorDevice 的构造函数中，会调用 hw_get_module 接口加载 Sensor HAL 的动态库，接着调用 Sensor HAL 提供的 open 接口，执行 Sensor HAL 的初始化。
 接着 SensorService 通过 SensorDevice，调用 Sensor HAL 提供的 get_sensors_list 接口，获取所支持的 Sensor 信息。
-而后，SensorService 会创建一个 Looper 和 SensorEventAckReceiver。其中 Looper 用于 enble sensor 后，进行数据的接收；而 SensorEventAckReceiver 则用于在 dispatch wake up sensor event 给上层后，接收上层返回的确认 ACK。
+而后，SensorService 会创建一个 Looper 和 SensorEventAckReceiver。其中 Looper 用于 enable sensor 后，进行数据的接收；而 SensorEventAckReceiver 则用于在 dispatch wake up sensor event 给上层后，接收上层返回的确认 ACK。
 至此，SensorService 初始化完毕。
 
 ### 6.2. Android Sensor HAL 加载
@@ -390,5 +390,5 @@ APP 在获取 Sensor 数据前，需要获取一个 SensorManager 对象。而�
 
 ![图片 6](/images/posts/2016/05/android_sensor_framework_6.png)
 
-当上层调用 registerListener 接口时，相应的 sensor 就会被 enable。SensorService 在调用 HAL 提供的 enble 接口前，会先调用 batch 接口，对 sensor 的采样率、数据上报频率等进行配置。另外，如果 sensor 已经被 enable 了，那么 SensorService 就只调用 batch 和 flush 接口。
+当上层调用 registerListener 接口时，相应的 sensor 就会被 enable。SensorService 在调用 HAL 提供的 enable 接口前，会先调用 batch 接口，对 sensor 的采样率、数据上报频率等进行配置。另外，如果 sensor 已经被 enable 了，那么 SensorService 就只调用 batch 和 flush 接口。
 SensorService 在 onFirstRef 时创建了一个 Looper，该 Looper 的执行线程会调用 poll 接口，并阻塞在 sensor 的数据管道，当 sensor 有数据返回时，SensorService 会通过 SensorEventQueue 发送到上层，并最终分发到各个 listener。
