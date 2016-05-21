@@ -230,6 +230,7 @@ article section p {
   margin-bottom: .67em;
 }
 article section p:last-child { margin-bottom: 0; }
+article section li p:first-child {  margin-bottom: 0; }
 article section ul li { line-height: 180%; }
 article section ol li { line-height: 180%; }
 article footer {
