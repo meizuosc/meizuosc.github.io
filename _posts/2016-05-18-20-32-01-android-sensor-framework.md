@@ -4,7 +4,7 @@ title: "Android Sensor Framework 概览"
 categories:
   - "传感器"
 tags:
-  - "android"
+  - "Android"
   - "sensor"
 author: Rock Zhang
 permalink: /android-sensor-framework.html
