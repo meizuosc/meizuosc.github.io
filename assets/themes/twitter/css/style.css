@@ -902,3 +902,11 @@ pre code {
   margin-left: 50px;
   margin-top: 20px;
 }
+
+blockquote p {
+ font-size: 1rem;
+ margin-bottom: .33999rem;
+ font-style: italic;
+ padding: .66001rem 1rem 1rem;
+ border-left: 3px solid #A0AABF;
+}
