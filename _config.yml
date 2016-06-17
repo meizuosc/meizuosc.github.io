@@ -3,10 +3,19 @@
 permalink: /:year/:month/:title.html
 
 safe: true
+lsi: false
 gems: ["jekyll-paginate"]
 exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md", "tools"]
 paginate: 10
 encoding: utf-8
+kramdown:
+  input: GFM
+  hard_wrap: false
+gems:
+  - jekyll-coffeescript
+  - jekyll-paginate
+incremental: false
+highlighter: rouge
 # markdown: redcarpet
 # redcarpet:
 #  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", "tables"]
