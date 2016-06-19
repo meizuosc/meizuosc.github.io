@@ -7,6 +7,8 @@ lsi: false
 gems: ["jekyll-paginate"]
 exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md", "tools"]
 paginate: 10
+whitelist:
+  - jekyll-paginate
 encoding: utf-8
 kramdown:
   input: GFM
