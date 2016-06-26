@@ -3,7 +3,7 @@ layout: post
 title: "剖析 Android M 锁屏密码存储方式"
 keywords: ["锁屏","密码","Android","lockcreen","password"]
 categories:
-  - "Android"
+  - "安全"
 tags:
   - "Android"
   - "lockcreen"
