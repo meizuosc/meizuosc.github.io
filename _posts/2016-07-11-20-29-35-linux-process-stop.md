@@ -2,7 +2,7 @@
 layout: post
 title: "Linux 进程中 Stop, Park, Freeze"
 keywords: ["kthread_stop","kthread_park","freeze_processes"]
-categories: "进程管理"
+categories: " 进程管理 "
 tags: ["kthread_stop","kthread_park","freeze_processes"]
 author: Peng Weilin
 permalink: /linux-process-stop.html
@@ -18,15 +18,15 @@ permalink: /linux-process-stop.html
 
 用户进程 stop 可以通过给进程发送 STOP 信号来实现，可以参考“Linux Signal”这一篇的描述。但是对内核进程来说不会响应信号，如果碰到需要 stop 内核进程的场景怎么处理？比如：我们在设备打开的时候创建了内核处理进程，在设备关闭的时候需要 stop 内核进程。
 
-Linux 实现了一套 kthread_stop() 的机制来实现内核进程 stop。
+Linux 实现了一套 `kthread_stop()` 的机制来实现内核进程 stop。
 
 ### 1.1 内核进程的创建
 
 内核进程创建过程，是理解本篇的基础。
 
-可以看到 kthread_create() 并不是自己去创建内核进程，而是把创建任务推送给 kthreadd() 进程执行。
+可以看到 `kthread_create()` 并不是自己去创建内核进程，而是把创建任务推送给 `kthreadd()` 进程执行。
 
-kthreadd() -> create_kthread() -> kernel_thread() 创建的新进程也不是直接使用用户的函数 threadfn()，而是创建通用函数 kthread()，kthread() 再来调用 threadfn()。
+`kthreadd()` -> `create_kthread()` -> `kernel_thread()` 创建的新进程也不是直接使用用户的函数 `threadfn()`，而是创建通用函数 `kthread()`，`kthread()` 再来调用 `threadfn()`。
 
 - kernel/kthread.c:
 
@@ -34,16 +34,16 @@ kthreadd() -> create_kthread() -> kernel_thread() 创建的新进程也不是直
 
 ### 1.2 内核进程的 stop
 
-如果内核进程需要支持 kthread_stop()，需要根据以下框架来写代码。用户在主循环中调用 kthread_should_stop() 来判断当前 kthread 是否需要 stop，如果被 stop 则退出循环。
+如果内核进程需要支持 `kthread_stop()`，需要根据以下框架来写代码。用户在主循环中调用 `kthread_should_stop()` 来判断当前 kthread 是否需要 stop，如果被 stop 则退出循环。
 
-这种代码为什么不做到通用代码 kthread() 中？这应该是和 Linux 的设计思想相关的。Linux 运行内核态的策略比较灵活，而对用户态的策略更加严格统一。
+这种代码为什么不做到通用代码 `kthread()` 中？这应该是和 Linux 的设计思想相关的。Linux 运行内核态的策略比较灵活，而对用户态的策略更加严格统一。
 
 ![kthread_should_stop](/images/posts/2016/07/stop_kthread_should_stop.png)
 
-kthread_should_stop() 和 kthread_stop() 的代码实现：
+`kthread_should_stop()` 和 `kthread_stop()` 的代码实现：
 
 - kernel/kthread.c:
-- kthread_should_stop()/kthread_stop()
+- `kthread_should_stop()`/`kthread_stop()`
 
 ```cpp
 
@@ -80,7 +80,7 @@ int kthread_stop(struct task_struct *k)
 
 ## 2. 进程 park
 
-smpboot_register_percpu_thread() 用来创建 per_cpu 内核进程，所谓的 per_cpu 进程是指需要在每个 online cpu 上创建线程。比如执行 stop_machine() 中 cpu 同步操作的 migration 进程：
+`smpboot_register_percpu_thread()` 用来创建 per_cpu 内核进程，所谓的 per_cpu 进程是指需要在每个 online cpu 上创建线程。比如执行 `stop_machine()` 中 cpu 同步操作的 migration 进程：
 
 ```
 shell@:/ $ ps | grep migration
@@ -99,20 +99,20 @@ root      2165  2     0      0     __kthread_ 0000000000 R migration/9
 问题来了，既然 per_cpu 进程是和 cpu 绑定的，那么在 cpu hotplug 的时候，进程需要相应的 disable 和 enable。实现的方法可以有多种：
 
 - 动态的销毁和创建线程。缺点是开销比较大。
-- 设置进程的 cpu 亲和力 set_cpus_allowed_ptr()。缺点是进程绑定的 cpu 如果被 down 掉，进程会迁移到其他 cpu 继续执行。
+- 设置进程的 cpu 亲和力 `set_cpus_allowed_ptr()`。缺点是进程绑定的 cpu 如果被 down 掉，进程会迁移到其他 cpu 继续执行。
 
-为了克服上述方案的缺点，适配 per_cpu 进程的 cpu hotplug 操作，设计了 kthread_park()/kthread_unpark() 机制。
+为了克服上述方案的缺点，适配 per_cpu 进程的 cpu hotplug 操作，设计了 `kthread_park()`/`kthread_unpark()` 机制。
 
-### 2.1 smpboot_register_percpu_thread()
+### 2.1 `smpboot_register_percpu_thread()`
 
-per_cpu 进程从代码上看，实际也是调用 kthread_create() 来创建的。
+per_cpu 进程从代码上看，实际也是调用 `kthread_create()` 来创建的。
 
 - kernel/smpboot.c:
 - kernel/kthread.c:
 
 ![smpboot_register_percpu_thread](/images/posts/2016/07/stop_smpboot_register.png)
 
-我们可以看到 smpboot_register 又增加了一层封装：kthread() -> smpboot_thread_fn() -> ht->thread_fn()，这种封装的使用可以参考 cpu_stop_threads。
+我们可以看到 smpboot_register 又增加了一层封装：`kthread()` -> `smpboot_thread_fn()` -> `ht->thread_fn()`，这种封装的使用可以参考 cpu_stop_threads。
 
 - kernel/stop_machine.c:
 
@@ -146,7 +146,7 @@ static int __init cpu_stop_init(void)
 }
 ```
 
-我们可以看到 smpboot_thread_fn() 循环中实现了对 park 的支持，具体实现 kthread_should_park()、kthread_parkme()、kthread_park()、kthread_unpark() 的代码分析：
+我们可以看到 `smpboot_thread_fn()` 循环中实现了对 park 的支持，具体实现 `kthread_should_park()`、`kthread_parkme()`、`kthread_park()`、`kthread_unpark()` 的代码分析：
 
 - kernel/kthread.c:
 
@@ -253,7 +253,7 @@ static void __kthread_unpark(struct task_struct *k, struct kthread *kthread)
 
 - kernel/power/process.c:
 - kernel/freezer.c:
-- suspend_freeze_processes() -> freeze_processes() -> try_to_freeze_tasks() -> freeze_task()
+- `suspend_freeze_processes()` -> `freeze_processes()` -> `try_to_freeze_tasks()` -> `freeze_task()`
 
 ```cpp
 
@@ -478,7 +478,7 @@ bool freezing_slow_path(struct task_struct *p)
 
 ### 3.1 用户进程 freeze
 
-freeze 用户态的进程利用了 signal 机制，系统 suspend 使能了 suspend 以后，调用 fake_signal_wake_up() 伪造一个信号唤醒进程，进程在 ret_to_user() -> do_notify_resume() -> do_signal() -> get_signal() -> try_to_freeze() 中 freeze 自己。
+freeze 用户态的进程利用了 signal 机制，系统 suspend 使能了 suspend 以后，调用 `fake_signal_wake_up()` 伪造一个信号唤醒进程，进程在 `ret_to_user()` -> `do_notify_resume()` -> `do_signal()` -> `get_signal()` -> `try_to_freeze()` 中 freeze 自己。
 
 具体代码分析如下：
 
@@ -554,7 +554,7 @@ bool __refrigerator(bool check_kthr_stop)
 如果进程阻塞在信号量、mutex 等内核同步机制上，wake_up_state 并不能解除阻塞。因为这些机制都有 while(1) 循环来判断条件，是否成立，不成立只是简单的唤醒随即又会进入阻塞睡眠状态。
 
 - kernel/locking/mutex.c:
-- mutex_lock() -> __mutex_lock_common()
+- `mutex_lock()` -> `__mutex_lock_common()`
 
 ```cpp
 __mutex_lock_common(struct mutex *lock, long state, unsigned int subclass,
@@ -606,7 +606,7 @@ __mutex_lock_common(struct mutex *lock, long state, unsigned int subclass,
 }
 ```
 
-所以 wake_up_state() 只能唤醒这种简单阻塞的内核进程，而对于阻塞在内核同步机制上是无能无力的：
+所以 `wake_up_state()` 只能唤醒这种简单阻塞的内核进程，而对于阻塞在内核同步机制上是无能无力的：
 
 ```cpp
 void user_thread()
@@ -620,7 +620,7 @@ void user_thread()
 }
 ```
 
-内核进程响应 freeze 操作，也必须显式的调用 try_to_freeze() 或者 kthread_freezable_should_stop() 来 freeze 自己：
+内核进程响应 freeze 操作，也必须显式的调用 `try_to_freeze()` 或者 `kthread_freezable_should_stop()` 来 freeze 自己：
 
 ```cpp
 void user_thread()
@@ -633,7 +633,7 @@ void user_thread()
 }
 ```
 
-所以从代码逻辑上看内核进程 freeze，并不会 freeze 所有内核进程，只 freeze 了 2 部分：一部分是设置了 WQ_FREEZABLE 标志的 workqueue，另一部分是内核进程主动调用 try_to_freeze() 并且在架构上设计的可以响应 freeze。
+所以从代码逻辑上看内核进程 freeze，并不会 freeze 所有内核进程，只 freeze 了 2 部分：一部分是设置了 WQ_FREEZABLE 标志的 workqueue，另一部分是内核进程主动调用 `try_to_freeze()` 并且在架构上设计的可以响应 freeze。
 
 ## 参考资料
 
