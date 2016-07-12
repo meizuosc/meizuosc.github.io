@@ -635,5 +635,3 @@ void user_thread()
 
 所以从代码逻辑上看内核进程 freeze，并不会 freeze 所有内核进程，只 freeze 了 2 部分：一部分是设置了 WQ_FREEZABLE 标志的 workqueue，另一部分是内核进程主动调用 `try_to_freeze()` 并且在架构上设计的可以响应 freeze。
 
-## 参考资料
-
