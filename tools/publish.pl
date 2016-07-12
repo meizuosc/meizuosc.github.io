@@ -54,6 +54,11 @@ while(<FILEIN>) {
 		$line =~ s/(^###*)([^ #].*)/$1 $2/;
 	}
 
+	# add inline pre in every function call
+	if (not $is_pre) {
+		$line =~ s/([a-zA-Z0-9_\->]+\(\))/`$1`/g;
+	}
+
 	if ($line =~ /^\s*$/ && $next =~ /^\s*$/) {
 		print "INFO: ignore redundant empty line $.\n";
 	} else {
