@@ -6,6 +6,7 @@ use utf8;
 use File::Copy;
 use POSIX qw(strftime);
 
+my @special_nouns = ("Android", "Linux");
 my $ifilename = $ARGV[0];
 die "Error: $!" unless(-e $ifilename);
 
@@ -57,6 +58,13 @@ while(<FILEIN>) {
 	# add inline pre in every function call
 	if (not $is_pre) {
 		$line =~ s/([a-zA-Z0-9_\->]+\(\))/`$1`/g;
+	}
+
+	# correct special nouns
+	if (not $is_pre and not $is_meta) {
+		foreach (@special_nouns) {
+			$line =~ s/\b$_\b/$_/ig;
+		}
 	}
 
 	if ($line =~ /^\s*$/ && $next =~ /^\s*$/) {
