@@ -6,7 +6,7 @@ use utf8;
 use File::Copy;
 use POSIX qw(strftime);
 
-my @special_nouns = ("Android", "Linux");
+my @special_nouns = ("Android", "Linux", "SMP", "HMP", "CPU");
 my $ifilename = $ARGV[0];
 die "Error: $!" unless(-e $ifilename);
 
