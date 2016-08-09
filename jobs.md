@@ -24,7 +24,7 @@ description: "魅族内核团队招聘系统优化工程师（包括 Android、L
 * 待遇：宜居城市+媲美BAT+__ESOP__
 
 * 联系
-  * 微信：lzufalcon，请备注『魅族内核团队』
+  * 微信：lzufalcon,请备注 魅族内核团队
   * 邮箱：falcon [at] meizu [dot] com
 
 * 看点
