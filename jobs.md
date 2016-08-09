@@ -21,8 +21,6 @@ description: "魅族内核团队招聘系统优化工程师（包括 Android、L
 
 * 地址：珠海市高新区魅族科技大厦
 
-* 待遇：宜居城市+媲美BAT+__ESOP__
-
 * 联系
   * 微信：lzufalcon,请备注 魅族内核团队
   * 邮箱：falcon [at] meizu [dot] com
@@ -32,7 +30,6 @@ description: "魅族内核团队招聘系统优化工程师（包括 Android、L
   * 协作氛围融洽
   * 充满挑战和创新
   * 南方宜居城市
-  * 薪酬媲美BAT+ESOP
   * 公司业绩高速成长
 
 * 备注
