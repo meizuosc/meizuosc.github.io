@@ -189,7 +189,7 @@ description: "魅族内核团队招聘系统优化工程师（包括 Android、L
 
 * __优选条件__
 
-  1. 有 Camera、LCD/TP/Sensors、Audio、Modem、WIFI/BT、eMMC、指纹、Recovery/Bootloader 中某类模块开发经验
+  1. 有 Recovery/Bootloader，LCD/OLED，指纹、Modem、WIFI/BT/GPS、USB/eMMC、充电管理 中某类模块开发经验
   2. 有在手机芯片公司或者国内 TOP10 手机公司相关从业经验
 
 ## Linux 测试开发工程师（2人）
