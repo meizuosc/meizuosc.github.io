@@ -14,10 +14,13 @@ comments: true
 
 ## Linux 内核源码
 
+* [MX6](https://github.com/meizuosc/m685)
 * [PRO 5](https://github.com/meizuosc/m576)
 * [MX4 PRO](https://github.com/meizuosc/m462)
 * [MX4](https://github.com/meizuosc/m75)
-* [魅蓝/Note](https://github.com/meizuosc/m463)
+* [魅蓝2 Note](https://github.com/meizuosc/m571)
+* [魅蓝 Note](https://github.com/meizuosc/m463)
+* [魅蓝](https://github.com/meizuosc/m463)
 * [MX3](https://github.com/meizuosc/m35x)
 * [MX2](https://github.com/meizuosc/m040)
 * [MX](https://github.com/meizuosc/m03x)
