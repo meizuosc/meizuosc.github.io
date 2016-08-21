@@ -2,7 +2,7 @@
 layout: post
 title: "Linux 进程中 Stop, Park, Freeze"
 keywords: ["kthread_stop","kthread_park","freeze_processes"]
-categories: " 进程管理 "
+categories: "进程管理与通信"
 tags: ["kthread_stop","kthread_park","freeze_processes"]
 author: Peng Weilin
 permalink: /linux-process-stop.html
