@@ -16,6 +16,9 @@ $('article #article_main').each(function(i){
 
 		$(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
 	});
+	$(this).find('.caption').each(function(){
+		if ($(this).next().is("sup")) $(this).next().appendTo(this);
+	});
 	$(this).find('.fancybox').each(function(){
 		$(this).attr('rel', 'article' + i);
 	});
