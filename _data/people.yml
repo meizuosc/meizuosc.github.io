@@ -231,7 +231,7 @@ Wu DongNan:
   name : 吴东南
   nickname: 东南
   web:
-  email : 13169628987@163.com
+  email :
   github : wudongnan
   weibo :
   wechat :
@@ -241,6 +241,17 @@ Wu DongNan:
 Xie LinXi:
   name :
   nickname: Axi
+  web:
+  email :
+  github :
+  weibo :
+  wechat :
+  bio:
+  avatar:
+
+Zhang Yaping:
+  name : 张亚平
+  nickname:
   web:
   email :
   github :
