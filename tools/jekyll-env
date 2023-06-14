@@ -24,4 +24,4 @@ if [ $? -eq 1 ]; then
     # pkill X
 fi
 
-docker build -t $image_name $TOP_DIR/../
+docker build -t $image_name $TOP_DIR/../tools
