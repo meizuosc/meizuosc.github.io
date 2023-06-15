@@ -2,6 +2,76 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
+    
+    <lastmod>2023-06-15T10:30:02.944Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/04/15/intro-wrapfs.html/</loc>
+    
+    <lastmod>2023-06-15T10:29:00.032Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2019/01/02/android-binder.html/</loc>
+    
+    <lastmod>2023-06-15T10:28:16.540Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2018/03/21/device-tree.html/</loc>
+    
+    <lastmod>2023-06-15T10:23:18.300Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
+    
+    <lastmod>2023-06-15T10:21:58.528Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/11/18/memory%2520management%2520-%2520ion.html/</loc>
+    
+    <lastmod>2023-06-15T10:20:52.237Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2018/07/12/linux-time.html/</loc>
+    
+    <lastmod>2023-06-15T10:19:50.401Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/21/zram-introduction.html/</loc>
+    
+    <lastmod>2023-06-15T10:13:53.453Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/18/android-sensor-framework.html/</loc>
+    
+    <lastmod>2023-06-15T10:12:46.429Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/02/gps-introduction.html/</loc>
+    
+    <lastmod>2023-06-15T10:11:51.485Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2016/04/08/cpufreq-sched.html/</loc>
     
     <lastmod>2023-06-15T09:54:45.847Z</lastmod>
@@ -23,13 +93,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/11/18/memory%2520management%2520-%2520ion.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2018/07/12/android-p-fbe.html/</loc>
     
     <lastmod>2023-06-15T07:55:41.887Z</lastmod>
@@ -38,27 +101,6 @@
   
   <url>
     <loc>https://kernel.meizu.com/2018/11/23/implementation-of-loading-fw-from-userspace.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2018/03/21/device-tree.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2018/07/12/linux-time.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2019/01/02/android-binder.html/</loc>
     
     <lastmod>2023-06-15T07:55:41.887Z</lastmod>
     
@@ -86,28 +128,7 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/05/02/gps-introduction.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/04/15/intro-wrapfs.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2016/05/09/slab-allocator-and-kmalloc.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/18/android-sensor-framework.html/</loc>
     
     <lastmod>2023-06-15T07:55:41.883Z</lastmod>
     
@@ -135,13 +156,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/05/21/zram-introduction.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2016/06/26/lockcreen-password.html/</loc>
     
     <lastmod>2023-06-15T07:55:41.883Z</lastmod>
@@ -150,20 +164,6 @@
   
   <url>
     <loc>https://kernel.meizu.com/2016/07/11/linux-process-stop.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
-    
-    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
     
     <lastmod>2023-06-15T07:55:41.883Z</lastmod>
     

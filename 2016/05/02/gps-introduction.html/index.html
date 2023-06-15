@@ -256,12 +256,12 @@
 <p>WIFI 定位原理：扫描周围所有的 AP，获取 AP 的 MAC Address (说明下，不是 IP Address 哦)，在连网前提下，就可以去地图服务器（比如 Baidu 地图服务器，有这些 MAC Address 的经纬度）查询这些 MAC Address 的座标，并结合每个 AP 的信号强弱，计算出手机的大致地理位置并返回给用户（ Baidu 地图），从而完成定位</p>
 <h3 id="AGPS定位"><a href="#AGPS定位" class="headerlink" title="AGPS定位"></a>AGPS定位</h3><p>AGPS 是标准的在线辅助手段，简单点说就是 GPS + 辅助数据，需要额外的辅助服务器支持。</p>
 <p>原理：通过网络连接到 AGPS SERVER，从 AGPS SERVER 获取辅助数据（包括参考时间，参考位置，星历和历书），从而缩小 TTFF （Time To First Fix，首次定位时间）</p>
-<p>如图： <img src="/images/posts/2016/05/agps.png" alt="AGPS"></p>
+<p>如图： <img src="agps.png" alt="AGPS"></p>
 <h3 id="离线辅助定位"><a href="#离线辅助定位" class="headerlink" title="离线辅助定位"></a>离线辅助定位</h3><p>通过预测技术，将未来 N 天所有 GPS 卫星的 ephemeris （星历数据）放到 XX 服务器，然后手机端可以从该 XX 服务器下载，这样，在没有 A-GPS 去 supl 服务器下载卫星星历数据的情况下，也可以实现快速定位。<br>其存在目的就是缩小TTFF，提高定位速度。</p>
 <p>比如 MTK EPO 原理：通过预测技术，将未来 30 天所有 GPS 卫星的 ephemeris 放到 mtk 服务器（epo.mediatek.com），当打开 GPS 和网络时，就会去下载预测的未来 30 天内所有卫星星历，15 天后只要在打开 GPS 和网络前提下就会自动去同步一下。</p>
-<p>如图：<img src="/images/posts/2016/05/epo.png" alt="epo"></p>
+<p>如图：<img src="epo.png" alt="epo"></p>
 <h2 id="Android5-1-上的-MTK-GPSandroid-book"><a href="#Android5-1-上的-MTK-GPSandroid-book" class="headerlink" title="Android5.1 上的 MTK GPSandroid_book"></a>Android5.1 上的 MTK GPS<sup><a href="#fn_android_book" id="reffn_android_book">android_book</a></sup></h2><p>下图是 Android 5.1 上 GPS 代码框架图：</p>
-<p><img src="/images/posts/2016/05/gps_introduction.png" alt="Android5.1 上的 MTK GPS"></p>
+<p><img src="gps_introduction.png" alt="Android5.1 上的 MTK GPS"></p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><blockquote id="fn_android_book">
 <sup>android_book</sup>. 《深入理解 Android：Wi-Fi，NFC 和 GPS》第九章 深入理解 GPS<a href="#reffn_android_book" title="Jump back to footnote [android_book] in the text."> &#8617;</a>
 </blockquote>

@@ -279,9 +279,9 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">static inline void tick_irq_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">#ifdef CONFIG_NO_HZ_COMMON</span><br><span class="line">	int cpu &#x3D; smp_processor_id();</span><br><span class="line"></span><br><span class="line">	&#x2F;* Make sure that timer wheel updates are propagated *&#x2F;</span><br><span class="line">	if ((idle_cpu(cpu) &amp;&amp; !need_resched()) || tick_nohz_full_cpu(cpu)) &#123;</span><br><span class="line">		if (!in_interrupt())</span><br><span class="line">			tick_nohz_irq_exit();</span><br><span class="line">	&#125;</span><br><span class="line">#endif</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>如果有别的进程需要运行，<code>need_resched()</code> 就会为 1，就不能进入 tick_nohz_irq_exit 函数，也就无法停掉若干 tick，下次唤醒的时间就还是一个 tick_period。</p>
 <p>没有使能 tickless，tick 周期性产生，如下图所示：</p>
-<p><img src="/images/posts/2016/07/tick.jpg" alt="Tick"></p>
+<p><img src="tick.jpg" alt="Tick"></p>
 <p>配置了 tickless，tick 会被停掉若干时间，变得没有规律，如下图所示：</p>
-<p><img src="/images/posts/2016/07/tickless.jpg" alt="Tickless"></p>
+<p><img src="tickless.jpg" alt="Tickless"></p>
 
                 
                 <hr>

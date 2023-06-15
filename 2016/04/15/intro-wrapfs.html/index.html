@@ -250,7 +250,7 @@
                 post-container">
 
                 <h2 id="初识-WrapFS"><a href="#初识-WrapFS" class="headerlink" title="初识 WrapFS"></a>初识 WrapFS</h2><p>WrapFS 是一种堆栈式文件系统，堆栈式文件系统的一个基本功能就是把操作和参数转换成底层文件系统的操作和参数。这就意味着我们会在 WrapFS 层上创建一个文件对象后会在底层文件对应着创建一个对象，要说明的是，WrapFS 层的这个文件对象只保存在内存里面，断电后会消失，真正文件里面的数据保存在底层文件系统里面。</p>
-<p><img src="/images/posts/2016/04/wrapfs.gif" alt="wrapfs"></p>
+<p><img src="wrapfs.gif" alt="wrapfs"></p>
 <h2 id="WrapFS-的意义"><a href="#WrapFS-的意义" class="headerlink" title="WrapFS 的意义"></a>WrapFS 的意义</h2><p>从 WrapFS 的发明者有这样的回答：</p>
 <ul>
 <li>WrapFS 是一种理想的小模板，可以修改，逐步改造出新的文件系统功能。</li>
@@ -258,7 +258,7 @@
 <li>WrapFS 可以当作学习 VFS，或学习如何写新的 Linux 文件系统的一个好工具。</li>
 <li>在 Android 里面，采用的是 FUSE 文件系统，FUSE 文件系统的最终实现是在用户空间，这样导致一个文件操作会两次跨越用户空间和内核空间，导致效率降低，但是 WrapFS 不会有这个问题，其性能接近底层文件系统的实际性能.</li>
 </ul>
-<p><img src="/images/posts/2016/04/wrapfs-layer.gif" alt="wrapfs-layer"></p>
+<p><img src="wrapfs-layer.gif" alt="wrapfs-layer"></p>
 <h2 id="继承角度看-WrapFS"><a href="#继承角度看-WrapFS" class="headerlink" title="继承角度看 WrapFS"></a>继承角度看 WrapFS</h2><p>从面向对象的角度来看，WrapFS 继承自底层文件系统，并且新增加了一下类成员，重写了一些 VFS 层的方法。</p>
 <h2 id="文件系统-mount"><a href="#文件系统-mount" class="headerlink" title="文件系统 mount"></a>文件系统 mount</h2><p>WrapFS 的 mount 方法为:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -t wrapfs &#x2F;some&#x2F;lower&#x2F;path &#x2F;mnt&#x2F;wrapfs</span><br></pre></td></tr></table></figure>
