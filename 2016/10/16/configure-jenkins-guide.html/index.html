@@ -288,7 +288,7 @@
 <p>设置发送配置：在系统设置，邮件通知中，添加 Jenkins 发送人信息。需注意的是，这里使用 SMTP 认证的邮件用户名应与 Jenkins Location 中的系统管理员邮件地址一致，否则会无法使用。设置后可通过发送测试邮件测试配置，</p>
 <p>如能正常受到邮件，则账户设置成功。</p>
 <p>设置邮件默认格式：系统设置中找到 Extended E-mail Notification 配置发送信息</p>
-<p><img src="images/posts/2016/10/defalut_Notification.png" alt="默认邮件配置"></p>
+<p><img src="defalut_Notification.png" alt="默认邮件配置"></p>
 <p>其中 Default Recipients 为默认的邮件接收对象，Default Subject 为邮件标题，Default Content 为邮件内容。</p>
 <p>变量是一个以 $( 美元符号 ) 开始，并以空格结束的字符串。当一个邮件触发时，主题和内容主体字段的所有变量都会通过真实的值动态地替换。同样，变量中的“值”能包含其它的变量，都将被替换成真实的内容。</p>
 <p>常用的属性如下 :</p>
@@ -303,10 +303,10 @@
 <li>Role-based Authorization Strategy : 用户权限管理插件<br>安装此插件后，需在系统管理的 Configure Global Security 中的授权策略勾选 Role-Based Strategy，在系统管理页面会多出一个 Manage and Assign Roles 选项，点击该选项，可以看到 Manage Roles 和 Assign Roles 这两个选项，通过它俩，便可以根据需求设置用户的相关权限。</li>
 </ul>
 <p>首先设置各角色的权限，点击 Manage Roles，如下图</p>
-<p><img src="images/posts/2016/10/manage_roles.png" alt="角色权限管理"></p>
+<p><img src="manage_roles.png" alt="角色权限管理"></p>
 <p>需要注意的是在 Global roles 的权限设置会覆盖 Project roles 中的权限，例如一个账户的 Global roles 具有 Job 的 read 权限 ，那么不管这个账户的 Project roles 怎么设置，它都会具备所有 Job 的 read 权限。在 Project roles 有个 Pattern 选项，该选项可设置角色对不同项目的访问权限，如填写 M.* ，表示设置的权限仅对项目名以 M 开头的有效。</p>
 <p>在 Manage Roles 中设置完角色权限后，方可进入 Assign Roles 界面，给用户分配角色，如下图</p>
-<p><img src="images/posts/2016/10/Assign_roles.png" alt="角色分配"></p>
+<p><img src="Assign_roles.png" alt="角色分配"></p>
 <h2 id="三-建立项目"><a href="#三-建立项目" class="headerlink" title="三 . 建立项目"></a>三 . 建立项目</h2><p>以建立可以实现 Android 系统编译的项目为例，简单介绍项目的建立过程</p>
 <ul>
 <li><p>新建项目，选择“构建一个自由风格的软件项目”</p>
@@ -351,66 +351,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

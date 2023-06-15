@@ -253,7 +253,7 @@
 
                 <h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>在传感器数据融合以及工业测量中，常常需要对已知的数据或者是已知的结构的特征参数进行检测，来评估数据的信噪比或者结构的质量是否符合产品的需求。一般的，可以通过记录大量数据或者通过结构的离散点，来反解出它的特征参数。<br>以球面为例，这些特征参数可以是球的半径，或者是球心等。对于球体拟合算法，通常有代数拟合和几何拟合。在本例中，以一般的代数拟合方法为主进行介绍。</p>
 <h2 id="原理分析"><a href="#原理分析" class="headerlink" title="原理分析"></a>原理分析</h2><p>以下图的数据为例，我们可以明显看出这些数据“可能”是一个球体，那么我们应该如何来得到这个球体的半径以及球心？</p>
-<p><img src="/images/posts/2016/06/pic1.png" alt="拟合前示意图"></p>
+<p><img src="pic1.png" alt="拟合前示意图"></p>
 <p>从如此多的数据中很明显可以看到，最后的执行方程组肯定是超定方程组。正常来看，超定方程组是没有解的，但在数值计算领域我们可以以最优解的形式来获得我们想要的参数。正所谓，有总比没有好，迟到总比不到好，是吧。</p>
 <p>话不多说，原始数据经过剔除异常点以及滤波之后，我们假设这些离散点为</p>
 <p>Pi = (Xi,Yi,Zi), i = 1，2，…，n</p>
@@ -261,13 +261,13 @@
 <p>(x-a)^2 + (y-b)^2 + (z-c)^2 = r^2</p>
 <p>以 Di 表示离散点 Pi 到 m 的距离，即</p>
 <p>Di^2 = (Xi-a)^2 + (Yi-b)^2 + (Zi-c)^2, i = 1，2，…，n。</p>
-<p>令残差平方和 S = <img src="/images/posts/2016/06/chart.png" alt=""><br>其中 i = 1，2，…，n。</p>
+<p>令残差平方和 S = <img src="chart.png" alt=""><br>其中 i = 1，2，…，n。</p>
 <p>为了选取最合适的让该等式”尽量成立”，只需要让 S 为最小值即可。也就是说，b` = argmin(S)。而且很明显，S 肯定存在大于或等于 0 的极小值。由逼近算法可以罗列出超定方程组，在这里，我们将球的标准方程展开然后代入 S 中，将 S 对其中的未知数求偏导，令偏导为 0，得到极值点，比较之后即可得到最小值。由于解方程是比较基础的内容，本例中就不罗列出来了。</p>
 <p>这个时候，就可以将 b` 中的数据直接代入球的标准方程，看看是否得到了我们想要的球面。一般的，可以直接得到比较好的球面了。</p>
 <h2 id="误差分析"><a href="#误差分析" class="headerlink" title="误差分析"></a>误差分析</h2><p>这个时候还没有结束，我们还需要对我们所得到的球面进行评定，看看是否误差在允许的范围之内，这个范围取决于个人或者组织对产品的定义。我们可以将所得到的最优解 b` 以及离散点Pi的均方误差作为评定的参考，假如均方误差不在允许范围之内，可以再次进行剔除异常值还有滤波，一直迭代，直到数据满足要求。</p>
 <h2 id="原理扩展"><a href="#原理扩展" class="headerlink" title="原理扩展"></a>原理扩展</h2><p>从上述例子中，我们可以知道，该算法不仅可以从大量已知数据得出最优解，也可以从四个不共面的点来确定一球面，甚至可以通过结构的球冠来得到最匹配的球面。</p>
 <p>下图是经过剔除异常值并且滤波之后，由上述逼近算法拟合得到的最优解。</p>
-<p><img src="/images/posts/2016/06/pic2.png" alt="最优解拟合图"></p>
+<p><img src="pic2.png" alt="最优解拟合图"></p>
 <h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>这个案例还比较容易，因为仅有 4 个未知量，而且也不需要考虑三维空间旋转。如果大伙搞懂了这个，下次再来给大伙讲讲二次曲面/椭球拟合算法（结合三维空间旋转，大概 10 个未知数）或者扩展卡尔曼滤波结合四元数进行姿态解算。</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>《概率论与数理统计》（第 4 版）盛骤</p>
 
@@ -300,66 +300,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

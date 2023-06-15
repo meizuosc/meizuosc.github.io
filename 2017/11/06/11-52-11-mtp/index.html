@@ -247,12 +247,12 @@
 
                 <h2 id="mtp简介"><a href="#mtp简介" class="headerlink" title="mtp简介"></a>mtp简介</h2><p>MTP，全称是 Media Transfer Protocol（媒体传输协议）。它是微软的一个为计算机和便携式设备之间传输图像、音乐等所定制的协议。</p>
 <p>Android 从3.0开始支持 MTP。MTP 的应用分两种角色，一个是作为 Initiator，另一个作为 Responder 。以”Android 平板电脑”连接 PC 为例，他们的关系如图所示。</p>
-<p><img src="/images/posts/2017/11/2.png" alt="mtp_2"></p>
+<p><img src="2.png" alt="mtp_2"></p>
 <p>Initiator —— 在 MTP 中所有的请求都有 Initiator 发起。例如，PC 请求获取 Android 平板电脑上的文件数据。</p>
 <p>Responder —— 它会处理 Initiator 的请求；除此之外，Responder 也会发送 Event 事件。</p>
 <p>这里要注意的是：对于一个 MTP 事件，比如从 PC 拷贝数据到 Android 手机中，整个数据处理是双向通信的。</p>
 <h2 id="mtp-框架"><a href="#mtp-框架" class="headerlink" title="mtp 框架"></a>mtp 框架</h2><p>来张经典的 Android 框架图：</p>
-<p><img src="/images/posts/2017/11/1.jpg" alt="mtp_frame"></p>
+<p><img src="1.jpg" alt="mtp_frame"></p>
 <p>从图中可以看到，在 kernel 层中分为 MTP 驱动和 USB 驱动，其实呢，真正和底层直接通信的依然是 USB 驱动负责，MTP 驱动只是负责将数据进行打包封装，然后作为一层分别与上层和 USB 之间进行通信。</p>
 <p>再来看一下 JNI 层，那，如果要对 MTP 进行定制化的开发，这一层就需要额外的关注了。相关的源码位置位于：frameworks/av/media/mtp frameworks/base/media/jni/目录下</p>
 <p>在 JNI 层，MtpServer 会不断地监听 Kernel 的消息”MTP 请求”，并对相应的消息进行相关处理。同时，MTP 的 Event 事件也是通过 MtpServer 发送给 MTP 驱动的。 MtpStorage 对应一个”存储单元”；例如，SD 卡就对应一个 MtpStorage。 MtpPacket 和 MtpEventPacket 负责对 MTP 消息进行打包。android_mtp_MtpServer 是一个 JNI 类，它是”JNI 层的 MtpServer 和 Java 层的 MtpServer “沟通的桥梁。android_mtp_MtpDatabase 也是一个 JNI 类，JNI 层通过它实现了对 MtpDatabase (Framework 层)的操作。</p>
@@ -303,66 +303,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

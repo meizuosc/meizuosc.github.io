@@ -250,7 +250,7 @@
                 post-container">
 
                 <p>ISP(Image Signal Processor)，即图像信号处理器，用于处理图像信号传感器输出的图像信号。它在相机系统中占有核心主导的地位，是构成相机的重要设备。</p>
-<h2 id="主要内部构成"><a href="#主要内部构成" class="headerlink" title="主要内部构成"></a>主要内部构成</h2><p>如下图所示，ISP 内部包含 CPU、SUP IP、IF 等设备，事实上，可以认为 ISP 是一个 SOC，可以运行各种算法程序，实时处理图像信号。<br><img src="/images/posts/2016/06/isp_archi.PNG" alt="ISP 架构"></p>
+<h2 id="主要内部构成"><a href="#主要内部构成" class="headerlink" title="主要内部构成"></a>主要内部构成</h2><p>如下图所示，ISP 内部包含 CPU、SUP IP、IF 等设备，事实上，可以认为 ISP 是一个 SOC，可以运行各种算法程序，实时处理图像信号。<br><img src="isp_archi.PNG" alt="ISP 架构"></p>
 <ul>
 <li><p>CPU</p>
 <p>CPU 即中央处理器，可以运行 AF、LSC 等各种图像处理算法，控制外围设备。现代的 ISP 内部的 CPU 一般都是 ARM Cortex-A 系列的，例如 Cortex-A5、Cortex-A7。</p>
@@ -266,7 +266,7 @@
 </li>
 </ul>
 <h2 id="主要功能特性"><a href="#主要功能特性" class="headerlink" title="主要功能特性"></a>主要功能特性</h2><p>ISP 作为图像处理的核心器件，拥有十分重要的功能，下图展示了 ISP 处理图像数据的基本流程。</p>
-<p><img src="/images/posts/2016/06/isp_process.jpg" alt="ISP 处理流程"></p>
+<p><img src="isp_process.jpg" alt="ISP 处理流程"></p>
 <p>下面针对 ISP 的主要功能特性进行下介绍。</p>
 <ul>
 <li><p>DEMOSAIC</p>
@@ -318,7 +318,7 @@
 </ul>
 <h2 id="ISP-架构方案"><a href="#ISP-架构方案" class="headerlink" title="ISP 架构方案"></a>ISP 架构方案</h2><p>上文多次提到外置 ISP 和内置 ISP，这实际上是 ISP 的架构方案。</p>
 <h3 id="外置-ISP-架构"><a href="#外置-ISP-架构" class="headerlink" title="外置 ISP 架构"></a>外置 ISP 架构</h3><p>外置 ISP 架构是指在 AP 外部单独布置 ISP 芯片用于图像信号处理。外置 ISP 的架构图一般如下所示：</p>
-<p><img src="/images/posts/2016/06/isp_ext.PNG" alt="外置 ISP 架构图"></p>
+<p><img src="isp_ext.PNG" alt="外置 ISP 架构图"></p>
 <p>外置 ISP 架构的优点主要有：</p>
 <ul>
 <li><p>能够提供更优秀的图像质量</p>
@@ -341,7 +341,7 @@
 </li>
 </ul>
 <h3 id="内置-ISP-架构"><a href="#内置-ISP-架构" class="headerlink" title="内置 ISP 架构"></a>内置 ISP 架构</h3><p>内置 ISP 架构是指在 AP 内部嵌入了 ISP IP，直接使用 AP 内部的 ISP 进行图像信号处理。<br>内置 ISP 的架构图一般如下所示：</p>
-<p><img src="/images/posts/2016/06/isp_int.PNG" alt="内置 ISP 架构图"></p>
+<p><img src="isp_int.PNG" alt="内置 ISP 架构图"></p>
 <p>内置 ISP 架构的优点主要有：</p>
 <ul>
 <li><p>能降低成本价格</p>
@@ -390,66 +390,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

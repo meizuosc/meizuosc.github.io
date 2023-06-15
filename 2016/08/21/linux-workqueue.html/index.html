@@ -263,7 +263,7 @@
 <li>worker_pool：工人的集合。worker_pool 和 worker 是一对多的关系。</li>
 <li>pwq(pool_workqueue)：中间人 / 中介，负责建立起 workqueue 和 worker_pool 之间的关系。workqueue 和 pwq 是一对多的关系，pwq 和 worker_pool 是一对一的关系。</li>
 </ul>
-<p><img src="/images/posts/2016/08/wq_topology.png" alt="normal wq_topology"></p>
+<p><img src="wq_topology.png" alt="normal wq_topology"></p>
 <p>最终的目的还是把 work( 工作 ) 传递给 worker( 工人 ) 去执行，中间的数据结构和各种关系目的是把这件事组织的更加清晰高效。</p>
 <h3 id="1-1-worker-pool"><a href="#1-1-worker-pool" class="headerlink" title="1.1 worker_pool"></a>1.1 worker_pool</h3><p>每个执行 work 的线程叫做 worker，一组 worker 的集合叫做 worker_pool。CMWQ 的精髓就在 worker_pool 里面 worker 的动态增减管理上 <code>manage_workers()</code>。</p>
 <p>CMWQ 对 worker_pool 分成两类：</p>
@@ -277,9 +277,9 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">snprintf</span>(id_buf, <span class="keyword">sizeof</span>(id_buf), <span class="string">"%d:%d%s"</span>, pool-&gt;cpu, id,</span><br><span class="line">	 pool-&gt;attrs-&gt;nice &lt; <span class="number">0</span>  ? <span class="string">"H"</span> : <span class="string">""</span>);</span><br><span class="line"></span><br><span class="line">worker-&gt;task = kthread_create_on_node(worker_thread, worker, pool-&gt;node,</span><br><span class="line">				      <span class="string">"kworker/%s"</span>, id_buf);</span><br></pre></td></tr></table></figure>
 <p>so 类似名字是 normal worker_pool：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">shell@PRO5:&#x2F; $ ps | grep &quot;kworker&quot;</span><br><span class="line">root      14    2     0      0     worker_thr 0000000000 S kworker&#x2F;1:0H		&#x2F;&#x2F; cpu1 高优先级 worker_pool 的第 0 个 worker 进程</span><br><span class="line">root      17    2     0      0     worker_thr 0000000000 S kworker&#x2F;2:0		&#x2F;&#x2F; cpu2 低优先级 worker_pool 的第 0 个 worker 进程</span><br><span class="line">root      18    2     0      0     worker_thr 0000000000 S kworker&#x2F;2:0H		&#x2F;&#x2F; cpu2 高优先级 worker_pool 的第 0 个 worker 进程</span><br><span class="line">root      23699 2     0      0     worker_thr 0000000000 S kworker&#x2F;0:1		&#x2F;&#x2F; cpu0 低优先级 worker_pool 的第 1 个 worker 进程</span><br></pre></td></tr></table></figure>
-<p><img src="/images/posts/2016/08/wq_worker_pool.png" alt="normal worker_pool"></p>
+<p><img src="wq_worker_pool.png" alt="normal worker_pool"></p>
 <p>对应的拓扑图如下：</p>
-<p><img src="/images/posts/2016/08/wq_normal_wq_topology.png" alt="normal worker_pool topology"></p>
+<p><img src="wq_normal_wq_topology.png" alt="normal worker_pool topology"></p>
 <p>以下是 normal worker_pool 详细的创建过程代码分析：</p>
 <ul>
 <li>kernel/workqueue.c:</li>
@@ -296,15 +296,15 @@
 <ul>
 <li>unbound_std_wq。每个 node 对应一个 worker_pool，多个 node 就对应多个 worker_pool;</li>
 </ul>
-<p><img src="/images/posts/2016/08/wq_unbound_std_wq.png" alt="unbound worker_pool: unbound_std_wq"></p>
+<p><img src="wq_unbound_std_wq.png" alt="unbound worker_pool: unbound_std_wq"></p>
 <p>对应的拓扑图如下：</p>
-<p><img src="/images/posts/2016/08/wq_unboundstd_wq_topology.png" alt="unbound_std_wq topology"></p>
+<p><img src="2016/08/wq_unboundstd_wq_topology.png" alt="unbound_std_wq topology"></p>
 <ul>
 <li>ordered_wq。所有 node 对应一个 default worker_pool；</li>
 </ul>
-<p><img src="/images/posts/2016/08/wq_ordered_wq.png" alt="unbound worker_pool: ordered_wq"></p>
+<p><img src="wq_ordered_wq.png" alt="unbound worker_pool: ordered_wq"></p>
 <p>对应的拓扑图如下：</p>
-<p><img src="/images/posts/2016/08/wq_ordered_wq_topology.png" alt="ordered_wq topology"></p>
+<p><img src="wq_ordered_wq_topology.png" alt="ordered_wq topology"></p>
 <p>以下是 unbound worker_pool 详细的创建过程代码分析：</p>
 <ul>
 <li>kernel/workqueue.c:</li>
@@ -337,7 +337,7 @@
 <li>如果没有 work 需要执行，会让所有 worker 进入 idle 状态；</li>
 <li>如果创建的 worker 过多，destroy_worker 在 300s(IDLE_WORKER_TIMEOUT) 时间内没有再次运行的 idle worker。</li>
 </ul>
-<p><img src="/images/posts/2016/08/wq_worker_statusmachine.png" alt="worker status machine"></p>
+<p><img src="wq_worker_statusmachine.png" alt="worker status machine"></p>
 <p>详细代码可以参考上节 <code>worker_thread()</code> -&gt; <code>process_one_work()</code> 的分析。</p>
 <p>为了追踪 worker 的 running 和 suspend 状态，用来动态调整 worker 的数量。wq 使用在进程调度中加钩子函数的技巧：</p>
 <ul>
@@ -442,66 +442,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

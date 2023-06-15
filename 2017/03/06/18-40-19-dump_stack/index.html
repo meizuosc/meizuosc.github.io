@@ -251,7 +251,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">[    4.778339] &lt;1&gt;-(1)[258:charger_thread]CPU: 1 PID: 258 Comm: charger_thread Tainted: G        W       4.4.15+ #50</span><br><span class="line"></span><br><span class="line">[    4.778342] &lt;1&gt;-(1)[258:charger_thread]Hardware name: MT67XX</span><br><span class="line"></span><br><span class="line">[    4.778345] &lt;1&gt;-(1)[258:charger_thread]Call trace:</span><br><span class="line"></span><br><span class="line">[    4.778347] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc00008a40c&gt;] dump_backtrace+0x0&#x2F;0x14c</span><br><span class="line"></span><br><span class="line">[    4.778354] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc00008a56c&gt;] show_stack+0x14&#x2F;0x1c</span><br><span class="line"></span><br><span class="line">[    4.778358] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc000368930&gt;] dump_stack+0x8c&#x2F;0xb0</span><br><span class="line"></span><br><span class="line">[    4.778364] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc000852140&gt;] ipanic_die+0x50&#x2F;0x104</span><br><span class="line"></span><br><span class="line">[    4.778368] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc0000bfd94&gt;] notifier_call_chain+0x88&#x2F;0x2d4</span><br><span class="line"></span><br><span class="line">[    4.778374] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc0000c08d4&gt;] notify_die+0x48&#x2F;0x5c</span><br><span class="line"></span><br><span class="line">[    4.778377] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc00008a60c&gt;] die+0x98&#x2F;0x1b8</span><br><span class="line"></span><br><span class="line">[    4.778381] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc000099ab4&gt;] __do_kernel_fault.part.6+0x74&#x2F;0x90</span><br><span class="line"></span><br><span class="line">[    4.778386] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc000097cbc&gt;] do_page_fault+0x2e8&#x2F;0x2f8</span><br><span class="line"></span><br><span class="line">[    4.778392] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc000097d84&gt;] do_translation_fault+0xb8&#x2F;0xe0</span><br><span class="line"></span><br><span class="line">[    4.778396] &lt;1&gt;-(1)[258:charger_thread][&lt;ffffffc0000822bc&gt;] do_mem_abort+0x40&#x2F;0xa0</span><br></pre></td></tr></table></figure>
 <p>从打印可以清晰的了解程序到底发生了什么，这是一个很好用的函数，那么今天我们就来透过现象看本质，看看这个函数到底是何方神圣，怎么来实现这种功能的。</p>
 <h2 id="2-实现分析"><a href="#2-实现分析" class="headerlink" title="2 实现分析"></a>2 实现分析</h2><p>通过 grep，发现 dump_stack 函数原型存在于 kernel/lib/dump_stack.c 文件中（注：笔者使用的是 4.4 版本的代码）。它的实现流程如下图所示：</p>
-<p><img src="/images/posts/2017/03/dump_stack.png" alt="dump_stack"></p>
+<p><img src="dump_stack.png" alt="dump_stack"></p>
 <p>可以看到关键的两个函数分别是 dump_stack_print_info 和 show_stack 。其中第一个函数是用来打印 info 信息的，而第二个函数是用来打印 Call trace 的。</p>
 <p><strong>Step 1: dump_stack_print_info</strong></p>
 <p>第一部分主要实现 print info ，函数比较简单，我们直接看代码：</p>
@@ -307,7 +307,7 @@ void dump_stack_print_info(const char *log_lvl)
 
 <p><strong>Step 2: show_stack</strong></p>
 <p>第二部分的主要功能是实现 Call trace ，它的执行流程如下：</p>
-<p><img src="/images/posts/2017/03/show_dump.png" alt="show_stack"></p>
+<p><img src="show_dump.png" alt="show_stack"></p>
 <p> unwind_frame 是判断是否到达栈底的函数，一个线程堆栈大小为 THREAD_SIZE，SP 寄存器存储的是栈顶，由此可以找到对应的栈底，如果没有到堆栈底部，则每次持续打印出相关的函数调用列表。</p>
 <p>接下来就是另一个关键函数 dump_backtrace_entry ，看一下它的代码：</p>
 <pre><code>
@@ -370,66 +370,6 @@ static inline void print_ip_sym(unsigned long ip)
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

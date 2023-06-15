@@ -256,7 +256,7 @@
 <h4 id="TEE-软件交互基础组件简介"><a href="#TEE-软件交互基础组件简介" class="headerlink" title="TEE 软件交互基础组件简介"></a><strong>TEE 软件交互基础组件简介</strong></h4><ul>
 <li>TEE 系统软件从整体上包含 REE 和 TEE 两部分，各自对应的基础组件如图1所示。</li>
 </ul>
-<p><img src="./images/posts/2017/12/ca2ta_arch.png" alt="图1: TEE 系统软件组成" title="图1: TEE 系统软件组成"></p>
+<p><img src="ca2ta_arch.png" alt="图1: TEE 系统软件组成" title="图1: TEE 系统软件组成"></p>
 <ul>
 <li>REE 部分 Client Applications（CA） 一般是指指纹录入，支付应用等上层应用，其通过调用 TEE Client API 接口来与 TEE 环境的 Trusted OS 进行交互，这里的 TEE Client API 包括 TEE 厂商自定义的一些接口或 GlobalPlatform（GP） 全球组织定义的通用 API，其目的是制定一套标准的编程接口，方便开发者在不同软硬件平台下使用同一套代码实现其功能。</li>
 <li>TEE Client API 通过 ioctl 系统调用对 TEE Driver 进行操作，TEE Driver 是沟通 REE 和 TEE 的桥梁，其通过 SMC 指令，实现将上层的 OpenSession，InvokeCommand，CloseSession 等标准调用的请求转发到 TEE 环境，同时其也会处理来自 TEE 的请求，将请求转发到 TEE Helper Daemon 让其处理。</li>
@@ -284,10 +284,10 @@
 <li>TA 在 TEE 环境下执行处理，得到的处理结果重新填充到共享内存中，CA 通过共享内存就可以获取到处理结果。</li>
 <li>获得处理结果后，如不需要进一步请求，则由 CA 发起关闭 Session 的请求（CloseSession），Trusted OS 回收 TA 相关资源，最后 CA 发起销毁 Context 的请求（FinalizeContext），完成一次完整交互。</li>
 </ol>
-<p><img src="./images/posts/2017/12/arch-of-tee-plat-de.png" alt="图2: TEE 软件交互逻辑" title="图2: TEE 软件交互逻辑"></p>
+<p><img src="arch-of-tee-plat-de.png" alt="图2: TEE 软件交互逻辑" title="图2: TEE 软件交互逻辑"></p>
 <p>从以上流程可以看到，整个交互流程主要涉及 InitializeContext，OpenSession，InvokeCommand，CloseSession 和 FinalizeContext 5个操作。<br>InitializeContext 用于 Trusted OS 分配 TA 运行需要的安全内存，FinalizeContext 则是销毁相应内存，具体流程分别与 OpenSession 和 CloseSession 类似，本文将不对这两个操作赘述。<br>下面看看 OpenSession，InvokeCommand 和 CloseSession 这几个操作下，各个基础组件的交互时序。</p>
 <p>OpenSession 时序如图3所示，操作步骤如下:</p>
-<p><img src="./images/posts/2017/12/ca2ta_os.png" alt="图3: OpenSession 时序图" title="图3: OpenSession 时序图"></p>
+<p><img src="ca2ta_os.png" alt="图3: OpenSession 时序图" title="图3: OpenSession 时序图"></p>
 <ol>
 <li>CA 经过 TEE Client API 向 TEE Driver 发送 OpenSession 请求。</li>
 <li>TEE Driver 发送 OpenSession SMC 请求到 Trusted OS，此请求中包含要请求 TA 的唯一标识号（UUID）。</li>
@@ -298,8 +298,8 @@
 <li>最后，Trusted OS 将分配的 Session 句柄逐级返回，最终 CA 拿到 Session 句柄，以后的 InvokeCommand 将需要依赖此句柄进行调用。</li>
 </ol>
 <p>InvokeCommand 和 CloseSession 的流程与 OpenSession 流程相似，差别在于少了 load TA 的流程，时序图如图4和图5所示。</p>
-<p><img src="./images/posts/2017/12/ca2ta_ic.png" alt="图4: InvokeCommand 时序图" title="图4: InvokeCommand 时序图"></p>
-<p><img src="./images/posts/2017/12/ca2ta_cs.png" alt="图5: CloseSession 时序图" title="图5: CloseSession 时序图"></p>
+<p><img src="ca2ta_ic.png" alt="图4: InvokeCommand 时序图" title="图4: InvokeCommand 时序图"></p>
+<p><img src="ca2ta_cs.png" alt="图5: CloseSession 时序图" title="图5: CloseSession 时序图"></p>
 <h4 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a><strong>参考资料</strong></h4><blockquote id="fn_1">
 <sup>1</sup>. <a href="http://kernel.meizu.com/2017/08/17-33-25-tee_fp.html">指纹 TEE</a><a href="#reffn_1" title="Jump back to footnote [1] in the text."> &#8617;</a>
 </blockquote>
@@ -342,66 +342,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

@@ -264,10 +264,10 @@
 <ul>
 <li>kernel/kthread.c:</li>
 </ul>
-<p><img src="/images/posts/2016/07/stop_kthread_create.png" alt="kthread_create"></p>
+<p><img src="stop_kthread_create.png" alt="kthread_create"></p>
 <h3 id="1-2-内核进程的-stop"><a href="#1-2-内核进程的-stop" class="headerlink" title="1.2 内核进程的 stop"></a>1.2 内核进程的 stop</h3><p>如果内核进程需要支持 <code>kthread_stop()</code>，需要根据以下框架来写代码。用户在主循环中调用 <code>kthread_should_stop()</code> 来判断当前 kthread 是否需要 stop，如果被 stop 则退出循环。</p>
 <p>这种代码为什么不做到通用代码 <code>kthread()</code> 中？这应该是和 Linux 的设计思想相关的。Linux 运行内核态的策略比较灵活，而对用户态的策略更加严格统一。</p>
-<p><img src="/images/posts/2016/07/stop_kthread_should_stop.png" alt="kthread_should_stop"></p>
+<p><img src="stop_kthread_should_stop.png" alt="kthread_should_stop"></p>
 <p><code>kthread_should_stop()</code> 和 <code>kthread_stop()</code> 的代码实现：</p>
 <ul>
 <li>kernel/kthread.c:</li>
@@ -287,7 +287,7 @@
 <li>kernel/smpboot.c:</li>
 <li>kernel/kthread.c:</li>
 </ul>
-<p><img src="/images/posts/2016/07/stop_smpboot_register.png" alt="smpboot_register_percpu_thread"></p>
+<p><img src="stop_smpboot_register.png" alt="smpboot_register_percpu_thread"></p>
 <p>我们可以看到 smpboot_register 又增加了一层封装：<code>kthread()</code> -&gt; <code>smpboot_thread_fn()</code> -&gt; <code>ht-&gt;thread_fn()</code>，这种封装的使用可以参考 cpu_stop_threads。</p>
 <ul>
 <li>kernel/stop_machine.c:</li>
@@ -302,12 +302,12 @@
 <ul>
 <li>kernel/smpboot.c:</li>
 </ul>
-<p><img src="/images/posts/2016/07/stop_park_hotplug.png" alt="park_hotplug"></p>
+<p><img src="stop_park_hotplug.png" alt="park_hotplug"></p>
 <h2 id="3-进程-freeze"><a href="#3-进程-freeze" class="headerlink" title="3. 进程 freeze"></a>3. 进程 freeze</h2><p>在系统进入 suspend 的时候，会尝试冻住一些进程，以避免一些进程无关操作影响系统的 suspend 状态。主要的流程如下：</p>
 <ul>
 <li>kernel/power/suspend.c:</li>
 </ul>
-<p><img src="/images/posts/2016/07/stop_pm_suspend.png" alt="suspend_freeze_processes"></p>
+<p><img src="stop_pm_suspend.png" alt="suspend_freeze_processes"></p>
 <p>这 suspend_freeze 里面判断当前在那个阶段，有 3 个重要的变量：</p>
 <ul>
 <li>system_freezing_cnt - &gt;0 表示系统全局的 freeze 开始；</li>
@@ -373,66 +373,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 

@@ -282,10 +282,10 @@
 <h3 id="3-2、多级安全"><a href="#3-2、多级安全" class="headerlink" title="3.2、多级安全"></a>3.2、多级安全</h3><p>SELinux 引入的另外一个安全策略是多级安全 (Multi-Level Security)。多级安全是建立在 TE 的基础之上的，这个安全策略在 SELinux 中是可选的，但引入多级安全，不仅是对安全访问的增强，更是因为对于一组对象进行分类访问授权，使用多级安全是非常高效的。在前面所举例子中，proc 和 adbd 都有一个安全级别 s0。</p>
 <p>在多级安全中，主体和客体都有一个关联的安全级别，多级安全的访问规则就是：安全级别较高的主体可以读取安全级别较低的客体；而安全级别较低的主体可以写入安全级别较高的客体。前者称为 “read down”，后者称为 “write up”。通过这种规则，可以允许数据从安全级别较低的客体流向安全级别较高的主体，而限制数据从安全级别较高的客体流向安全级别较低的主体，从而有效的保护了数据。对于安全级别相同的主体和客体，主体对客体的读写都是允许的。</p>
 <p>基于多级安全策略的 MAC 数据流向，如下所示：</p>
-<p><img src="images/posts/2016/08/SELinux_1.png" alt="MAC 数据流向 "></p>
+<p><img src="SELinux_1.png" alt="MAC 数据流向 "></p>
 <p>图中定义来两个安全级别，PUBLIC 和 SECRET，其中，SECRET 安全级别高于 PUBLIC。</p>
 <h2 id="4、总结"><a href="#4、总结" class="headerlink" title="4、总结"></a>4、总结</h2><p>SELinux 原来是作为一个内核补丁实现的，现在已经将 Linux 安全模块（LSM）重新实现为一个安全模块。嵌入到标准 Linux 中的方式是 LSM 提供一套钩子函数 (hook)，MAC 安全策略检查在这些钩子函数中实现。钩子函数通常放在标准 Linux 检查后、内核调用访问真实资源前调用。系统调用进入内核后，会做常规的错误检查 ( 如参数有效性等 )，然后是标准 Linux 的 DAC 检查。MAC 在这些检查都通过之后才会生效。所以，在 SELinux 中，DAC 和 MAC 同时起作用，两者并行而不悖。LSM 具体实现机制及代码解读将在后续文章中介绍。最终 SELinux 的访问控制流程就如下图所示：</p>
-<p><img src="images/posts/2016/08/SELinux_2.png" alt="SELinux 控制流程 "></p>
+<p><img src="SELinux_2.png" alt="SELinux 控制流程 "></p>
 
                 
                 <hr>
@@ -316,66 +316,6 @@
                 <!-- tip end -->
 
                 <!-- Music start-->
-                
-                
-<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/reset.css">
-
-
-<link rel="stylesheet" href="/css/music-player/css/player.css">
-
-
-<div class="music-player">
-    <audio class="music-player__audio" ></audio>
-    <div class="music-player__main">
-        <div class="music-player__blur"></div>
-        <div class="music-player__disc">
-            <div class="music-player__image">
-                <img width="100%" src="" alt="">
-            </div>
-            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
-        </div>
-        <div class="music-player__controls">
-            <div class="music__info">
-                <h3 class="music__info--title">...</h3>
-                <p class="music__info--singer">...</p>
-            </div>
-            <div class="player-control">
-                <div class="player-control__content">
-                    <div class="player-control__btns">
-                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
-                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
-                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
-                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
-                    </div>
-                    <div class="player-control__volume">
-                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
-                        <div class="control__volume--progress player_progress"></div>
-                    </div>
-                </div>
-                <div class="player-control__content">
-                    <div class="player__song--progress player_progress"></div>
-                    <div class="player__song--timeProgess nowTime">00:00</div>
-                    <div class="player__song--timeProgess totalTime">00:00</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<script src="/js/music-player/utill.js"></script>
-
-
-<script src="/js/music-player/jquery.min.js"></script>
-
-<!-- netease; qqkg -->
-<!--
-<script src="/js/music-player/player.js?library=config.music.library.js"></script>
--->
-<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
                 
                 <!-- Music end -->
 
