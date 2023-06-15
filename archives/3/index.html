@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/archives/3/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('/img/header_img/home-bg-1-dark.png') 
+                /*config*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="site-heading">
+                        <h1>魅族内核团队</h1>
+                        <!--<hr class="small">-->
+                        <span id="subdusi" class="subheading">一个有内涵的技术分享平台</span>
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Main Content -->
+<div class="container">
+    <div class="row">
+        
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                post-container
+            ">
+                <!-- Top -->
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+
+<!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/16//linux-thermal-framework-intro.html/">
+                <h2 class="post-title">
+                    Linux Thermal 框架解析 
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    Linux Thermal 是 Linux 系统下温度控制相关的模块，主要用来控制系统运行过程中芯片产生的热量，使芯片温度和设备外壳温度维持在一个安全、舒适的范围。
+那下面我们就来一起看看对于温度控制这样一个需求，Linux 内核是怎么实现的。
+Thermal 的主要框架要实现一个温度控制的需求，试想一下我们是不是最少要有获取温度的设备和控制温度的设备这两个最基本的东西？当然附带的也会产生一......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Zhang Xirui on
+                    2016-07-16
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Thermal" title="Thermal">Thermal</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/11//linux-process-stop.html/">
+                <h2 class="post-title">
+                    Linux 进程中 Stop, Park, Freeze
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    在调试内核的时候，经常会碰到几个相近的概念：进程 stop、进程 park、进程 freeze。这几个名词看起来都是停止进程，那么他们之间的区别和应用场景在分别是什么呢？下面就来分析一番。
+
+本文的代码分析基于 Linux kernel 3.18.22，最好的学习方法还是 “RTFSC”
+
+1. 进程 stop进程 stop 分成两种：用户进程 stop 和内核进程 stop。
+用户进程 s......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2016-07-11
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#kthread_stop" title="kthread_stop">kthread_stop</a>
+                    
+                      <a href="/tags/#kthread_park" title="kthread_park">kthread_park</a>
+                    
+                      <a href="/tags/#freeze_processes" title="freeze_processes">freeze_processes</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/04//linux-signal.html/">
+                <h2 class="post-title">
+                    Linux Signal
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    信号的基本使用场景：使用 ctrl+c 中止一个程序，或者使用 kill pid 命令杀掉一个进程。Linux 信号机制基本上每个同学都用过，但是信号的具体实现机制还是有很多人不清楚的。在很多人的概念中信号是一种异步机制，像中断一样。但是除了硬中断，信号也是由中断实现的吗？如果不是中断，系统又怎么样来利用软件机制模拟类似如异步中断的动作？
+
+本文的代码分析基于 Linux Kernel 3.......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2016-07-04
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#signal" title="signal">signal</a>
+                    
+                      <a href="/tags/#Linux 信号" title="Linux 信号">Linux 信号</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/06/26//lockcreen-password.html/">
+                <h2 class="post-title">
+                    剖析 Android M 锁屏密码存储方式
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    Android M 之前锁屏密码的存储在 Android M 之前，锁屏密码的存储格式很简单，其使用了 64 位随机数作为 salt 值，此 salt 值被存储在 SQLite 数据库 /data/system/locksettings.db 中。密码在存储的时候，会将输入的密码加上此随机数组成新的字符串。然后对新的字符串分别进行 SHA-1 和 MD5 加密，将加密后的密文通过 MD5 +......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Dong Liyuan on
+                    2016-06-26
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Android" title="Android">Android</a>
+                    
+                      <a href="/tags/#lockcreen" title="lockcreen">lockcreen</a>
+                    
+                      <a href="/tags/#锁屏" title="锁屏">锁屏</a>
+                    
+                      <a href="/tags/#密码" title="密码">密码</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/06/19//nonlinear-regression.html/">
+                <h2 class="post-title">
+                    球面拟合算法
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    引言在传感器数据融合以及工业测量中，常常需要对已知的数据或者是已知的结构的特征参数进行检测，来评估数据的信噪比或者结构的质量是否符合产品的需求。一般的，可以通过记录大量数据或者通过结构的离散点，来反解出它的特征参数。以球面为例，这些特征参数可以是球的半径，或者是球心等。对于球体拟合算法，通常有代数拟合和几何拟合。在本例中，以一般的代数拟合方法为主进行介绍。
+原理分析以下图的数据为例，我们可以......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Hu Jian on
+                    2016-06-19
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#algorithm" title="algorithm">algorithm</a>
+                    
+                      <a href="/tags/#sensors" title="sensors">sensors</a>
+                    
+                      <a href="/tags/#球面拟合" title="球面拟合">球面拟合</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/06/05//camera-isp-intro.html/">
+                <h2 class="post-title">
+                    相机系统综述 —— ISP
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    ISP(Image Signal Processor)，即图像信号处理器，用于处理图像信号传感器输出的图像信号。它在相机系统中占有核心主导的地位，是构成相机的重要设备。
+主要内部构成如下图所示，ISP 内部包含 CPU、SUP IP、IF 等设备，事实上，可以认为 ISP 是一个 SOC，可以运行各种算法程序，实时处理图像信号。
+
+CPU
+CPU 即中央处理器，可以运行 AF、LSC 等各种......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Qu Dao on
+                    2016-06-05
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Android" title="Android">Android</a>
+                    
+                      <a href="/tags/#ISP" title="ISP">ISP</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/05/28//cpuidle.html/">
+                <h2 class="post-title">
+                    CPUIDLE 之低功耗定时器
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    在 Linux 操作系统中，Idle 进程（又叫 Swapper 进程）的 pid 号是 0，是所有进程的祖先，它是在 Linux 初始化阶段从无到有创建的一个内核线程。stark_kernel() 函数初始化内核需要的所有数据结构，激活中断，创建另一个叫进程 1 的内核线程（init 进程）。新创建内核线程的 PID 为 1，并与进程 0 共享进程所有的内核数据结构。创建 init 进程后......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Zhong Bin on
+                    2016-05-28
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Linux" title="Linux">Linux</a>
+                    
+                      <a href="/tags/#cpuidle" title="cpuidle">cpuidle</a>
+                    
+                      <a href="/tags/#hrtimer" title="hrtimer">hrtimer</a>
+                    
+                      <a href="/tags/#tickless" title="tickless">tickless</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/05/21//zram-introduction.html/">
+                <h2 class="post-title">
+                    zram 简介
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    zram 技术的由来zramzram_tech（也称为 zRAM，先前称为 compcache）是 Linux 内核的一项功能，可提供虚拟内存压缩。zram 通过在 RAM 内的压缩块设备上分页，直到必须使用硬盘上的交换空间，以避免在磁盘上进行分页，从而提高性能。由于 zram 可以用内存替代硬盘为系统提供交换空间的功能，zram 可以在需要交换 / 分页时让 Linux 更好利用 RAM ......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Wu Youqian on
+                    2016-05-21
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#zram" title="zram">zram</a>
+                    
+                      <a href="/tags/#compcache" title="compcache">compcache</a>
+                    
+                      <a href="/tags/#swap" title="swap">swap</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/05/18//android-sensor-framework.html/">
+                <h2 class="post-title">
+                    Android Sensor Framework 概览
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    1. OverviewAndroid Sensor Framework 的整体架构如图 1 所示:
+
+Android Sensor Framework 可以分为 3 大部分，各个部分的主要功能如下：
+SDK    这一部分主要功能是为 Application 提供 Java API 接口，以便 Application 可以开启所需的 Sensor 并获取数据。
+Framework    这一......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Rock Zhang on
+                    2016-05-18
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Android" title="Android">Android</a>
+                    
+                      <a href="/tags/#sensor" title="sensor">sensor</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/05/09//slab-allocator-and-kmalloc.html/">
+                <h2 class="post-title">
+                    SLAB 分配器和 kmalloc
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    为什么要有 SLAB一般来说，一个新东西的产生总是为了解决某一个现有的问题的。那么，slab 是为了解决什么问题呢？我们知道，在 Linux 内核中的内存管理是使用伙伴系统 (Buddy System)，但是这个系统有一个问题就是，它的最小单位是页，即 PAGE_SIZE ，在 x86 架构中这个常数一般是 4k 。但是很多情况下我们要分配的单元大小是远远小于 4k 的，如果使用伙伴系统的话......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Guo Chumou on
+                    2016-05-09
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Linux" title="Linux">Linux</a>
+                    
+                      <a href="/tags/#SLAB" title="SLAB">SLAB</a>
+                    
+                      <a href="/tags/#SLUB" title="SLUB">SLUB</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+        <li class="previous">
+            <a href="/archives/2/">&larr; Newer Posts</a>
+        </li>
+    
+    
+        <li class="next">
+            <a href="/archives/4/">Older Posts &rarr;</a>
+        </li>
+    
+</ul>
+
+
+            </div>
+
+            <!-- Sidebar Container -->
+<div class="
+    col-lg-3 col-lg-offset-0
+    col-md-3 col-md-offset-0
+    col-sm-12
+    col-xs-12
+    sidebar-container
+">
+    
+        
+<!--
+<h5>SEARCH</h5>
+<div class="search-article" class="tags">
+	<input id="search-kw" type="text" name="search_article" placeholder="Enter keywords for search" />
+	<div class="search-img">
+		<img 
+			src="/img/search.png" 
+			alt="search" 
+			onMouseOver="this.src='/img/search-focus.png'" 
+			onMouseOut="this.src='/img/search.png'"/>
+	</div>
+</div>-->
+
+<h5>SEARCH</h5>
+<div id="site_search">
+	<div class="form-group">
+		<input type="text" id="local-search-input" name="q" results="0" placeholder="search" class="st-search-input st-default-search-input form-control"/>
+	</div>  
+	<div id="local-search-result"></div>
+</div>
+
+        <hr>
+    
+        <!-- Featured Tags -->
+
+<section>
+    <!-- no hr -->
+    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#Linux" title="Linux" rel="7">Linux</a>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#Android" title="Android" rel="6">Android</a>
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#hrtimer" title="hrtimer" rel="2">hrtimer</a>
+            
+        
+            
+            <a href="/tags/#tickless" title="tickless" rel="2">tickless</a>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#security" title="security" rel="2">security</a>
+            
+        
+            
+            <a href="/tags/#Trusted Execution Environment" title="Trusted Execution Environment" rel="2">Trusted Execution Environment</a>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+</section>
+
+        <hr>
+    
+        <!-- Short About -->
+<section class="visible-md visible-lg">
+    <h5><a href="/about/">ABOUT ME</a></h5>
+    <div class="short-about">
+
+        
+            <img id = "avatar_pic" src="/img/ironman-draw.png" />
+        
+
+        
+            <p>欢迎来到魅族内核分享平台!</p>
+        
+
+        <!-- SNS Link -->
+        <ul class="list-inline">
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+        </ul>
+    </div>
+</section>
+        <hr>
+    
+        
+  <h5>VISITORS</h5>
+  <div class="widget">
+    <span>
+    	Viewed <b><i><span id="busuanzi_value_site_pv"><i class="fa fa-spinner fa-spin"></i></span></i></b> Times
+	</span>
+	<br/>
+	<span>
+		<b><i><span id="busuanzi_value_site_uv"><i class="fa fa-spinner fa-spin"></i></span></i></b> Visitors In Total
+	</span>
+  </div>
+
+        <hr>
+    
+        
+  <h5>RECENT POSTS</h5>
+  <div class="widget">
+    <ul>
+      
+        <li>
+          <a href="../../2019/01/02/android-binder.html/">Android Binder</a>
+        </li>
+      
+        <li>
+          <a href="../../2018/11/23/implementation-of-loading-fw-from-userspace.html/">kernel 空间加载用户空间fw实现原理</a>
+        </li>
+      
+        <li>
+          <a href="../../2018/07/12/android-p-fbe.html/">Android FBE</a>
+        </li>
+      
+        <li>
+          <a href="../../2018/07/12/linux-time.html/">Linux Time</a>
+        </li>
+      
+        <li>
+          <a href="../../2018/03/21/device-tree.html/">Device Tree 详解</a>
+        </li>
+      
+    </ul>
+  </div>
+
+        <hr>
+    
+        <!-- Friends Blog -->
+
+<h5>FRIENDS</h5>
+<ul class="list-inline">
+
+    
+        <li><a href="#" target="_blank">Other</a></li>
+    
+</ul>
+
+        <hr>
+    
+        
+    <h5>ARCHIVES</h5>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+
+        <hr>
+    
+        <!-- Categories -->
+
+    <h5>categories</h5>
+    <div class="widget">
+      <ul>
+        
+          <a href="categories/#无线通讯"><li>无线通讯</li></a>
+        
+          <a href="categories/#调度器"><li>调度器</li></a>
+        
+          <a href="categories/#文件系统"><li>文件系统</li></a>
+        
+          <a href="categories/#内存管理"><li>内存管理</li></a>
+        
+          <a href="categories/#传感器"><li>传感器</li></a>
+        
+          <a href="categories/#电源管理"><li>电源管理</li></a>
+        
+          <a href="categories/#电源管理"><li>电源管理</li></a>
+        
+          <a href="categories/#多媒体"><li>多媒体</li></a>
+        
+          <a href="categories/#安全"><li>安全</li></a>
+        
+          <a href="categories/#进程管理与通信"><li>进程管理与通信</li></a>
+        
+          <a href="categories/#性能与稳定性"><li>性能与稳定性</li></a>
+        
+          <a href="categories/#时间管理"><li>时间管理</li></a>
+        
+          <a href="categories/#中断管理"><li>中断管理</li></a>
+        
+          <a href="categories/#存储"><li>存储</li></a>
+        
+          <a href="categories/#程序设计"><li>程序设计</li></a>
+        
+          <a href="categories/#系统管理和维护"><li>系统管理和维护</li></a>
+        
+          <a href="categories/#Bootloader"><li>Bootloader</li></a>
+        
+          <a href="categories/#MTP"><li>MTP</li></a>
+        
+          <a href="categories/#Security"><li>Security</li></a>
+        
+          <a href="categories/#linux"><li>linux</li></a>
+        
+          <a href="categories/#android"><li>android</li></a>
+        
+      </ul>
+    </div>
+
+        <hr>
+    
+</div>
+
+        
+    </div>
+</div>
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2023 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

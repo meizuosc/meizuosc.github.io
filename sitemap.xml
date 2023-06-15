@@ -205,6 +205,13 @@
   </url>
   
   <url>
+    <loc>https://kernel.meizu.com/about/index.html</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2016/05/09/slab-allocator-and-kmalloc.html/</loc>
     
     <lastmod>2023-06-15T07:55:41.883Z</lastmod>
