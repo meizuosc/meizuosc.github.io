@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>https://kernel.meizu.com/2023/06/15/test/</loc>
+    
+    <lastmod>2023-06-15T08:22:59.204Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/tags/index.html</loc>
+    
+    <lastmod>2023-06-15T07:55:41.891Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/12/27/tee.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/11/18/memory%2520management%2520-%2520ion.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2018/07/12/android-p-fbe.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2018/11/23/implementation-of-loading-fw-from-userspace.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2018/03/21/device-tree.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2018/07/12/linux-time.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2019/01/02/android-binder.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/about/index.html</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/categories/index.html</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/archive/index.html</loc>
+    
+    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/02/gps-introduction.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/04/08/cpufreq-sched.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/04/15/intro-wrapfs.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/09/slab-allocator-and-kmalloc.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/18/android-sensor-framework.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/28/cpuidle.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/06/05/camera-isp-intro.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/21/zram-introduction.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/06/26/lockcreen-password.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/11/linux-process-stop.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/08/06/bfs-porting.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/25/linux-dead-lock-detect-lockdep.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/08/12/linux-selinux-intro.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/04/linux-signal.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/09/02/linux-interrupt.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/09/12/android-m-external-storage.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/09/19/android-design-pattern-singleton.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/10/16/configure-jenkins-guide.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/08/21/linux-workqueue.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/08/08/17-33-25-tee_fp/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/09/07/samsun-uboot-fastboot-command.html/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/11/06/11-52-11-mtp/</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/404.html</loc>
+    
+    <lastmod>2023-06-15T07:55:41.883Z</lastmod>
+    
+  </url>
+  
+</urlset>

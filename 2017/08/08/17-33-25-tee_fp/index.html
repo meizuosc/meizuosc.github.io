@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          指纹 TEE  - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2017/08/08/17-33-25-tee_fp/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="/css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="/css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="/css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="/css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="/css/widget.css">
+
+
+    
+<link rel="stylesheet" href="/css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="/css/signature.css">
+
+
+    
+<link rel="stylesheet" href="/css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="/css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#security" title="security">security</a>
+                            
+                              <a class="tag" href="/tags/#Trusted Execution Environment" title="Trusted Execution Environment">Trusted Execution Environment</a>
+                            
+                        </div>
+                        <h1>指纹 TEE </h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Wu DongNan on
+                            2017-08-08
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="指纹-TEE"><a href="#指纹-TEE" class="headerlink" title="指纹 TEE"></a>指纹 TEE</h1><hr>
+<ul>
+<li><h3 id="TEE-介绍"><a href="#TEE-介绍" class="headerlink" title="TEE 介绍"></a>TEE 介绍</h3><ul>
+<li>TEE 架构</li>
+<li>TEE 启动流程</li>
+<li>TEE 应用场景以及前景</li>
+</ul>
+</li>
+<li><h3 id="指纹硬件原理"><a href="#指纹硬件原理" class="headerlink" title="指纹硬件原理"></a>指纹硬件原理</h3><ul>
+<li>指纹硬件原理</li>
+<li>指纹通信接口与硬件资源</li>
+</ul>
+</li>
+<li><h3 id="指纹软件框架"><a href="#指纹软件框架" class="headerlink" title="指纹软件框架"></a>指纹软件框架</h3><ul>
+<li>指纹TEE软件框架</li>
+<li>指纹软件机制</li>
+</ul>
+</li>
+</ul>
+<h2 id="一、TEE-介绍"><a href="#一、TEE-介绍" class="headerlink" title="一、TEE 介绍"></a>一、TEE 介绍</h2><hr>
+<h3 id="1-TEE-架构"><a href="#1-TEE-架构" class="headerlink" title="1. TEE 架构"></a>1. TEE 架构</h3><p>TEE(Trusted Execution Environment) 是基于 ARM TrustZone 技术拓展而来的，TrustZone 技术是基于 ARM 架构系统级别层次的对 service  以及 device 进行保护的一项技术, 为了支撑该保护技术, ARMV8 本身支持名为 secure mode 的模式，用来区分 normal mode， 其通过设置 Secure Configuration Register 系统寄存器来使能该模式的支持，该寄存器的最后 1 bit 为 0 的话，则表示当前 CPU 处于为 secure mode，如下图所示，并且 ARM 本身支持将系统资源配置成 secure 状态，通过操作 TZPC 控制寄存器可以将系统总线、内存、DMA、cache 等资源配置成 secure  态，配置成 secure 态之后，normal 端运行的程序无法访问其硬件资源。</p>
+<p><img src="/images/posts/2017/08/tz_two_worlds.png" alt="tz_two_worlds"></p>
+<p>说完 ARMV8 本身支持 secure 模式以及系统硬件资源可配之后，讲解一下 ARMV8 架构。</p>
+<p>ARMv8-a 架构的主要特性包括：</p>
+<blockquote>
+<p>1）新增一套 64-bit 的指令集，称作 A64。</p>
+<p>2）由于需要向前兼容 ARMv7，所以同时支持现存的 32-bit 指令集，称作 A32 和 T32</p>
+<p>3）定义 AArch64 和 AArch32 两套运行环境（称作 Execution state ），分别执行 64-bit 和 32-bit 指令集。软件可以在需要的时候，切换 Execution state。</p>
+<p>4）AArch64 最大的改动，使用新的概念（exception level），重新解释了 processor mode、privilege level 等概念</p>
+<p>5）在 ARMv7 security extension 的基础上，新增 security model，支持安全相关的应用需求。</p>
+<p>6）在 ARMv7 virtualization extension 的基础上，提供完整的 virtualization 框架，从硬件上支持虚拟化。</p>
+</blockquote>
+<p>其中跟 TEE 密切相关的就是 ARMv8-a 实现的 exception level 以及 security 特性。</p>
+<p>ARMV7 架构上，处理器可以工作在多种模式（称作 processor mode）下，包括 User、FIQ、IRQ、Abort、Undefined、System 等, 等于把 ARMV8 架构上 processor mode 的概念去掉了，取而代之的是 4 个固定的 Exception level，简称 EL0-EL3。同时，也淡化了 privilege level 的概念。Exception level 本身就已经包好了 privilege 的信息，即 ELn 的 privilege 随着 n 的增大而增大。类似地，可以将 EL0 归属于 non-privilege level，EL1/2/3 属于 privilege level。</p>
+<p><img src="/images/posts/2017/08/armv8-a_execution_level.gif" alt="armv8-a_execution_level"></p>
+<p>Exception level 简介:</p>
+<blockquote>
+<p>Application 位于特权等级最低的 EL0，Guest OS（Linux kernel 等）位于 EL1，提供虚拟化支持的 Hypervisor 位于 EL2，提供 Security 支持的 Seurity Monitor 位于 EL3，EL3 的等级最高，其拥有的权限也是最高．</p>
+<p>等级低的 EL 想要陷入到较高等级的 EL 需要通过产生异常，只有异常发生时，才能切换 EL， 并且异常发生时只能是跳转到更高等级的 EL，或是停留在当前 EL．同理，异常处理返回时，只能回到低等级 EL 或是停留在当前 EL。</p>
+<p>其中跟 TEE 运行环境密切相关的就是 EL3，其架构层级所处位置为 security 提供了一个安全环境，首先 EL0 跟 EL1 不能直接访问到 EL3，其次在物理资源(内存 cache 总线等)访问上，不同 security 状态下，可以访问的物理资源是不同的，EL3 具备访问 security 跟 non-security 资源，主要目的保护一些安全应用的数据，例如支付等。</p>
+</blockquote>
+<p>security 简介：<br>ARMv8-a 架构有两个 security state，Security 和  non-Security。主要的功效是物理地址的区隔，以及一些 system control  寄存器的访问控制</p>
+<blockquote>
+<p>在 Security 状态下，处理器可以访问所有的 Secure physical address space 以及 Non-secure physical address space</p>
+<p>在 Non-security 状态下，只能访问 Non-secure physical address space，且不能访问 Secure system control resources</p>
+</blockquote>
+<h3 id="2-TEE-启动流程"><a href="#2-TEE-启动流程" class="headerlink" title="2. TEE 启动流程"></a>2. TEE 启动流程</h3><p><img src="/images/posts/2017/08/ATF.png" alt="secure_boot"></p>
+<p>TEE 的启动流程是跟手机启动流程密切相关的，如上图所示，上图主要是描述各阶段镜像校验进行，手机芯片出厂时会固化一个启动程序在 IROM(BL1) 里边，里边会存储一把用于校验下一个启动镜像(BL2)的公钥，BL2 镜像会使用对应 BL1 里边公钥的私钥进行签名， 以此类推， BL2 镜像会存有下一个镜像的公钥，用于校验后续的镜像。</p>
+<p>Arm 为 trustzone 提供了一个通用的 Firmware 层 ATF(ARM Trusted Firmware)。ATF 包含了 service router、PSCI、Interrupt Handler 等功能， 该项目是开源的， 相关代码可以参考 GitHub：<a href="https://github.com/ARM-software/arm-trusted-firmware" target="_blank" rel="noopener">https://github.com/ARM-software/arm-trusted-firmware</a></p>
+<p>ATF 会有几个阶段需要进行，分别叫做  BL1、BL2、BL31、BL32、BL33，下面依据自己对源码的理解，简单描述一下各个阶段所做的事情。</p>
+<p>BL1： 上面介绍了 ARM-V8a 的层级关系，为了保证 secure boot，所以 BL1 阶段的启动必须是处于 secure-EL3 层级， 该阶段会做一些架构上的初始化工作，比如说初始化 EL3 异常向量表(比如说跟 TEE 相关的 SMC 异常向量表)、初始化 cpu(cpu0)、控制系统寄存器(EL3层级)设置、使能MMU、配置 storage、 设置传递参数并加载下一阶段镜像。</p>
+<p>BL2： 该镜像运行在 secure-EL1 环境( BL1 会设置一些参数并传递给 BL2，用来设置其运行初始环境)，该阶段会设置 EL1 异常向量表、使能 MMU、配置 storage、设置传递参数 bl2_to_bl31_params、 bl2_to_bl32_params、bl2_to_bl33_params 并加载下阶段的镜像、 发送 SMC 指令陷入到 BL1 初始化好的 SMC 异常向量处理函数，用于设置 BL31 运行的系统环境。</p>
+<p>BL31：该阶段跟 TEE 密切相关， 由于 world-switch 必须是要在 EL3 阶段下才能完成，所以该阶段的进行是需要在 EL3 的环境下执行的， BL2 在加载 BL31 后，会发送一条 SMC 指令(“smc(BL1_SMC_RUN_IMAGE, (unsigned long)bl31_ep_info, 0, 0, 0, 0, 0, 0)”)，并将 BL31 入口参数 (bl31_ep_info) 也传递到 SMC handler 里边进行配置，主要设置当前为 secure-EL3 层级以及 BL31 镜像的 PC 值，进而让 BL31 镜像处于 EL3 层级下运行。 这个阶段会初始化中断GIC、初始化并使能系统计时器， 并且会实现 runtime service init， 这个 runtime service 则是跟 TEE 密切关联的， 该步骤会初始化一系列跟 SMC handler 相关的入口， 其中就包括 TEE 的入口，当然也有跟 CPU 电源管理相关的 PSCI，厂家也可以定制一些入口， 并且会将这个入口地址存放在一个代码段地址上， SMC handler 会依据 SMC CALL 参数来判断，进而从上述代码段地址上选出要进入的处理入口， 其中第三方的 TEE 厂家也会在该阶段进行入口初始化。<br>(SMC CALL 参数规则可以参考  <a href="http://infocenter.arm.com/help/topic/com.arm.doc.den0028b/ARM_DEN0028B_SMC_Calling_Convention.pdf" target="_blank" rel="noopener">http://infocenter.arm.com/help/topic/com.arm.doc.den0028b/ARM_DEN0028B_SMC_Calling_Convention.pdf</a> )</p>
+<p>BL32：该阶段会依据BL2阶段设置的启动参数来配置当前运行环境，BL32 运行于 secure-EL1 层级， 针对 TEE 而言，其会初始化好 world-switch 的系统环境，比如说 world-switch 前后的栈保护以及恢复工作。</p>
+<p>BL33： 该阶段会依据BL2阶段设置的启动参数来配置当前运行环境， BL33 运行于 normal-EL1 层级， 该阶段的工作主要是完成 lead kernel 以及 load tee os 镜像的工作。</p>
+<p>至此， TEE 核心部分已经集成并启动完成，TEE 运行依赖已经成功搭建，已经具备了 world-switch 的机制支持， 后续上层的应用则会在这 world-switch 的机制基础上进行交互，下图为基本的 normal-secure 交互框架图</p>
+<p><img src="/images/posts/2017/08/normal_secure_framework.png" alt="normal-secure-framework"></p>
+<p>应用交互框架主要包含两部分， normal world 的 service &amp; kernel 支持， secure world 的 trusted application(TA) &amp; secure driver。</p>
+<p>normal world 部分， kernel 部分主要是定义了一套 SMC CALL 接口，提供给上层 service 使用。</p>
+<p>secure world 部分，会简单的区分逻辑层(TA)跟驱动层， 驱动层会操作实际的硬件资源，比如说 SPI、I2C总线已经内存资源等。TA 主要是响应来自 normal world 的逻辑需求。</p>
+<p>所有跟私密数据相关，比如说支付密码、指纹数据、鉴权秘钥等不让 normal world 访问的资源，都可以放在 secure world 端进行处理，secure world 可以将数据总线、内存、DMA等硬件资源都保护起来，normal world 无法通过访问硬件通信接口获得数据。</p>
+<p>有了这一套框架的存在，secure world 下的应用程序或是资源，normal world 下正常应用是无法进行访问的，所以只有与 TA 相对应的 normal world 应用，通过定义好的 SMC CALL 规则接口才能切换至 secure world，完成跟 TA 的交互。</p>
+<p>安全防护上，TA 需要校验签名通过方可加载，给 TA 签名的秘钥一般由 OEM 厂家制定，normal world 这边的应用则会受 selinux 权限限制， 无法获得访问 kernel 提供的 SMC CALL 接口权限。</p>
+<h3 id="3-TEE-应用场景以及前景"><a href="#3-TEE-应用场景以及前景" class="headerlink" title="3. TEE 应用场景以及前景"></a>3. TEE 应用场景以及前景</h3><p>TEE 其实是一个安全载体，在业界也有很多安全测试机构对其进行测试评估，就目前而言，还是很多产品、方案厂家承认其安全性的，在移动支付盛行的时代，越来越多在线支付产品会选择使用 TEE 作为安全支持，像现在流行的支付宝、微信支付等都采用了 TEE 方案作为其支付安全保障。</p>
+<p>在未来，相信在身份认证这一领域上，会有越来越多的产品采用 TEE 方案，而其认证形式可能会涉及到指纹、虹膜、人脸等生物识别技术。</p>
+<h2 id="二、指纹硬件环境"><a href="#二、指纹硬件环境" class="headerlink" title="二、指纹硬件环境"></a>二、指纹硬件环境</h2><p>上述介绍了 TEE 的硬件支持、安全启动以及一套完整的应用框架支持，接下来会针对现在市面较为流行的指纹识别技术，简单介绍指纹识别技术以及指纹跟 TEE 的结合。</p>
+<hr>
+<h3 id="1-指纹硬件原理"><a href="#1-指纹硬件原理" class="headerlink" title="1. 指纹硬件原理"></a>1. 指纹硬件原理</h3><p>电容式指纹识别解决方案，是基于电容检测原理而自主开发的按压式指纹识别技术。如下图所示，当 Finger 与 Cover 的接触时，指纹的嵴和峪与 Pixel Array  间会形成不同的耦合电容。 驱动信号由指纹芯片的信号驱动模块产生，通过检测 Finger 与 Sensor 所形成的耦合电容，通过 AD 转换将采集到的数据发送给 Host，从而 Host 可以根据不同的信号耦合量，探测到嵴和峪的位置；指纹 sensor 采集点以阵列式分布,收集实际指纹触碰到的采集点的数据，从而形成指纹图像数据。</p>
+<p><img src="/images/posts/2017/08/fp.png" alt="fp"></p>
+<h3 id="2-指纹通信接口与硬件资源"><a href="#2-指纹通信接口与硬件资源" class="headerlink" title="2. 指纹通信接口与硬件资源"></a>2. 指纹通信接口与硬件资源</h3><p>(1). 电源：1.8V ~ 3.0V</p>
+<p>(2). 通信总线：SPI 总线。全双工三线同步串行外围接口，采用主从模式（Master Slave）架构；支持多 slave 模式应用，一般仅支持单 Master。时钟由 Master 控制，在时钟移位脉冲下，数据按位传输，高位在前，低位在后，SPI 接口有 2 根单向数据线，为全双工通信。</p>
+<h2 id="三、指纹软件"><a href="#三、指纹软件" class="headerlink" title="三、指纹软件"></a>三、指纹软件</h2><hr>
+<h3 id="1-指纹TEE软件框架"><a href="#1-指纹TEE软件框架" class="headerlink" title="1. 指纹TEE软件框架"></a>1. 指纹TEE软件框架</h3><p><img src="/images/posts/2017/08/fp_tee_framework.png" alt="fp_tee_framework"></p>
+<p>(1)TA: 处于 secure 端，实现一些基本的硬件操作逻辑功能，如指纹 back  采图等逻辑。</p>
+<p>(2)client: 处于 normal 端，实现安卓上的一些基本接口，如指纹的录入 识别接口等。</p>
+<p>(3)secure driver: 处于 secure 端，主要实现一些总线硬件接口的驱动。如 spi DMA 等。</p>
+<p>(4)secure deamon: 处于 normal 端，响应 client 端需求，桥接 client 跟 kernel 的通信，kernel 端产生异常陷入 EL3，将 client 端指令传至 secure  端。</p>
+<p>(5)secure os: 维持 secure 端 OS 正常运作调度以及提供系统接口给 TA 以及 secure driver 使用。</p>
+<p>简单流程： client 端发起请求(采图、back 中断处理等) —&gt; 经由 secure daemon 到 kernel， 并由 kernel 发起 SMC CALL —&gt;  陷入到EL3，switch 到 secure world —&gt; TA 接收请求 —&gt; secure driver 执行spi数据通信。</p>
+<h3 id="2-指纹软件机制"><a href="#2-指纹软件机制" class="headerlink" title="2. 指纹软件机制"></a>2. 指纹软件机制</h3><p>魅族指纹产品支持两种模式， 一种是 mback 模式，该模式自魅族手机带指纹功能以来就一直存在，具体为轻触返回上一级功能，另一种模式是指纹采图模式，具体为指纹录入识别功能。</p>
+<p>mback 模式下，手指触碰到 pixel 或是 ring 环时，会根据 pixel 或是 ring 的容抗变化阈值来判断<br>是否产生 back 中断，并且会依据变化阈值大小来判断 down 或是 up，down 中断的话，pixel 或是 ring 其中一个达到阈值变化要求，都会产生，如果同时触碰到了 ring 跟 pixel， up中断必须需要 ring 以及 pixel 的阈值变化都达到要<br>求才会产生。</p>
+<p>采图模式下，芯片会定时扫描检测 sensor 区域是否有手指触摸，该扫描周期可以通过配置参数进行调整。当检测到有手指触摸时，会进行指纹数据的扫描，然后会发送中断通知主控读取数据，指纹数据帧以 FIFO 形式边扫描边读取， 采集到的 raw data，首先会经过图像预处理，并且会对图像进行打分，预处理失败该帧图像不会进行进一步的算法处理，在采集流程上，<br>状态为 down irq -&gt; image irq -&gt; image<br>capture -&gt; up irq</p>
+<p><img src="/images/posts/2017/08/fp_capture.png" alt="fp_capture_image"></p>
+<p>采图模式下，采集完成 raw data 之后需要进行图像算法匹配，其中跟匹配密切相关的是 finger base，finger base 可以简单理解为采集 raw data 后，用来作为比较的原始数据，算法构造指纹数字图像的基准，理想的 finger base 是没有手指在芯片模组上采集的 pixel数据，后续手指置于芯片上采集的 raw data，算法会将采集到的 raw data 跟 finger base 进行对比，从而得出每个 pixel 上的差值，手指的嵴和峪数据会因此不一样，最终会构造出接近真实手指的数字图像。finger base 尤其重要，一般来说，指纹服务开机启动时，由于此时安卓还没有完全启动，此时手指放置于芯片上面的概率最小，默认会采集一帧图像作为原始 finger base，并且会储存在某个位置，后续无论是指纹录入或是指纹匹配都会以这个作为比较基准。</p>
+<hr>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><h4 id="http-www-wowotech-net-armv8a-arch-armv8-a-overview-html"><a href="#http-www-wowotech-net-armv8a-arch-armv8-a-overview-html" class="headerlink" title="http://www.wowotech.net/armv8a_arch/armv8-a_overview.html"></a><a href="http://www.wowotech.net/armv8a_arch/armv8-a_overview.html" target="_blank" rel="noopener">http://www.wowotech.net/armv8a_arch/armv8-a_overview.html</a></h4><h4 id="http-genode-org-documentation-articles-trustzone"><a href="#http-genode-org-documentation-articles-trustzone" class="headerlink" title="http://genode.org/documentation/articles/trustzone"></a><a href="http://genode.org/documentation/articles/trustzone" target="_blank" rel="noopener">http://genode.org/documentation/articles/trustzone</a></h4><h4 id="http-www-arm-com-products-security-on-arm-trustzone"><a href="#http-www-arm-com-products-security-on-arm-trustzone" class="headerlink" title="http://www.arm.com/products/security-on-arm/trustzone"></a><a href="http://www.arm.com/products/security-on-arm/trustzone" target="_blank" rel="noopener">http://www.arm.com/products/security-on-arm/trustzone</a></h4>
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/09/07//samsun-uboot-fastboot-command.html/" data-toggle="tooltip" data-placement="top" title="samsung uboot fastboot command">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/03/06/18-40-19-dump_stack/" data-toggle="tooltip" data-placement="top" title="dump_stack 实现分析">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                
+<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
+
+
+<link rel="stylesheet" href="/css/music-player/css/reset.css">
+
+
+<link rel="stylesheet" href="/css/music-player/css/player.css">
+
+
+<div class="music-player">
+    <audio class="music-player__audio" ></audio>
+    <div class="music-player__main">
+        <div class="music-player__blur"></div>
+        <div class="music-player__disc">
+            <div class="music-player__image">
+                <img width="100%" src="" alt="">
+            </div>
+            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
+        </div>
+        <div class="music-player__controls">
+            <div class="music__info">
+                <h3 class="music__info--title">...</h3>
+                <p class="music__info--singer">...</p>
+            </div>
+            <div class="player-control">
+                <div class="player-control__content">
+                    <div class="player-control__btns">
+                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
+                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
+                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
+                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
+                    </div>
+                    <div class="player-control__volume">
+                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
+                        <div class="control__volume--progress player_progress"></div>
+                    </div>
+                </div>
+                <div class="player-control__content">
+                    <div class="player__song--progress player_progress"></div>
+                    <div class="player__song--timeProgess nowTime">00:00</div>
+                    <div class="player__song--timeProgess totalTime">00:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="/js/music-player/utill.js"></script>
+
+
+<script src="/js/music-player/jquery.min.js"></script>
+
+<!-- netease; qqkg -->
+<!--
+<script src="/js/music-player/player.js?library=config.music.library.js"></script>
+-->
+<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#security" title="security">security</a>
+                        
+                          <a class="tag" href="/tags/#Trusted Execution Environment" title="Trusted Execution Environment">Trusted Execution Environment</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2023 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="/js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/archives/2/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="/css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="/css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="/css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="/css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="/css/widget.css">
+
+
+    
+<link rel="stylesheet" href="/css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="/css/signature.css">
+
+
+    
+<link rel="stylesheet" href="/css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="/css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('/img/header_img/home-bg-1-dark.png') 
+                /*config*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="site-heading">
+                        <h1>魅族内核团队</h1>
+                        <!--<hr class="small">-->
+                        <span id="subdusi" class="subheading">一个有内涵的技术分享平台</span>
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Main Content -->
+<div class="container">
+    <div class="row">
+        
+
+    <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-1
+                col-md-8 col-md-offset-1
+                col-sm-12
+                col-xs-12
+                post-container
+            ">
+                <!-- Top -->
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+
+<!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2017/08/08/17-33-25-tee_fp/">
+                <h2 class="post-title">
+                    指纹 TEE 
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    指纹 TEE
+
+TEE 介绍
+TEE 架构
+TEE 启动流程
+TEE 应用场景以及前景
+
+
+指纹硬件原理
+指纹硬件原理
+指纹通信接口与硬件资源
+
+
+指纹软件框架
+指纹TEE软件框架
+指纹软件机制
+
+
+
+一、TEE 介绍
+1. TEE 架构TEE(Trusted Execution Environment) 是基于 ARM TrustZone 技术拓展而来的，TrustZone 技术是基于 A......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Wu DongNan on
+                    2017-08-08
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#security" title="security">security</a>
+                    
+                      <a href="/tags/#Trusted Execution Environment" title="Trusted Execution Environment">Trusted Execution Environment</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2017/03/06/18-40-19-dump_stack/">
+                <h2 class="post-title">
+                    dump_stack 实现分析
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    1 简介说起 dump_stack() ，相信从事 Linux 内核或者驱动相关开发的同行对于此函数肯定不陌生。我们经常会用到此函数来对自己的代码进行 debug，可以快速帮助开发者理清函数调用流程，或者说解决 bug…… 首先我们来看一下 dump_stack 的打印，相信很多人都遇到过 :
+123456789101112131415161718192021222324252627[   ......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Xie HaoCheng on
+                    2017-03-06
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#dump_stack" title="dump_stack">dump_stack</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/10/16//configure-jenkins-guide.html/">
+                <h2 class="post-title">
+                     搭建 Jenkins 服务指南 
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    前言如果常常需要给其他相关部门输出固件验证问题，那么用 Jenkins 搭建一个自动化的编译环境会是一个不错的选择。这篇文章简单的介绍了 Jenkins 的基本使用，及如何利用插件进行权限的管理，邮件的发送设置。
+一 .  在 Ubuntu 上搭建 jenkins
+在终端上执行
+ 1wget -q -O - http:&#x2F;&#x2F;pkg.jenkins-ci.org&#x2F;d......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Qin xiaolu on
+                    2016-10-16
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Jenkins" title="Jenkins">Jenkins</a>
+                    
+                      <a href="/tags/#服务搭建" title="服务搭建">服务搭建</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/09/19/./android-design-pattern-singleton.html/">
+                <h2 class="post-title">
+                    Android 中的设计模式 —— 单例模式
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    设计模式简介当我们讨论设计模式的时候，其实我们在讨论面向对象的设计问题。
+软件设计中很多问题都会一次又一次的重复出现，而经过一定的总结之后会有一些优秀的解法沉淀下来，可以用于以后出现的类似问题，我们把这些解法叫做设计模式。
+软件的生命周期决定了其设计要尽可能地面对（需求）改变，所以在开发和维护过程中，面临的较大问题，除了解决问题的关键点，另一个就是解决需求变更和扩展所带来的代码结构变化问题。......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Zhang Xing on
+                    2016-09-19
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Android" title="Android">Android</a>
+                    
+                      <a href="/tags/#Framework" title="Framework">Framework</a>
+                    
+                      <a href="/tags/#设计模式" title="设计模式">设计模式</a>
+                    
+                      <a href="/tags/#Singleton" title="Singleton">Singleton</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/09/12//android-m-external-storage.html/">
+                <h2 class="post-title">
+                    Android M 外部存储剖析 
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    
+这篇文章是建立在你已经对 Android 外部存储的基础知识有一定了解的基础之上，如果之前并不是太了解这个部分，阅读起来可能会比较费劲，可以先阅读参考下面文章：http://blog.csdn.net/zjbpku/article/details/25161131
+
+Android M 外部存储的变化从 Android 6.0 开始，Android 支持移动存储（adoptable sto......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Wenjun Zhang on
+                    2016-09-12
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Android" title="Android">Android</a>
+                    
+                      <a href="/tags/#外置存储" title="外置存储">外置存储</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/09/02//linux-interrupt.html/">
+                <h2 class="post-title">
+                    Linux Interrupt
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    在面试的时候我们常常被问及一个问题：几种中断下半部机制 softirq、tasklet、workqueue 有什么区别？Linux 为什么要设计这几种机制？真正能够回答清楚的人还是少数的。下面我们就详细分析一下这其中的区别。
+
+本文的代码分析基于 Linux kernel 3.18.22 和 arm64 架构，最好的学习方法还是 “RTFSC”
+
+1. Linux 中断arm64 和其他所有......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2016-09-02
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Linux" title="Linux">Linux</a>
+                    
+                      <a href="/tags/#gic" title="gic">gic</a>
+                    
+                      <a href="/tags/# 中断线程化 " title=" 中断线程化 "> 中断线程化 </a>
+                    
+                      <a href="/tags/#softirq" title="softirq">softirq</a>
+                    
+                      <a href="/tags/#tasklet" title="tasklet">tasklet</a>
+                    
+                      <a href="/tags/#linux 中断 " title="linux 中断 ">linux 中断 </a>
+                    
+                      <a href="/tags/#linux interrupt" title="linux interrupt">linux interrupt</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/08/21//linux-workqueue.html/">
+                <h2 class="post-title">
+                    Linux Workqueue
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    Workqueue 是内核里面很重要的一个机制，特别是内核驱动，一般的小型任务 (work) 都不会自己起一个线程来处理，而是扔到 Workqueue 中处理。Workqueue 的主要工作就是用进程上下文来处理内核中大量的小任务。
+所以 Workqueue 的主要设计思想：一个是并行，多个 work 不要相互阻塞；另外一个是节省资源，多个 work 尽量共享资源 ( 进程、调度、内存 )，......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2016-08-21
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Linux" title="Linux">Linux</a>
+                    
+                      <a href="/tags/#Workqueue" title="Workqueue">Workqueue</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/08/12//linux-selinux-intro.html/">
+                <h2 class="post-title">
+                    SELinux 安全策略解析 
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    1、简介SELinux 是 Security-Enhanced Linux 的简称，是美国国家安全局（NSA=The National Security Agency) 和 SCC（Secure Computing Corporation）开发的基于 Linux 的一个强制访问控制安全模块扩展。原先是在 Fluke 上开发的，2000 年以 GNU GPL 协议发布。对于目前可用的 Linu......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Deng Taiping on
+                    2016-08-12
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#SELinux" title="SELinux">SELinux</a>
+                    
+                      <a href="/tags/#类型强制" title="类型强制">类型强制</a>
+                    
+                      <a href="/tags/#多级安全" title="多级安全">多级安全</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/08/06//bfs-porting.html/">
+                <h2 class="post-title">
+                    BFS 调度器移植体验 
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    IntroductionBFS 全称 Brain Fuck Scheduler. 至于为什么叫这个名字，可以参考 BFS-FAQFAQ．
+作者 Con Kolivas 在介绍中表示，BFS 的设计的初衷是带来更好的桌面交互式体验，特别是对于大多数的低规格机器．
+Android 也曾经评估过 BFS, 测试的结果对用户体验没有明显的改进，因此并没有最终导入．
+通过一些第三方机构的测试数据来看，......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Wu Weilin on
+                    2016-08-06
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Linux" title="Linux">Linux</a>
+                    
+                      <a href="/tags/#scheduler" title="scheduler">scheduler</a>
+                    
+                      <a href="/tags/#BFS" title="BFS">BFS</a>
+                    
+                      <a href="/tags/#调度器" title="调度器">调度器</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/25//linux-dead-lock-detect-lockdep.html/">
+                <h2 class="post-title">
+                    Linux 死锁检测模块 Lockdep 简介
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    死锁概念死锁是指多个进程（线程）因为长久等待已被其他进程占有的的资源而陷入阻塞的一种状态。当等待的资源一直得不到释放，死锁会一直持续下去。死锁一旦发生，程序本身是解决不了的，只能依靠外部力量使得程序恢复运行，例如重启，开门狗复位等。
+Linux 提供了检测死锁的机制，主要分为 D 状态死锁和 R 状态死锁。
+
+D 状态死锁
+进程等待 I/O 资源无法得到满足，长时间（系统默认配置 120 秒......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Bai Haowen on
+                    2016-07-25
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#可靠性" title="可靠性">可靠性</a>
+                    
+                      <a href="/tags/#调试" title="调试">调试</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+
+
+<!-- Pager -->
+
+<ul class="pager">
+    
+        <li class="previous">
+            <a href="/">&larr; Newer Posts</a>
+        </li>
+    
+    
+        <li class="next">
+            <a href="/archives/3/">Older Posts &rarr;</a>
+        </li>
+    
+</ul>
+
+
+            </div>
+
+            <!-- Sidebar Container -->
+<div class="
+    col-lg-3 col-lg-offset-0
+    col-md-3 col-md-offset-0
+    col-sm-12
+    col-xs-12
+    sidebar-container
+">
+    
+        
+<!--
+<h5>SEARCH</h5>
+<div class="search-article" class="tags">
+	<input id="search-kw" type="text" name="search_article" placeholder="Enter keywords for search" />
+	<div class="search-img">
+		<img 
+			src="/img/search.png" 
+			alt="search" 
+			onMouseOver="this.src='/img/search-focus.png'" 
+			onMouseOut="this.src='/img/search.png'"/>
+	</div>
+</div>-->
+
+<h5>SEARCH</h5>
+<div id="site_search">
+	<div class="form-group">
+		<input type="text" id="local-search-input" name="q" results="0" placeholder="search" class="st-search-input st-default-search-input form-control"/>
+	</div>  
+	<div id="local-search-result"></div>
+</div>
+
+        <hr>
+    
+        <!-- Featured Tags -->
+
+<section>
+    <!-- no hr -->
+    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+    <div class="tags">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#Linux" title="Linux" rel="7">Linux</a>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#Android" title="Android" rel="6">Android</a>
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#hrtimer" title="hrtimer" rel="2">hrtimer</a>
+            
+        
+            
+            <a href="/tags/#tickless" title="tickless" rel="2">tickless</a>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+            <a href="/tags/#security" title="security" rel="2">security</a>
+            
+        
+            
+            <a href="/tags/#Trusted Execution Environment" title="Trusted Execution Environment" rel="2">Trusted Execution Environment</a>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+</section>
+
+        <hr>
+    
+        <!-- Short About -->
+<section class="visible-md visible-lg">
+    <h5><a href="/about/">ABOUT ME</a></h5>
+    <div class="short-about">
+
+        
+            <img id = "avatar_pic" src="/img/ironman-draw.png" />
+        
+
+        
+            <p>欢迎来到魅族内核分享平台!</p>
+        
+
+        <!-- SNS Link -->
+        <ul class="list-inline">
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+        </ul>
+    </div>
+</section>
+        <hr>
+    
+        
+  <h5>VISITORS</h5>
+  <div class="widget">
+    <span>
+    	Viewed <b><i><span id="busuanzi_value_site_pv"><i class="fa fa-spinner fa-spin"></i></span></i></b> Times
+	</span>
+	<br/>
+	<span>
+		<b><i><span id="busuanzi_value_site_uv"><i class="fa fa-spinner fa-spin"></i></span></i></b> Visitors In Total
+	</span>
+  </div>
+
+        <hr>
+    
+        
+  <h5>RECENT POSTS</h5>
+  <div class="widget">
+    <ul>
+      
+        <li>
+          <a href="/2023/06/15/test/">test</a>
+        </li>
+      
+        <li>
+          <a href="/2019/01/02/android-binder.html/">Android Binder</a>
+        </li>
+      
+        <li>
+          <a href="/2018/11/23/implementation-of-loading-fw-from-userspace.html/">kernel 空间加载用户空间fw实现原理</a>
+        </li>
+      
+        <li>
+          <a href="/2018/07/12/android-p-fbe.html/">Android FBE</a>
+        </li>
+      
+        <li>
+          <a href="/2018/07/12/linux-time.html/">Linux Time</a>
+        </li>
+      
+    </ul>
+  </div>
+
+        <hr>
+    
+        <!-- Friends Blog -->
+
+<h5>FRIENDS</h5>
+<ul class="list-inline">
+
+    
+        <li><a href="#" target="_blank">Other</a></li>
+    
+</ul>
+
+        <hr>
+    
+        
+    <h5>ARCHIVES</h5>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+
+        <hr>
+    
+        <!-- Categories -->
+
+    <h5>categories</h5>
+    <div class="widget">
+      <ul>
+        
+          <a href="categories/#无线通讯"><li>无线通讯</li></a>
+        
+          <a href="categories/#调度器"><li>调度器</li></a>
+        
+          <a href="categories/#文件系统"><li>文件系统</li></a>
+        
+          <a href="categories/#内存管理"><li>内存管理</li></a>
+        
+          <a href="categories/#传感器"><li>传感器</li></a>
+        
+          <a href="categories/#电源管理"><li>电源管理</li></a>
+        
+          <a href="categories/#电源管理"><li>电源管理</li></a>
+        
+          <a href="categories/#多媒体"><li>多媒体</li></a>
+        
+          <a href="categories/#安全"><li>安全</li></a>
+        
+          <a href="categories/#进程管理与通信"><li>进程管理与通信</li></a>
+        
+          <a href="categories/#性能与稳定性"><li>性能与稳定性</li></a>
+        
+          <a href="categories/#时间管理"><li>时间管理</li></a>
+        
+          <a href="categories/#中断管理"><li>中断管理</li></a>
+        
+          <a href="categories/#存储"><li>存储</li></a>
+        
+          <a href="categories/#程序设计"><li>程序设计</li></a>
+        
+          <a href="categories/#系统管理和维护"><li>系统管理和维护</li></a>
+        
+          <a href="categories/#Bootloader"><li>Bootloader</li></a>
+        
+          <a href="categories/#MTP"><li>MTP</li></a>
+        
+          <a href="categories/#Security"><li>Security</li></a>
+        
+          <a href="categories/#linux"><li>linux</li></a>
+        
+          <a href="categories/#android"><li>android</li></a>
+        
+      </ul>
+    </div>
+
+        <hr>
+    
+</div>
+
+        
+    </div>
+</div>
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2023 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="/js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
