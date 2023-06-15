@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Android Sensor Framework 概览 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2016/05/18//android-sensor-framework.html/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="/css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="/css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="/css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="/css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="/css/widget.css">
+
+
+    
+<link rel="stylesheet" href="/css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="/css/signature.css">
+
+
+    
+<link rel="stylesheet" href="/css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="/css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                            
+                              <a class="tag" href="/tags/#sensor" title="sensor">sensor</a>
+                            
+                        </div>
+                        <h1>Android Sensor Framework 概览</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Rock Zhang on
+                            2016-05-18
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="1-Overview"><a href="#1-Overview" class="headerlink" title="1. Overview"></a>1. Overview</h2><p>Android Sensor Framework 的整体架构如图 1 所示:</p>
+<p><img src="/images/posts/2016/05/android_sensor_framework_1.png" alt="图片 1"></p>
+<p>Android Sensor Framework 可以分为 3 大部分，各个部分的主要功能如下：</p>
+<p><strong>SDK</strong><br>    这一部分主要功能是为 Application 提供 Java API 接口，以便 Application 可以开启所需的 Sensor 并获取数据。</p>
+<p><strong>Framework</strong><br>    这一部分主要有 Sensor Service 构成，主要实现了 Sensor 数据流和控制流。</p>
+<p><strong>Libraries</strong><br>    这一部分是 Sensor 的硬件抽象层（HAL），它实现了 Sensor 的具体操作和数据获取功能。同时，它还进行虚拟 Sensor，电子罗盘等相关的算法处理过程。此模块通常以一个动态链接库的形式提供。</p>
+<h2 id="2-Android-Sensor-Framework-类图"><a href="#2-Android-Sensor-Framework-类图" class="headerlink" title="2. Android Sensor Framework 类图"></a>2. Android Sensor Framework 类图</h2><p><img src="/images/posts/2016/05/android_sensor_framework_2.png" alt="图片 2"></p>
+<h2 id="3-Android-Sensor-SDK"><a href="#3-Android-Sensor-SDK" class="headerlink" title="3. Android Sensor SDK"></a>3. Android Sensor SDK</h2><p>图片 2 中的 Client 部分内容即为 Android Sensor SDK 的主要构成。主要类的主要功能如下：</p>
+<p><strong>SensorManager</strong><br>该类主要封装了 Sensor 相关的 API ，提供给 Application 使用。<br>文件路径：frameworks/base/core/java/android/hardware/SensorManager.java</p>
+<p><strong>SystemSensorManager</strong><br>该类主要实现 SensorManager 控制和数据获取的逻辑。<br>文件路径：frameworks/base/core/java/android/hardware/SystemSensorManager.java</p>
+<p><strong>android_hardware_SensorManager.cpp</strong><br>该文件负责 jave 层和 native 层通信的 JNI 实现，上层的 Java 代码通过 JNI 调用 Native 层提供的服务。<br>文件路径：frameworks/base/core/jni/android_hardware_SensorManager.cpp</p>
+<p><strong>SensorManager.cpp</strong><br>Sensor 在 Native 层的客户端，负责与服务端 SensorService.cpp 的通信<br>文件路径：frameworks/native/libs/gui/SensorManager.cpp</p>
+<h2 id="4-Android-Sensor-Native-Framework"><a href="#4-Android-Sensor-Native-Framework" class="headerlink" title="4. Android Sensor Native Framework"></a>4. Android Sensor Native Framework</h2><p>图片 2 中的 Server 部分内容即为 Android Sensor Native Framwork 的主要构成。主要类的主要功能如下：</p>
+<p><strong>SensorService.cpp</strong><br>SensorService 是 Android Sensor Framework 最核心的模块，它实现了主要的 Sensor控制流和数据流逻辑，完成 Sensor 参数配置，数据分发，Client 请求处理等功能。<br>文件路径：frameworks/native/services/sensorservice/SensorService.cpp</p>
+<p><strong>BinderService</strong><br>BinderService 是 Android Service 框架的主要类，它提供了 Service 的生命周期管理、进程间通信、请求响应处理等功能。Android 中的绝大部分 Service 都会继承此类。<br>文件路径：frameworks/native/include/binder/BinderService.h</p>
+<p><strong>BnSensorServer</strong><br>该类提供类 Sensor 信息获取以及 SensorEventConnection 创建的功能。<br>文件路径：frameworks/native/include/gui/ISensorServer.h</p>
+<p><strong>SensorEventConnection</strong><br>SensorEventConnection 是 Sensor 数据的传输通道，当 Client 开始监听某一个 Sensor 是，一个对应的 SensorEventConnection 将会被创建，Server 端在接收到 Sensor 数据后，通过写入到 SensorEventConnection 传递给 Client 端。<br>文件路径：frameworks/native/libs/gui/ISensorEventConnection.cpp</p>
+<p><strong>Bittube</strong><br>该类为单向字节管道，提供进程间单向数据通信功能。SensorEventConnection 是基于 Bittube 实现的。<br>文件路径：frameworks/native/libs/gui/BitTube.cpp</p>
+<p><strong>SensorDevice</strong><br>该类负责管理和维护系统中的所有 Sensor，封装了 Sensor 的使能、配置、数据读取等功能。<br>文件路径：frameworks/native/services/sensorservice/SensorDevice.cpp</p>
+<h2 id="5-Android-Sensor-HAL"><a href="#5-Android-Sensor-HAL" class="headerlink" title="5. Android Sensor HAL"></a>5. Android Sensor HAL</h2><p>Android 定义了一系列 Sensor HAL 接口，实际的 Sensor HAL 库需要实现这些接口，主要的接口如下:</p>
+<h3 id="5-1-SensorList"><a href="#5-1-SensorList" class="headerlink" title="5.1. SensorList"></a>5.1. SensorList</h3><p>SensorList 定义了 HAL 层提供的 Sensor，提供 Sensor 类型、供应商、功耗等信息。同时，HAL 层需要实现获取 SensorList 的回调接口。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">sensor_t</span> <span class="title">SensorList</span>[] = &#123;</span></span><br><span class="line"></span><br><span class="line">        &#123;</span><br><span class="line">                .name                   = <span class="string">"LTR559 Ambient Light Sensor"</span>,</span><br><span class="line">                .vendor                 = <span class="string">"LITE-ON TECHNOLOGY CORP."</span>,</span><br><span class="line">                .version                = <span class="number">0</span>,</span><br><span class="line">                .handle                 = SENSOR_HANDLE_LIGHT,</span><br><span class="line">                .type                   = SENSOR_TYPE_LIGHT,</span><br><span class="line">                .maxRange               = <span class="number">32767</span>,</span><br><span class="line">                .resolution             = <span class="number">1</span>,</span><br><span class="line">                .power                  = <span class="number">0.1f</span>, <span class="comment">/* 100 uA */</span></span><br><span class="line">                .minDelay               = <span class="number">0</span>,</span><br><span class="line">                .fifoReservedEventCount = <span class="number">0</span>,</span><br><span class="line">                .fifoMaxEventCount      = <span class="number">0</span>,</span><br><span class="line">                .stringType             = SENSOR_STRING_TYPE_LIGHT,</span><br><span class="line">                .requiredPermission     = <span class="string">""</span>,</span><br><span class="line">                .maxDelay               = <span class="number">500</span>,</span><br><span class="line">                .flags                  = SENSOR_FLAG_ON_CHANGE_MODE,</span><br><span class="line">                .reserved[<span class="number">0</span>]            = <span class="literal">NULL</span>;</span><br><span class="line">                .reserved[<span class="number">1</span>]            = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line">        &#123;</span><br><span class="line">                .name                   = <span class="string">"LTR559 Proximity Sensor"</span>,</span><br><span class="line">                .vendor                 = <span class="string">"LITE-ON TECHNOLOGY CORP."</span>,</span><br><span class="line">                .version                = <span class="number">0</span>,</span><br><span class="line">                .handle                 = SENSOR_HANDLE_PROXIMITY,</span><br><span class="line">                .type                   = SENSOR_TYPE_PROXIMITY,</span><br><span class="line">                .maxRange               = <span class="number">4</span>,</span><br><span class="line">                .resolution             = <span class="number">4</span>,</span><br><span class="line">                .power                  = <span class="number">0.15f</span>, <span class="comment">/* 150 uA */</span></span><br><span class="line">                .minDelay               = <span class="number">0</span>,</span><br><span class="line">                .fifoReservedEventCount = <span class="number">0</span>,</span><br><span class="line">                .fifoMaxEventCount      = <span class="number">0</span>,</span><br><span class="line">                .stringType             = SENSOR_STRING_TYPE_PROXIMITY,</span><br><span class="line">                .requiredPermission     = <span class="string">""</span>,</span><br><span class="line">                .maxDelay               = <span class="number">100</span>,</span><br><span class="line">                .flags                  = SENSOR_FLAG_ON_CHANGE_MODE,</span><br><span class="line">                .reserved[<span class="number">0</span>]            = <span class="literal">NULL</span>;</span><br><span class="line">                .reserved[<span class="number">1</span>]            = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line">        &#123;</span><br><span class="line">                .name                   = <span class="string">"LTR559 Proximity Sensor [Wake Up]"</span>,</span><br><span class="line">                .vendor                 = <span class="string">"LITE-ON TECHNOLOGY CORP."</span>,</span><br><span class="line">                .version                = <span class="number">0</span>,</span><br><span class="line">                .handle                 = SENSOR_HANDLE_PROXIMITY_WAKE_UP,</span><br><span class="line">                .type                   = SENSOR_TYPE_PROXIMITY,</span><br><span class="line">                .maxRange               = <span class="number">4</span>,</span><br><span class="line">                .resolution             = <span class="number">4</span>,</span><br><span class="line">                .power                  = <span class="number">0.15f</span>, <span class="comment">/* 150 uA */</span></span><br><span class="line">                .minDelay               = <span class="number">0</span>,</span><br><span class="line">                .fifoReservedEventCount = <span class="number">0</span>,</span><br><span class="line">                .fifoMaxEventCount      = <span class="number">0</span>,</span><br><span class="line">                .stringType             = SENSOR_STRING_TYPE_PROXIMITY,</span><br><span class="line">                .requiredPermission     = <span class="string">""</span>,</span><br><span class="line">                .maxDelay               = <span class="number">100</span>,</span><br><span class="line">                .flags                  = SENSOR_FLAG_ON_CHANGE_MODE | SENSOR_FLAG_WAKE_UP,</span><br><span class="line">                .reserved[<span class="number">0</span>]            = <span class="literal">NULL</span>;</span><br><span class="line">                .reserved[<span class="number">1</span>]            = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">sensor_hal_get_sensors_list</span><span class="params">(struct <span class="keyword">sensors_module_t</span>* <span class="keyword">module</span>,</span></span></span><br><span class="line"><span class="function"><span class="params">                                     struct <span class="keyword">sensor_t</span> <span class="keyword">const</span>** <span class="built_in">list</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        *<span class="built_in">list</span> = SensorList;</span><br><span class="line">        <span class="keyword">return</span> ARRAY_SIZE(SensorList);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="5-2-sensors-module-t"><a href="#5-2-sensors-module-t" class="headerlink" title="5.2. sensors_module_t"></a>5.2. sensors_module_t</h3><p>HAL 层需要定义一个 sensors_module_t，供系统在启动时加载 Sensor HAL 动态库。sensors_module_t 向上层注册获取 SensorList 和获取 Sensor 控制接口的相关回调函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">open_sensors</span><span class="params">(<span class="keyword">const</span> struct <span class="keyword">hw_module_t</span>* hw_module, <span class="keyword">const</span> <span class="keyword">char</span>* name,</span></span></span><br><span class="line"><span class="function"><span class="params">        struct <span class="keyword">hw_device_t</span>** hw_device_out)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">int</span> status = -EINVAL;</span><br><span class="line">        <span class="keyword">sensors_poll_context_t</span> *dev = <span class="keyword">new</span> <span class="keyword">sensors_poll_context_t</span>();</span><br><span class="line"></span><br><span class="line">        <span class="built_in">memset</span>(&amp;dev-&gt;device, <span class="number">0</span>, <span class="keyword">sizeof</span>(sensors_poll_device_1));</span><br><span class="line"></span><br><span class="line">        dev-&gt;device.common.tag = HARDWARE_DEVICE_TAG;</span><br><span class="line">        dev-&gt;device.common.version = SENSORS_DEVICE_API_VERSION_1_3;</span><br><span class="line">        dev-&gt;device.common.<span class="keyword">module</span> = <span class="keyword">const_cast</span>&lt;<span class="keyword">hw_module_t</span>*&gt;(hw_module);</span><br><span class="line">        dev-&gt;device.common.<span class="built_in">close</span> = device__close;</span><br><span class="line">        dev-&gt;device.activate = device__activate;</span><br><span class="line">        dev-&gt;device.setDelay = device__setDelay;</span><br><span class="line">        dev-&gt;device.poll = device__poll;</span><br><span class="line">        dev-&gt;device.batch = device__batch;</span><br><span class="line">        dev-&gt;device.<span class="built_in">flush</span> = device__flush;</span><br><span class="line"></span><br><span class="line">        *hw_device_out = &amp;dev-&gt;device.common;</span><br><span class="line">        status = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">hw_module_methods_t</span> <span class="title">sensors_module_methods</span> = &#123;</span></span><br><span class="line">        .<span class="built_in">open</span> = open_sensors</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sensors_module_t</span> <span class="title">HAL_MODULE_INFO_SYM</span> = &#123;</span></span><br><span class="line">        .common = &#123;</span><br><span class="line">                .tag = HARDWARE_MODULE_TAG,</span><br><span class="line">                .module_api_version = <span class="number">1</span>,</span><br><span class="line">                .hal_api_version = <span class="number">0</span>,</span><br><span class="line">                .id = SENSORS_HARDWARE_MODULE_ID,</span><br><span class="line">                .name = <span class="string">"ALS PS Sensor module"</span>,</span><br><span class="line">                .author = <span class="string">"Meizu Telecom Equipment Co., Ltd."</span>,</span><br><span class="line">                .methods = &amp;sensors_module_methods,</span><br><span class="line">        &#125;,</span><br><span class="line">        .get_sensors_list = sensor_hal_get_sensors_list,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="5-3-Sensor-控制和数据获取接口"><a href="#5-3-Sensor-控制和数据获取接口" class="headerlink" title="5.3. Sensor 控制和数据获取接口"></a>5.3. Sensor 控制和数据获取接口</h3><p>HAL 层还需要提供实际控制和获取 Sensor 数据的接口，SensorService 中对 Sensor 的控制和数据的获取最终会调用到这些接口。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Extends a sensors_poll_device_1 by including all the sub-module's devices.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sensors_poll_context_t</span> &#123;</span></span><br><span class="line">    sensors_poll_device_1 device; <span class="comment">// must be first</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">activate</span><span class="params">(<span class="keyword">int</span> handle, <span class="keyword">int</span> enabled)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">setDelay</span><span class="params">(<span class="keyword">int</span> handle, <span class="keyword">int64_t</span> ns)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">poll</span><span class="params">(<span class="keyword">sensors_event_t</span>* data, <span class="keyword">int</span> count)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">batch</span><span class="params">(<span class="keyword">int</span> handle, <span class="keyword">int</span> flags, <span class="keyword">int64_t</span> period_ns, <span class="keyword">int64_t</span> timeout)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">flush</span><span class="params">(<span class="keyword">int</span> handle)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">close</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">device__close</span><span class="params">(struct <span class="keyword">hw_device_t</span> *dev)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">sensors_poll_context_t</span>* ctx = (<span class="keyword">sensors_poll_context_t</span>*) dev;</span><br><span class="line">    <span class="keyword">if</span> (ctx != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> retval = ctx-&gt;<span class="built_in">close</span>();</span><br><span class="line">        <span class="keyword">delete</span> ctx;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">device__activate</span><span class="params">(struct <span class="keyword">sensors_poll_device_t</span> *dev, <span class="keyword">int</span> handle,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int</span> enabled)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">sensors_poll_context_t</span>* ctx = (<span class="keyword">sensors_poll_context_t</span>*) dev;</span><br><span class="line">    <span class="keyword">return</span> ctx-&gt;activate(handle, enabled);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">device__setDelay</span><span class="params">(struct <span class="keyword">sensors_poll_device_t</span> *dev, <span class="keyword">int</span> handle,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int64_t</span> ns)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">sensors_poll_context_t</span>* ctx = (<span class="keyword">sensors_poll_context_t</span>*) dev;</span><br><span class="line">    <span class="keyword">return</span> ctx-&gt;setDelay(handle, ns);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">device__poll</span><span class="params">(struct <span class="keyword">sensors_poll_device_t</span> *dev, <span class="keyword">sensors_event_t</span>* data,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int</span> count)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">sensors_poll_context_t</span>* ctx = (<span class="keyword">sensors_poll_context_t</span>*) dev;</span><br><span class="line">    <span class="keyword">return</span> ctx-&gt;poll(data, count);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">device__batch</span><span class="params">(struct sensors_poll_device_1 *dev, <span class="keyword">int</span> handle,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int</span> flags, <span class="keyword">int64_t</span> period_ns, <span class="keyword">int64_t</span> timeout)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">sensors_poll_context_t</span>* ctx = (<span class="keyword">sensors_poll_context_t</span>*) dev;</span><br><span class="line">    <span class="keyword">return</span> ctx-&gt;batch(handle, flags, period_ns, timeout);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">device__flush</span><span class="params">(struct sensors_poll_device_1 *dev, <span class="keyword">int</span> handle)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">sensors_poll_context_t</span>* ctx = (<span class="keyword">sensors_poll_context_t</span>*) dev;</span><br><span class="line">    <span class="keyword">return</span> ctx-&gt;<span class="built_in">flush</span>(handle);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="6-Android-Sensor-Framework的初始化流程"><a href="#6-Android-Sensor-Framework的初始化流程" class="headerlink" title="6. Android Sensor Framework的初始化流程"></a>6. Android Sensor Framework的初始化流程</h2><h3 id="6-1-Android-Sensor-Service-初始化"><a href="#6-1-Android-Sensor-Service-初始化" class="headerlink" title="6.1. Android Sensor Service 初始化"></a>6.1. Android Sensor Service 初始化</h3><p><img src="/images/posts/2016/05/android_sensor_framework_3.png" alt="图片 3"></p>
+<p>Kernel 在启动完成后，会执行 init 程序，该程序接着解析 init.rc 文件，启动 zygote，最终会执行 Zyoteinit.java 中的 main 函数。</p>
+<p>在 Zygoteinit 的main 函数执行过程中，会调用 startSystemServer 接口，该接口最终会调用 native 层的 nativeforkSystemServer 接口，进而启动 SystemServer ，调用其 main 函数。</p>
+<p>在 SystemServer 的 main 函数中，会调用对应的 nativeInit 接口。在 nativeInit 中，会创建第一个 SensorService 实例。当 SensorService 第一个实例创建时，其 onFirstRef 接口将会被调用。</p>
+<p><img src="/images/posts/2016/05/android_sensor_framework_4.png" alt="图片 4"></p>
+<p>在 SensorService 的 onFirstRef 接口中，会创建 SensorDevice 的实例。在 SensorDevice 的构造函数中，会调用 hw_get_module 接口加载 Sensor HAL 的动态库，接着调用 Sensor HAL 提供的 open 接口，执行 Sensor HAL 的初始化。<br>接着 SensorService 通过 SensorDevice，调用 Sensor HAL 提供的 get_sensors_list 接口，获取所支持的 Sensor 信息。<br>而后，SensorService 会创建一个 Looper 和 SensorEventAckReceiver。其中 Looper 用于 enable sensor 后，进行数据的接收；而 SensorEventAckReceiver 则用于在 dispatch wake up sensor event 给上层后，接收上层返回的确认 ACK。<br>至此，SensorService 初始化完毕。</p>
+<h3 id="6-2-Android-Sensor-HAL-加载"><a href="#6-2-Android-Sensor-HAL-加载" class="headerlink" title="6.2. Android Sensor HAL 加载"></a>6.2. Android Sensor HAL 加载</h3><p>在 SensorService 创建 SensorDevice 时，会调用 hw_get_module 接口加载 SensorHAL 的动态库文件。<br>在64位的系统中，hw_get_module 接口会在 /vendor/lib64/hw 和 /system/lib64/hw 目录下搜索 SensorHAL 动态库文件，前者的优先级高。<br>hw_get_module 会获取依次获取 “ro.hardware.sensors”，”ro.hardware”，”ro.product.board”，”ro.board.platform”，”ro.arch” property 的值作为 subname，并以 sensors.subname.so 作为 SensorHAL 动态库的文件名，在上述两个目录中搜索文件是否存在，如果都没有搜索到，那么最后会用 sensors.default.so 作为文件名，进行搜索。<br>当搜索到 SensorHAL 的动态库文件后，就会调用 load 接口进行加载操作。<br>具体的流程可以查看下面的源代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">hw_module_exists</span><span class="params">(<span class="keyword">char</span> *path, <span class="keyword">size_t</span> path_len, <span class="keyword">const</span> <span class="keyword">char</span> *name,</span></span></span><br><span class="line"><span class="function"><span class="params">                            <span class="keyword">const</span> <span class="keyword">char</span> *subname)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">snprintf</span>(path, path_len, <span class="string">"%s/%s.%s.so"</span>,</span><br><span class="line">             HAL_LIBRARY_PATH2, name, subname);</span><br><span class="line">    <span class="keyword">if</span> (access(path, R_OK) == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">snprintf</span>(path, path_len, <span class="string">"%s/%s.%s.so"</span>,</span><br><span class="line">             HAL_LIBRARY_PATH1, name, subname);</span><br><span class="line">    <span class="keyword">if</span> (access(path, R_OK) == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> -ENOENT;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">hw_get_module_by_class</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *class_id, <span class="keyword">const</span> <span class="keyword">char</span> *inst,</span></span></span><br><span class="line"><span class="function"><span class="params">                           <span class="keyword">const</span> struct <span class="keyword">hw_module_t</span> **<span class="keyword">module</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">char</span> prop[PATH_MAX] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="keyword">char</span> path[PATH_MAX] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="keyword">char</span> name[PATH_MAX] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="keyword">char</span> prop_name[PATH_MAX] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (inst)</span><br><span class="line">        <span class="built_in">snprintf</span>(name, PATH_MAX, <span class="string">"%s.%s"</span>, class_id, inst);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        strlcpy(name, class_id, PATH_MAX);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Here we rely on the fact that calling dlopen multiple times on</span></span><br><span class="line"><span class="comment">     * the same .so will simply increment a refcount (and not load</span></span><br><span class="line"><span class="comment">     * a new copy of the library).</span></span><br><span class="line"><span class="comment">     * We also assume that dlopen() is thread-safe.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* First try a property specific to the class and possibly instance */</span></span><br><span class="line">    <span class="built_in">snprintf</span>(prop_name, <span class="keyword">sizeof</span>(prop_name), <span class="string">"ro.hardware.%s"</span>, name);</span><br><span class="line">    <span class="keyword">if</span> (property_get(prop_name, prop, <span class="literal">NULL</span>) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (hw_module_exists(path, <span class="keyword">sizeof</span>(path), name, prop) == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">goto</span> found;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Loop through the configuration variants looking for a module */</span></span><br><span class="line">    <span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;HAL_VARIANT_KEYS_COUNT; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (property_get(variant_keys[i], prop, <span class="literal">NULL</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (hw_module_exists(path, <span class="keyword">sizeof</span>(path), name, prop) == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">goto</span> found;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Nothing found, try the default */</span></span><br><span class="line">    <span class="keyword">if</span> (hw_module_exists(path, <span class="keyword">sizeof</span>(path), name, <span class="string">"default"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">goto</span> found;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> -ENOENT;</span><br><span class="line"></span><br><span class="line">found:</span><br><span class="line">    <span class="comment">/* load the module, if this fails, we're doomed, and we should not try</span></span><br><span class="line"><span class="comment">     * to load a different variant. */</span></span><br><span class="line">    <span class="keyword">return</span> load(class_id, path, <span class="keyword">module</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">hw_get_module</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *id, <span class="keyword">const</span> struct <span class="keyword">hw_module_t</span> **<span class="keyword">module</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> hw_get_module_by_class(id, <span class="literal">NULL</span>, <span class="keyword">module</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SENSORS_HARDWARE_MODULE_ID <span class="meta-string">"sensors"</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">SensorDevice::SensorDevice()</span><br><span class="line">    :  mSensorDevice(<span class="number">0</span>),</span><br><span class="line">       mSensorModule(<span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">status_t</span> err = hw_get_module(SENSORS_HARDWARE_MODULE_ID,</span><br><span class="line">            (<span class="keyword">hw_module_t</span> <span class="keyword">const</span>**)&amp;mSensorModule);</span><br><span class="line">    ... ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="6-3-Android-Sensor-Manager-初始化"><a href="#6-3-Android-Sensor-Manager-初始化" class="headerlink" title="6.3. Android Sensor Manager 初始化"></a>6.3. Android Sensor Manager 初始化</h3><p><img src="/images/posts/2016/05/android_sensor_framework_5.png" alt="图片 5"></p>
+<p>APP 在获取 Sensor 数据前，需要获取一个 SensorManager 对象。而在其构造函数中，会先调用 nativeClassInit 和 nativeGetNextSensor 获取系统支持的所有 Sensor 的参数（注，nativeClassInit 只会调用一次），包括名称、类型等参数。后续的相关接口，会用到这些参数。</p>
+<h2 id="7-Android-Sensor-Framework的数据流程分析"><a href="#7-Android-Sensor-Framework的数据流程分析" class="headerlink" title="7. Android Sensor Framework的数据流程分析"></a>7. Android Sensor Framework的数据流程分析</h2><p><img src="/images/posts/2016/05/android_sensor_framework_6.png" alt="图片 6"></p>
+<p>当上层调用 registerListener 接口时，相应的 sensor 就会被 enable。SensorService 在调用 HAL 提供的 enable 接口前，会先调用 batch 接口，对 sensor 的采样率、数据上报频率等进行配置。另外，如果 sensor 已经被 enable 了，那么 SensorService 就只调用 batch 和 flush 接口。<br>SensorService 在 onFirstRef 时创建了一个 Looper，该 Looper 的执行线程会调用 poll 接口，并阻塞在 sensor 的数据管道，当 sensor 有数据返回时，SensorService 会通过 SensorEventQueue 发送到上层，并最终分发到各个 listener。</p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/05/21//zram-introduction.html/" data-toggle="tooltip" data-placement="top" title="zram 简介">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/05/09//slab-allocator-and-kmalloc.html/" data-toggle="tooltip" data-placement="top" title="SLAB 分配器和 kmalloc">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                
+<link rel="stylesheet" href="/css/music-player/fonts/iconfont.css">
+
+
+<link rel="stylesheet" href="/css/music-player/css/reset.css">
+
+
+<link rel="stylesheet" href="/css/music-player/css/player.css">
+
+
+<div class="music-player">
+    <audio class="music-player__audio" ></audio>
+    <div class="music-player__main">
+        <div class="music-player__blur"></div>
+        <div class="music-player__disc">
+            <div class="music-player__image">
+                <img width="100%" src="" alt="">
+            </div>
+            <div class="music-player__pointer"><img width="100%" src="/img/cd_tou.png" alt=""></div>
+        </div>
+        <div class="music-player__controls">
+            <div class="music__info">
+                <h3 class="music__info--title">...</h3>
+                <p class="music__info--singer">...</p>
+            </div>
+            <div class="player-control">
+                <div class="player-control__content">
+                    <div class="player-control__btns">
+                        <div class="player-control__btn player-control__btn--prev"><i class="iconfont icon-prev"></i></div>
+                        <div class="player-control__btn player-control__btn--play"><i class="iconfont icon-play"></i></div>
+                        <div class="player-control__btn player-control__btn--next"><i class="iconfont icon-next"></i></div>
+                        <div class="player-control__btn player-control__btn--mode"><i class="iconfont icon-loop"></i></div>
+                    </div>
+                    <div class="player-control__volume">
+                        <div class="control__volume--icon player-control__btn"><i class="iconfont icon-volume"></i></div>
+                        <div class="control__volume--progress player_progress"></div>
+                    </div>
+                </div>
+                <div class="player-control__content">
+                    <div class="player__song--progress player_progress"></div>
+                    <div class="player__song--timeProgess nowTime">00:00</div>
+                    <div class="player__song--timeProgess totalTime">00:00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="/js/music-player/utill.js"></script>
+
+
+<script src="/js/music-player/jquery.min.js"></script>
+
+<!-- netease; qqkg -->
+<!--
+<script src="/js/music-player/player.js?library=config.music.library.js"></script>
+-->
+<script src="../../../../js/music-player/player.js?library=netease&music=https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html"></script>
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                          <a class="tag" href="/tags/#sensor" title="sensor">sensor</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2023 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="/js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="/js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="/js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="/js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

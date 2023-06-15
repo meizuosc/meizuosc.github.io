@@ -1,3 +1,0 @@
----
----
-Sitemap: {{ site.production_url }}/sitemap.txt

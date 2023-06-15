@@ -1,160 +1,244 @@
-# This is the default format. 
-# For more see: https://github.com/mojombo/jekyll/wiki/Permalinks
-permalink: /:year/:month/:title.html
+# Hexo Configuration
+## Docs: https://hexo.io/docs/configuration.html
+## Source: https://github.com/hexojs/hexo/
 
-safe: true
-lsi: false
-gems: ["jekyll-paginate"]
-exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md", "tools"]
-paginate: 10
-whitelist:
-  - jekyll-paginate
-encoding: utf-8
-kramdown:
-  input: GFM
-  hard_wrap: false
-gems:
-  - jekyll-coffeescript
-  - jekyll-paginate
-incremental: false
-highlighter: rouge
-# markdown: redcarpet
-# redcarpet:
-#  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", "tables"]
+# Site
+title: 魅族内核团队
+subtitle: "一个有内涵的技术分享平台"
+author: meizu
+language: cn
+timezone:
 
-# Themes are encouraged to use these universal variables 
-# so be sure to set them if your theme uses them.
-#
-title : 魅族内核团队
-tagline: 致力于打造更好的 Linux 产品
-contacts_list: true
-author :
-  name : 魅族内核团队
-  email : patchwork@meizu.com
-  github : meizuosc
-  twitter :
-  weibo : mzkernel
-  v2ex :
-  googleplus :
-  feedburner :
+# URL
+## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
+url: https://kernel.meizu.com/       # Note: don't forget to modify the CNAME file to your url
+root: /
+permalink: :year/:month/:day/:title/
+permalink_defaults:
 
-# The production_url is only used when full-domain names are needed
-# such as sitemap.txt 
-# Most places will/should use BASE_PATH to make the urls
-#
-# If you have set a CNAME (pages.github.com) set your custom domain here.
-# Else if you are pushing to username.github.io, replace with your username.
-# Finally if you are pushing to a GitHub project page, include the project name at the end.
-#
-production_url : http://kernel.meizu.com
-cdn_url :
+#Custom Setting Start
 
-projects: false
-links_list: true
+# Site settings
+SEOTitle: 魅族内核团队
+email:
+description: "一个有内涵的技术分享平台"
+keyword: "meizu,kernel,魅族"
+header-img: img/header_img/home-bg-1-dark.png
+signature: false #show signature
+signature-img: img/signature/dusign.png
 
-# All Jekyll-Bootstrap specific configurations are namespaced into this hash
-#
-JB :
-  version : 0.3.0
+# SNS settings
+github_username:
+twitter_username:
+facebook_username:
+zhihu_username:
 
-  # All links will be namespaced by BASE_PATH if defined.
-  # Links in your website should always be prefixed with {{BASE_PATH}}
-  # however this value will be dynamically changed depending on your deployment situation.
-  #
-  # CNAME (http://yourcustomdomain.com)
-  #   DO NOT SET BASE_PATH 
-  #   (urls will be prefixed with "/" and work relatively)
-  #
-  # GitHub Pages (http://username.github.io)
-  #   DO NOT SET BASE_PATH 
-  #   (urls will be prefixed with "/" and work relatively)
-  #
-  # GitHub Project Pages (http://username.github.io/project-name)
-  #
-  #   A GitHub Project site exists in the `gh-pages` branch of one of your repositories.
-  #  REQUIRED! Set BASE_PATH to: http://username.github.io/project-name
-  #
-  # CAUTION:
-  #   - When in Localhost, your site will run from root "/" regardless of BASE_PATH
-  #   - Only the following values are falsy: ["", null, false]
-  #   - When setting BASE_PATH it must be a valid url.
-  #     This means always setting the protocol (http|https) or prefixing with "/"
-  BASE_PATH : false
+# Build settings
+anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
 
-  # By default, the asset_path is automatically defined relative to BASE_PATH plus the enabled theme.
-  # ex: [BASE_PATH]/assets/themes/[THEME-NAME]
-  #
-  # Override this by defining an absolute path to assets here.
-  # ex: 
-  #   http://s3.amazonaws.com/yoursite/themes/watermelon
-  #   /assets
-  #
-  ASSET_PATH : false
-  IMAGE_PATH : false
+# Analytics settings
+# Baidu Analytics
+# ba_track_id: 4cc1f2d8f3067386cc5cdb626a202900
+# Google Analytics
+ga_track_id: 'UA-XXXXXXXX-X'          # Format: UA-xxxxxx-xx
+ga_domain: yoursite
 
-  # These paths are to the main pages Jekyll-Bootstrap ships with.
-  # Some JB helpers refer to these paths; change them here if needed.
-  #
-  archive_path: /archive.html
-  categories_path : /categories.html
-  tags_path : /tags.html
-  atom_path : /atom.xml
-  rss_path : /rss.xml
-  messages_path :
-  about_path : /about.html
-  project_path: /projects.html
-  jobs_path: /jobs.html
+# Sidebar settings
+sidebar: true                      # whether or not using Sidebar.
+sidebar-about-description: "欢迎来到魅族内核分享平台!"
+sidebar-avatar: img/ironman-draw.png      # use absolute URL, seeing it's used in both `/` and `/about/`
+widgets:
+- search
+- featured-tags
+- short-about
+- visitor
+- recent-posts
+- friends-blog
+- archive
+- category
 
-  # Settings for comments helper
-  # Set 'provider' to the comment provider you want to use.
-  # Set 'provider' to false to turn commenting off globally.
-  #
-  comments :
-    provider : duoshuo
-    duoshuo :
-      short_name : mzkernel
-    disqus :
-      short_name :
-    livefyre :
-      site_id :
-    intensedebate :
-      account :
-    facebook :
-      appid :
-      num_posts:
-      width:
-      colorscheme:
+## Search
+search:
+  enable: true
+  path: search.xml
+  field: post
+  content: true
 
-  # Settings for analytics helper
-  # Set 'provider' to the analytics provider you want to use.
-  # Set 'provider' to false to turn analytics off globally.
-  #        
-  analytics :
-    provider : baidu
-    baidu :
-      tracking_id : 231c363d96e8f15c54974a34c26ca7c0
-    google : 
-      tracking_id :
-    getclicky :
-      site_id : 
-    mixpanel :
-      token : '_MIXPANEL_TOKEN_'
+# widget behavior
+## Archive
+archive_type: 'monthly'
+show_count: true
 
-  # Settings for sharing helper. 
-  # Sharing is for things like tweet, plusone, like, reddit buttons etc.
-  # Set 'provider' to the sharing provider you want to use.
-  # Set 'provider' to false to turn sharing off globally.
-  #
-  sharing :
-    provider : direct
 
-  # Settings for all other include helpers can be defined by creating 
-  # a hash with key named for the given helper. ex:
-  #
-  #   pages_list :
-  #     provider : "custom"   
-  #
-  # Setting any helper's provider to 'custom' will bypass the helper code
-  # and include your custom code. Your custom file must be defined at:
-  #   ./_includes/custom/[HELPER]
-  # where [HELPER] is the name of the helper you are overriding.
+## Featured Tags
+featured-tags: true                     # whether or not using Feature-Tags
+featured-condition-size: 1              # A tag will be featured if the size of it is more than this condition value
+
+
+## Friends
+friends: [
+    {
+        title: "Other",
+        href: "#"
+    }
+]
+
+math:
+  enable: true
+  engine: mathjax
+
+#Custom Setting End
+
+# Directory
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+photography_dir: photography
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+# Writing
+new_post_name: :year-:month-:day-:title.md # File name of new posts
+default_layout: post
+titlecase: false # Transform title into titlecase
+external_link: true # Open external links in new tab
+filename_case: 0
+render_drafts: false
+post_asset_folder: true
+relative_link: false
+future: true
+highlight:
+  enable: true
+  line_number: true
+  auto_detect: false
+  tab_replace:
+
+# Category & Tag
+default_category: uncategorized
+category_map:
+tag_map:
+home_posts_tag: true # show posts tags
+
+# Date / Time format
+## Hexo uses Moment.js to parse and display date
+## You can customize the date format as defined in
+## http://momentjs.com/docs/#/displaying/format/
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+
+# Pagination
+## Set per_page to 0 to disable pagination
+per_page: 10
+pagination_dir: archives
+
+archive_generator:
+  per_page: 10
+  yearly: true
+  monthly: true
+  daily: false
+  
+# Markdown-it config
+## Docs: https://github.com/celsomiranda/hexo-renderer-markdown-it/wiki
+markdown:
+  render:
+    html: true
+    xhtmlOut: false
+    breaks: true
+    linkify: true
+    typographer: true
+    quotes: '“”‘’'
+  
+# Extensions
+## Plugins: https://hexo.io/plugins/
+## Themes: https://hexo.io/themes/
+theme: snail
+
+#sitemap
+sitemap:
+  path: sitemap.xml
+## Baidusitemap
+baidusitemap:
+path: baidusitemap.xml
+
+# Deployment
+## Docs: https://hexo.io/docs/deployment.html
+deploy:
+  type: git
+  repo:
+      github:
+      coding:
+  branch: master
+
+## share
+share: true
+
+# Comment
+## This comment system is gitment
+## gitment url: https://github.com/imsun/gitment
+comment:
+  gitment:
+    enable: false
+    owner:
+    repo:
+    client_id:
+    client_secret:
+  livere:
+    enable: false
+  disqus:
+    enable: false
+    username:
+
+## music
+### netease; qqkg;
+### if your `library` is `qqkg`, please set `music` as the song url
+music:
+  enable: true
+  library: netease
+  music: https://kg.qq.com/node/play?s=7deFpz7Z26Jmv7di&g_f=share_html
+
+# Tip
+tip:
+  enable: true
+  copyright: This is copyright.
+  content: false
+
+# Background effects
+## If there is no effect after modification, please empty the cache and try again.
+## ⚠️ The following special effects will take up a lot of cpu resorces, please open it carefully.
+bg_effects:
+  enable: true
+  line:
+    enable: false
+    color: 129,200,61
+    pointColor: 129,200,61
+    opacity: 0.7
+    zIndex: -9
+    count: 99
+  mouse_click:
+    enable: true
+    content: '"🌱","just do it","🍀"'
+    color: '"rgb(121,93,179)"
+          ,"rgb(76,180,231)"
+          ,"rgb(184,90,154)"'
+  wave:
+    enable: true
+
+# Color Theme
+## light , dark or star
+## If you set the value of the `color_theme` to `dark`, set the value of the `highlight_theme` to `night` in `/theme/snail/config.yml`
+## `mouse_control` is only valid for star themes
+color_theme: light
+mouse_control: false
+
+# Visitor statistics
+visitor:
+  enable: false
+  type:
+
+# Chinese Blog
+chinese_blog:
+  enable: false
+  url: YOUR_CHINESE_BLOG_URL

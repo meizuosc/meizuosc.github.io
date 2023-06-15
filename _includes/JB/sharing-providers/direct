@@ -1,3 +1,0 @@
-<span id="share">
-  <a class="weibo" target="_blank" title="分享到微博" href="http://service.weibo.com/share/share.php?title={{ page.title }} - {{ site.title }}&amp;url={{ site.production_url }}{{ page.url }}&amp;type=3&amp;searchPic=1"><i class="icon-large icon-weibo"></i></a>
-</span>
