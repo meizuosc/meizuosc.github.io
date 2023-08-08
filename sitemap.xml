@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://kernel.meizu.com/about/index.html</loc>
+    
+    <lastmod>2023-08-08T03:46:41.282Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2023/07/04/Android-R-AVB2-0/</loc>
+    
+    <lastmod>2023-08-07T01:41:28.579Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
     
     <lastmod>2023-06-15T11:38:40.013Z</lastmod>
@@ -199,13 +213,6 @@
   
   <url>
     <loc>https://kernel.meizu.com/archive/index.html</loc>
-    
-    <lastmod>2023-06-15T07:55:41.887Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/about/index.html</loc>
     
     <lastmod>2023-06-15T07:55:41.887Z</lastmod>
     
