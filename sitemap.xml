@@ -2,9 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://kernel.meizu.com/2023/10/27/Android-inputTuning-and-Optimizing/</loc>
+    
+    <lastmod>2023-10-27T08:46:54.199Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
+    
+    <lastmod>2023-10-27T08:45:50.475Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
+    
+    <lastmod>2023-10-27T08:42:32.815Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/25/linux-dead-lock-detect-lockdep.html/</loc>
+    
+    <lastmod>2023-10-27T08:40:52.211Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2023/07/07/Face-recognition-block-analysis/</loc>
     
-    <lastmod>2023-08-12T09:53:31.916Z</lastmod>
+    <lastmod>2023-10-27T08:37:57.435Z</lastmod>
     
   </url>
   
@@ -58,13 +86,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
-    
-    <lastmod>2023-06-15T11:31:13.918Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2016/07/04/linux-signal.html/</loc>
     
     <lastmod>2023-06-15T11:30:04.674Z</lastmod>
@@ -82,13 +103,6 @@
     <loc>https://kernel.meizu.com/2016/10/16/configure-jenkins-guide.html/</loc>
     
     <lastmod>2023-06-15T11:25:49.370Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/07/25/linux-dead-lock-detect-lockdep.html/</loc>
-    
-    <lastmod>2023-06-15T11:23:17.095Z</lastmod>
     
   </url>
   
@@ -138,13 +152,6 @@
     <loc>https://kernel.meizu.com/2018/03/21/device-tree.html/</loc>
     
     <lastmod>2023-06-15T10:23:18.300Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
-    
-    <lastmod>2023-06-15T10:21:58.528Z</lastmod>
     
   </url>
   
