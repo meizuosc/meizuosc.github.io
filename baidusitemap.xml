@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://kernel.meizu.com/2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/</loc>
+    <lastmod>2023-11-06</lastmod>
+  </url>
+  <url>
     <loc>https://kernel.meizu.com/2023/10/27/Android-inputTuning-and-Optimizing/</loc>
     <lastmod>2023-10-27</lastmod>
   </url>
