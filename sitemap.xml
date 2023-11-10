@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://kernel.meizu.com/2023/11/10/Qcom_mvp/</loc>
+    
+    <lastmod>2023-11-10T11:03:22.270Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/</loc>
     
     <lastmod>2023-11-06T03:06:51.810Z</lastmod>

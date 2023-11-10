@@ -314,9 +314,43 @@
 
     
 
+    
+
 
 
 <!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2023/11/10/Qcom_mvp/">
+                <h2 class="post-title">
+                    浅析高通 mvp 进程优先调度
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    一、前言众所周知，原生 Linux 内核大部分进程是采用完全公平调度CFS（Completely Fair Scheduler），服务于 PC 机/服务器/Android设备/嵌入式设备等等。然而 Android 设备要求前台应用具有交互和UI的高响应性和高流畅性。原来不区分前后台应用的 CFS 机制似乎没有专门为交互设备考虑到这点，以至于国内大厂纷纷魔改内核调度策略，如 vip 线程、不公......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Pengcheng Lai on
+                    2023-11-10
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Performance" title="Performance">Performance</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
 
     
 
@@ -677,42 +711,6 @@ Node节点。在DTS中......
 
     
 
-    
-
-        <div class="post-preview">
-
-            <a href="/2017/12/27//tee.html/">
-                <h2 class="post-title">
-                    TEE 软件交互流程概述
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    前言
-本文建立在你已经对 TEE 技术的基础知识有一定了解的基础之上，如需了解，可以阅读本博客的文章《指纹 TEE》1。
-本文将基于 OP-TEE2 开源 TEE 软件，介绍 TEE 软件中，REE 客户端访问 TEE 环境资源的具体调用流程。 为此，本文首先会介绍实现 REE 到 TEE 调用的各个基础组件组成以及各自功能，然后分析各个基础组件的交互流程时序，使读者对 TEE 软件的运行逻......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Huang Jinwei on
-                    2017-12-27
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#security" title="security">security</a>
-                    
-                      <a href="/tags/#Trusted Execution Environment" title="Trusted Execution Environment">Trusted Execution Environment</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
 
 
 <!-- Pager -->
@@ -956,6 +954,8 @@ Node节点。在DTS中......
             
         
             
+            <a href="/tags/#Performance" title="Performance" rel="2">Performance</a>
+            
         
             
         
@@ -1028,6 +1028,10 @@ Node节点。在DTS中......
     <ul>
       
         <li>
+          <a href="2023/11/10/Qcom_mvp/">浅析高通 mvp 进程优先调度</a>
+        </li>
+      
+        <li>
           <a href="2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/">eBPF初体验：Android设备网络优化实践</a>
         </li>
       
@@ -1041,10 +1045,6 @@ Node节点。在DTS中......
       
         <li>
           <a href="2023/07/04/Android-R-AVB2-0/">Android Verified Boot 2.0</a>
-        </li>
-      
-        <li>
-          <a href="2019/01/02/android-binder.html/">Android Binder</a>
         </li>
       
     </ul>
@@ -1067,7 +1067,7 @@ Node节点。在DTS中......
         
     <h5>ARCHIVES</h5>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/11/">November 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/11/">November 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
 
         <hr>
@@ -1123,6 +1123,8 @@ Node节点。在DTS中......
           <a href="categories/#调试与稳定性"><li>调试与稳定性</li></a>
         
           <a href="categories/#性能"><li>性能</li></a>
+        
+          <a href="categories/#调度器"><li>调度器</li></a>
         
       </ul>
     </div>
