@@ -318,9 +318,67 @@
 
     
 
+    
+
 
 
 <!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2018/07/12//linux-time.html/">
+                <h2 class="post-title">
+                    Linux Time
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    1、Linux时钟框架DroidPhoneo
+上图是linux时钟框架一个经典的描述。本质上linux各种时钟架构和服务是基于硬件提供的两种timer而构建的。
+1、定时Timer
+
+这类timer每个cpu都有一个独立的，称为local timer。这类timer的中断一般都是PPI（Private Peripheral Interrupt）类型，即每个cpu都有独立一份中断。 与PPI对......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2018-07-12
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#hrtimer" title="hrtimer">hrtimer</a>
+                    
+                      <a href="/tags/#tickless" title="tickless">tickless</a>
+                    
+                      <a href="/tags/#clocksource" title="clocksource">clocksource</a>
+                    
+                      <a href="/tags/#timekeeper" title="timekeeper">timekeeper</a>
+                    
+                      <a href="/tags/#clockevent" title="clockevent">clockevent</a>
+                    
+                      <a href="/tags/#noHZ" title="noHZ">noHZ</a>
+                    
+                      <a href="/tags/#lowres timer" title="lowres timer">lowres timer</a>
+                    
+                      <a href="/tags/#wall time" title="wall time">wall time</a>
+                    
+                      <a href="/tags/#xtime" title="xtime">xtime</a>
+                    
+                      <a href="/tags/#monotonic time" title="monotonic time">monotonic time</a>
+                    
+                      <a href="/tags/#boottime" title="boottime">boottime</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
 
     
 
@@ -672,43 +730,6 @@ TEE 应用场景以及前景
 
     
 
-    
-
-        <div class="post-preview">
-
-            <a href="/2016/09/12//android-m-external-storage.html/">
-                <h2 class="post-title">
-                    Android M 外部存储剖析 
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    
-这篇文章是建立在你已经对 Android 外部存储的基础知识有一定了解的基础之上，如果之前并不是太了解这个部分，阅读起来可能会比较费劲，可以先阅读参考下面文章：http://blog.csdn.net/zjbpku/article/details/25161131
-
-Android M 外部存储的变化从 Android 6.0 开始，Android 支持移动存储（adoptable sto......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Wenjun Zhang on
-                    2016-09-12
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#Android" title="Android">Android</a>
-                    
-                      <a href="/tags/#外置存储" title="外置存储">外置存储</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
 
 
 <!-- Pager -->
@@ -1032,6 +1053,10 @@ Android M 外部存储的变化从 Android 6.0 开始，Android 支持移动存�
     <ul>
       
         <li>
+          <a href="../../2023/12/13/Full-stack-resolution-of-the-Linux-time-subsystem/">从硬件到软件，Linux 时间子系统全栈解析</a>
+        </li>
+      
+        <li>
           <a href="../../2023/11/23/Analysis-of-the-USB-4-0-FBO/">焕新存储技术：UFS 4.0 FBO 底层逻辑剖析</a>
         </li>
       
@@ -1045,10 +1070,6 @@ Android M 外部存储的变化从 Android 6.0 开始，Android 支持移动存�
       
         <li>
           <a href="../../2023/10/27/Android-inputTuning-and-Optimizing/">Android Input 调试与优化</a>
-        </li>
-      
-        <li>
-          <a href="../../2023/07/07/Face-recognition-block-analysis/">人脸解锁带来的安卓系统崩溃之谜！</a>
         </li>
       
     </ul>
@@ -1071,7 +1092,7 @@ Android M 外部存储的变化从 Android 6.0 开始，Android 支持移动存�
         
     <h5>ARCHIVES</h5>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
 
         <hr>
@@ -1294,7 +1315,7 @@ Android M 外部存储的变化从 Android 6.0 开始，Android 支持移动存�
         
 
         
-            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&#34;🌱&#34;,&#34;just do it&#34;,&#34;🍀&#34;]' color='[&#34;rgb(121,93,179)&#34; ,&#34;rgb(76,180,231)&#34; ,&#34;rgb(184,90,154)&#34;]'></script>
         
 
         <!-- background effects end -->
@@ -1304,21 +1325,6 @@ Android M 外部存储的变化从 Android 6.0 开始，Android 支持移动存�
     
         <script src="/js/ribbonDynamic.js"></script>
     
-<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        tex2jax: {
-            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
-            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-            processEscapes: true
-        }
-    });
-    MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax();
-        for (var i = 0; i < all.length; ++i)
-            all[i].SourceElement().parentNode.className += ' has-jax';
-    });
-</script>
-<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </body>
 
 </html>
