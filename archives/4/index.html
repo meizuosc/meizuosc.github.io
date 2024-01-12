@@ -320,9 +320,47 @@
 
     
 
+    
+
 
 
 <!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/04//linux-signal.html/">
+                <h2 class="post-title">
+                    Linux Signal
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    信号的基本使用场景：使用 ctrl+c 中止一个程序，或者使用 kill pid 命令杀掉一个进程。Linux 信号机制基本上每个同学都用过，但是信号的具体实现机制还是有很多人不清楚的。在很多人的概念中信号是一种异步机制，像中断一样。但是除了硬中断，信号也是由中断实现的吗？如果不是中断，系统又怎么样来利用软件机制模拟类似如异步中断的动作？
+
+本文的代码分析基于 Linux Kernel 3.......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2016-07-04
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#signal" title="signal">signal</a>
+                    
+                      <a href="/tags/#Linux 信号" title="Linux 信号">Linux 信号</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
 
     
 
@@ -658,43 +696,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
 
     
 
-    
-
-        <div class="post-preview">
-
-            <a href="/2016/04/08//cpufreq-sched.html/">
-                <h2 class="post-title">
-                    基于调度器的 CPU 调频机制
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    最近由于 Linaro 和 ARM 主导的 EAS(Energy Aware Scheduler) 日渐完善，属于 EAS 一部分的基于调度器的调频技术也获得了很多关注。本文主要介绍基于调度器的 CPU 调频策略的原理，以及当前上游社区在这一方面最新的进展。
-传统 CPU 调频策略传统 CPU 调频模块主要分为 3 块：CPUFreq 核心模块、CPUFreq 驱动和 CPUFreq Gov......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Wen Pingbo on
-                    2016-04-08
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#cpufreq" title="cpufreq">cpufreq</a>
-                    
-                      <a href="/tags/#schedutil" title="schedutil">schedutil</a>
-                    
-                      <a href="/tags/#EAS" title="EAS">EAS</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
 
 
 <!-- Pager -->
@@ -705,6 +706,10 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
             <a href="/archives/3/">&larr; Newer Posts</a>
         </li>
     
+    
+        <li class="next">
+            <a href="/archives/5/">Older Posts &rarr;</a>
+        </li>
     
 </ul>
 
@@ -813,6 +818,8 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
             
         
+            
+            <a href="/tags/#Thermal" title="Thermal" rel="2">Thermal</a>
             
         
             
@@ -1022,6 +1029,10 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
     <ul>
       
         <li>
+          <a href="../../2024/01/12/Qcom-Thermal-Engine-frame-analysis/">手机温控中枢：高通 Thermal Engine 框架分析</a>
+        </li>
+      
+        <li>
           <a href="../../2023/12/13/Full-stack-resolution-of-the-Linux-time-subsystem/">从硬件到软件，Linux 时间子系统全栈解析</a>
         </li>
       
@@ -1035,10 +1046,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
       
         <li>
           <a href="../../2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/">eBPF初体验：Android设备网络优化实践</a>
-        </li>
-      
-        <li>
-          <a href="../../2023/10/27/Android-inputTuning-and-Optimizing/">Android Input 调试与优化</a>
         </li>
       
     </ul>
@@ -1061,7 +1068,7 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
     <h5>ARCHIVES</h5>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
 
         <hr>
@@ -1158,7 +1165,7 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
 
                 </ul>
                 <p class="copyright text-muted">
-                    Copyright &copy; meizu 2023 
+                    Copyright &copy; meizu 2024 
                     <br>
                     Powered by 
                     <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
