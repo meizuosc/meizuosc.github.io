@@ -173,7 +173,7 @@
 
                         
                         <li>
-                            <a href="/categories/">Categories</a>
+                            <a href="/about/">About</a>
                         </li>
                         
                     
@@ -187,14 +187,14 @@
 
                         
                         <li>
-                            <a href="/tags/">Tags</a>
+                            <a href="/categories/">Categories</a>
                         </li>
                         
                     
 
                         
                         <li>
-                            <a href="/about/">About</a>
+                            <a href="/tags/">Tags</a>
                         </li>
                         
                     
@@ -254,14 +254,14 @@
 <li>凭据加密 (CE) 存储空间：这是默认存储位置，只有在用户解锁设备后才可用。设备加密 (DE) 存储空间：在直接启动模式期间以及用户解锁设备后均可用。</li>
 <li>开启 FBE 方式,在相关的 fstab 文件中添加相关的代码:</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;dev&#x2F;block&#x2F;bootdevice&#x2F;by-name&#x2F;userdata                  &#x2F;data              ext4    noatime,nosuid,nodev,barrier&#x3D;1,noauto_da_alloc,discard wait,check,resize,**fileencryption&#x3D;aes-256-xts**,quota</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/dev/block/bootdevice/by-name/userdata                  /data              ext4    noatime,nosuid,nodev,<span class="attribute">barrier</span>=1,noauto_da_alloc,discard wait,check,resize,*<span class="number">*f</span><span class="attribute">ileencryption</span>=aes-256-xts**,quota</span><br></pre></td></tr></table></figure>
 <ul>
 <li>一些概念性内容这里不再赘述，如有需要自行阅读 <a href="https://source.android.com/security/encryption/file-based" target="_blank" rel="noopener">Goole FBE</a></li>
 </ul>
 <h3 id="2-FBE-流程分析"><a href="#2-FBE-流程分析" class="headerlink" title="2. FBE 流程分析"></a>2. FBE 流程分析</h3><h4 id="2-1-开机过程中-加密前的准备"><a href="#2-1-开机过程中-加密前的准备" class="headerlink" title="2.1 开机过程中,加密前的准备"></a>2.1 开机过程中,加密前的准备</h4><ul>
 <li>init.rc 中加入相关的代码,用于根据 fstab 文件中进行相关的挂载操作</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">on fs</span><br><span class="line">    wait &#x2F;dev&#x2F;block&#x2F;bootdevice</span><br><span class="line">    write &#x2F;proc&#x2F;sys&#x2F;vm&#x2F;swappiness 100</span><br><span class="line">    mount_all fstab.qcom</span><br></pre></td></tr></table></figure>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">on</span> <span class="title">fs</span></span><br><span class="line">    <span class="built_in">wait</span> /dev/block/bootdevice</span><br><span class="line">    <span class="built_in">write</span> /proc/sys/vm/swappiness <span class="number">100</span></span><br><span class="line">    mount_all fstab.qcom</span><br></pre></td></tr></table></figure>
 <ul>
 <li>看完 init.rc 中,当然是查看 init 进程中如何解析 init.rc ,代码在 <code>system/core/init/builtins.cpp</code> 中:</li>
 </ul>
@@ -277,11 +277,11 @@
 <ul>
 <li>之前如果有了解过全盘加密的同学应该会很熟悉,全盘加密会返回 FS_MGR_MNTALL_DEV_NEEDS_ENCRYPTION ,然后触发一个 trigger ,最后在 init.rc 中执行 vdc 进程,最后启动 vold 进行全盘加密操作.那现在我们来看一下 FBE 中的 nonencrypted 这个 trigger 中做了什么操作,没看到有触发 vold 的操作啊,那文件加密是什么时候做的呢?不着急,我们继续往下看.</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">on nonencrypted</span><br><span class="line">    class_start main</span><br><span class="line">    class_start late_start</span><br></pre></td></tr></table></figure>
+<figure class="highlight ceylon"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">on nonencrypted</span><br><span class="line">    <span class="keyword">class</span><span class="number">_</span>start main</span><br><span class="line">    <span class="keyword">class</span><span class="number">_</span>start <span class="keyword">late</span><span class="number">_</span>start</span><br></pre></td></tr></table></figure>
 <ul>
 <li>我们知道,正常系统起来后,init 的执行顺序为 <code>early-init</code>,<code>init</code>,<code>late-init</code>.既然我们一下子无法知道 FBE 中 vold 是在什么时候执行的,那就只能一步步跟 init.rc,看下能否发现一些端倪,功夫不负有心人,终于在 init.rc 中发现了一点可能和 FBE 相关的东西. <strong>installkey /data</strong> 这个看着有点像.</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">on post-fs-data</span><br><span class="line">    # We chown&#x2F;chmod &#x2F;data again so because mount is run as root + defaults</span><br><span class="line">    chown system system &#x2F;data</span><br><span class="line">    chmod 0771 &#x2F;data</span><br><span class="line">    # We restorecon &#x2F;data in case the userdata partition has been reset.</span><br><span class="line">    restorecon &#x2F;data</span><br><span class="line"></span><br><span class="line">    # Make sure we have the device encryption key.</span><br><span class="line">    start vold</span><br><span class="line">    installkey &#x2F;data</span><br></pre></td></tr></table></figure>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="title">on</span> post-fs-<span class="class"><span class="keyword">data</span></span></span><br><span class="line">    # <span class="type">We</span> chown/chmod /<span class="class"><span class="keyword">data</span> again so because mount is run as root + defaults</span></span><br><span class="line">    chown system system /<span class="class"><span class="keyword">data</span></span></span><br><span class="line">    chmod <span class="number">0771</span> /<span class="class"><span class="keyword">data</span></span></span><br><span class="line">    # <span class="type">We</span> restorecon /<span class="class"><span class="keyword">data</span> in case the userdata partition has been reset.</span></span><br><span class="line">    restorecon /<span class="class"><span class="keyword">data</span></span></span><br><span class="line"></span><br><span class="line">    # <span class="type">Make</span> sure we have the device encryption key.</span><br><span class="line">    start vold</span><br><span class="line">    installkey /<span class="class"><span class="keyword">data</span></span></span><br></pre></td></tr></table></figure>
 <ul>
 <li>类似 mount 的处理流程, installkey /data 最后会调用<code>system/core/init/builtins.cpp</code> 中的 do_installkey 函数,do_installkey 首先判断是否为文件加密方式,如果是文件加密方式,则会执行 vdc 命令,到这里终于开始进入加密流程过程了.</li>
 </ul>
@@ -297,7 +297,7 @@
 <ul>
 <li>生成了 uncryptkey 之后, 分析 init.rc 看看之后做了什么操作,看了大部分都是 mkdir 操作啊.</li>
 </ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"># Start bootcharting as soon as possible after the data partition is</span><br><span class="line"># mounted to collect more data.</span><br><span class="line">mkdir &#x2F;data&#x2F;bootchart 0755 shell shell</span><br><span class="line">bootchart start</span><br><span class="line"></span><br><span class="line"># Avoid predictable entropy pool. Carry over entropy from previous boot.</span><br><span class="line">copy &#x2F;data&#x2F;system&#x2F;entropy.dat &#x2F;dev&#x2F;urandom</span><br><span class="line"></span><br><span class="line"># create basic filesystem structure</span><br><span class="line">mkdir &#x2F;data&#x2F;misc 01771 system misc</span><br><span class="line">mkdir &#x2F;data&#x2F;misc&#x2F;recovery 0770 system log</span><br></pre></td></tr></table></figure>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Start bootcharting as soon as possible after the data partition is</span></span><br><span class="line"><span class="comment"># mounted to collect more data.</span></span><br><span class="line">mkdir /data/bootchart 0755 shell shell</span><br><span class="line">bootchart start</span><br><span class="line"></span><br><span class="line"><span class="comment"># Avoid predictable entropy pool. Carry over entropy from previous boot.</span></span><br><span class="line">copy /data/system/entropy.dat /dev/urandom</span><br><span class="line"></span><br><span class="line"><span class="comment"># create basic filesystem structure</span></span><br><span class="line">mkdir /data/misc 01771<span class="built_in"> system </span>misc</span><br><span class="line">mkdir /data/misc/recovery 0770<span class="built_in"> system </span>log</span><br></pre></td></tr></table></figure>
 <ul>
 <li>也类似 mount_all ,mkdir 最终调用了 init/builtins.cpp 中的 do_mkdir 函数,关注 e4crypt_set_directory_policy 函数实现</li>
 </ul>

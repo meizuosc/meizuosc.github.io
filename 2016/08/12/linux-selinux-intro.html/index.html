@@ -175,7 +175,7 @@
 
                         
                         <li>
-                            <a href="/categories/">Categories</a>
+                            <a href="/about/">About</a>
                         </li>
                         
                     
@@ -189,14 +189,14 @@
 
                         
                         <li>
-                            <a href="/tags/">Tags</a>
+                            <a href="/categories/">Categories</a>
                         </li>
                         
                     
 
                         
                         <li>
-                            <a href="/about/">About</a>
+                            <a href="/tags/">Tags</a>
                         </li>
                         
                     
@@ -255,7 +255,7 @@
 <h2 id="2、自主访问控制"><a href="#2、自主访问控制" class="headerlink" title="2、自主访问控制"></a>2、自主访问控制</h2><p>标准 Linux 也不是没有一点安全性，对于用户对资源的访问也是有一定的限制的，这个限制由三个因素来决定：用户及其组 ID、资源所属的用户及其组 ID、访问模式。这里以文件访问为例，介绍一下标准 Linux 访问控制及其安全漏洞。</p>
 <p>Linux 是一个多用户多任务的分时操作系统，如果要使用系统资源，就必须向系统管理员申请一个账户，然后通过这个账户进入系统。这个账户就是用户 ID。有时需要让多个用户具有相同的权限，为了简化管理，将具有相同特征用户组成一个逻辑集合，就叫用户组。而文件所属用户，一般为文件的创建者，谁创建了该文件 , 就天然的成为该文件的所有者，创建者所在组就是该文件的所属用户组。</p>
 <p><code>ls -l</code> 显示文件的属性如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-rwxrw-r‐-1 dengtaiping dengtaiping 4096 6 月 2 09:39 temp</span><br></pre></td></tr></table></figure>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-rwxrw-r‐<span class="number">-1</span> dengtaiping dengtaiping <span class="number">4096</span> <span class="number">6</span> 月 <span class="number">2</span> <span class="number">09</span>:<span class="number">39</span> temp</span><br></pre></td></tr></table></figure>
 <p>前面 10 个字符代表了标准 Linux 对 temp 这个文件的访问控制：</p>
 <ul>
 <li>第一个字符代表文件（-）、目录（d），链接（l）</li>
@@ -274,11 +274,11 @@
 <li>许可（Permission(s)）： 象征目标类型允许源类型访问客体类型的访问种类</li>
 </ul>
 <p>下面以 Android 手机中一个例子说明 TE 是如何工作的。在手机的 console 环境中，运行 <code>ls -Z | grep proc</code>，可看到 proc 目录的安全上下文如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dr-xr-xr-x root     root              u:object_r:proc:s0 proc</span><br></pre></td></tr></table></figure>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">dr</span>-xr-xr-x root     root              u:object_r:<span class="meta">proc</span>:<span class="built_in">s0</span> <span class="meta">proc</span></span><br></pre></td></tr></table></figure>
 <p>再运行 <code>ps -Z | grep adbd</code>，看看进程 adbd 的安全上下文：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">u:r:su:s0                      root      2935  1     &#x2F;sbin&#x2F;adbd</span><br></pre></td></tr></table></figure>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">u:</span><span class="string">r:</span><span class="string">su:</span>s0                      root      <span class="number">2935</span>  <span class="number">1</span>     <span class="regexp">/sbin/</span>adbd</span><br></pre></td></tr></table></figure>
 <p>可以看到，目录 proc 和进程 adbd 各自有自己的安全上下文，安全上下文实际上是附加在对象上的一个标签，由用户、角色、类型和安全级别四部分组成，由冒号隔开。安全级别下一节再介绍，在 SEAndroid 里，只定义了一个用户 u，所以文件和进程安全上下文中，所有的用户都为 u。文件的角色一般都为 object_r，而进程的角色固定为 r。用户和角色定义得这么随意，是因为对安全策略来说它们并不重要，在类型强制访问控制的安全上下文中，最重要的就是类型，它才是定义规则时需要的。假如要想通过 adb 读写 proc 目录下的文件节点，则需要定义如下一条规则来授权：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allow init proc:dir rw_dir_perms;</span><br></pre></td></tr></table></figure>
+<figure class="highlight gauss"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allow init <span class="function"><span class="keyword">proc</span>:<span class="title">dir</span> <span class="title">rw_dir_perms</span></span>;</span><br></pre></td></tr></table></figure>
 <h3 id="3-2、多级安全"><a href="#3-2、多级安全" class="headerlink" title="3.2、多级安全"></a>3.2、多级安全</h3><p>SELinux 引入的另外一个安全策略是多级安全 (Multi-Level Security)。多级安全是建立在 TE 的基础之上的，这个安全策略在 SELinux 中是可选的，但引入多级安全，不仅是对安全访问的增强，更是因为对于一组对象进行分类访问授权，使用多级安全是非常高效的。在前面所举例子中，proc 和 adbd 都有一个安全级别 s0。</p>
 <p>在多级安全中，主体和客体都有一个关联的安全级别，多级安全的访问规则就是：安全级别较高的主体可以读取安全级别较低的客体；而安全级别较低的主体可以写入安全级别较高的客体。前者称为 “read down”，后者称为 “write up”。通过这种规则，可以允许数据从安全级别较低的客体流向安全级别较高的主体，而限制数据从安全级别较高的客体流向安全级别较低的主体，从而有效的保护了数据。对于安全级别相同的主体和客体，主体对客体的读写都是允许的。</p>
 <p>基于多级安全策略的 MAC 数据流向，如下所示：</p>

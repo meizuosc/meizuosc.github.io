@@ -160,7 +160,7 @@
 
                         
                         <li>
-                            <a href="/categories/">Categories</a>
+                            <a href="/about/">About</a>
                         </li>
                         
                     
@@ -174,14 +174,14 @@
 
                         
                         <li>
-                            <a href="/tags/">Tags</a>
+                            <a href="/categories/">Categories</a>
                         </li>
                         
                     
 
                         
                         <li>
-                            <a href="/about/">About</a>
+                            <a href="/tags/">Tags</a>
                         </li>
                         
                     
@@ -322,9 +322,46 @@
 
     
 
+    
+
+    
+
 
 
 <!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2024/03/15/Futex机制的内核优化/">
+                <h2 class="post-title">
+                    Futex机制的内核优化
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    1. futex简介Futex 是Fast Userspace muTexes的缩写，由 Linux 2.5.7开始引入。传统的SYSTEM V IPC机制需要系统调用进入内核态去操作某个内核对象，由内核来仲裁同步，事实上大部分情况下并没有资源竞争，此种情况下仍然进入内核态会显得很浪费，系统开销增加进而造成性能折扣，由此引入futex的概念。
+futex是一种用户态和内核态混合机制，需要两个......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Haibo.Chen on
+                    2024-03-15
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Performance" title="Performance">Performance</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
 
     
 
@@ -576,6 +613,40 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
 
         <div class="post-preview">
 
+            <a href="/2023/07/04/Display-frame-app-communicates-with-SurfaceFlinger/">
+                <h2 class="post-title">
+                    显示框架之app与SurfaceFlinger通信
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    显示框架之app与SurfaceFlinger通信SurfaceFlinger是android显示的核心进程，在整个显示框架中起到一个承上启下的作用，“承上”指的是与app进程间的通信，“启下”指的是与Composer进程的通信。Surfaceflinger本身不进行绘制，是app数据上屏的中枢通路，先来看下SurfaceFlinger在整个显示流程中的位置。
+
+从显示流程图看可知，Surf......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Zhou Qi on
+                    2023-07-04
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Display" title="Display">Display</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
             <a href="/2023/07/04/Android-R-AVB2-0/">
                 <h2 class="post-title">
                     Android Verified Boot 2.0
@@ -599,81 +670,11 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
                     
                       <a href="/tags/#AVB" title="AVB">AVB</a>
                     
-                      <a href="/tags/#Bootloader" title="Bootloader">Bootloader</a>
-                    
                       <a href="/tags/#Security" title="Security">Security</a>
                     
                       <a href="/tags/#Safe" title="Safe">Safe</a>
                     
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
-    
-
-        <div class="post-preview">
-
-            <a href="/2019/01/02//android-binder.html/">
-                <h2 class="post-title">
-                    Android Binder
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    1、binder原理纵观现有市面上所有讲binder的文章，都存在一个最大的问题：没有讲清楚binder对象是什么？不清楚binder对象是什么，那就不能理解handle是什么？不能理解什么时候是binder什么时候是handle，那就不能真正理解整个IPC的通讯过程。
-我们首先回到binder的目的，就是IPC(Inter-Process Communication)进程间通讯。那么怎么样......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Peng Weilin on
-                    2019-01-02
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#binder" title="binder">binder</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
-    
-
-        <div class="post-preview">
-
-            <a href="/2018/11/23//implementation-of-loading-fw-from-userspace.html/">
-                <h2 class="post-title">
-                    kernel 空间加载用户空间fw实现原理
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    随着手机外围器件的集成度和复杂度越来越高, 单纯的设置相关寄存器已经无法使得器件可以正常的工作. 在一般情况下，需要将一个特定的fw下载到器件中, 确保器件可以正常稳定的运行, 比如：camera ois，camera actuator， TP等等. 一般情况下, 有以下三种方案:
-
-直接将fw data转化为特定的数组，编码在驱动代码中.
-将fw data烧录到一个分区中，需要的时候从分区......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Qu dishui on
-                    2018-11-23
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#firmware" title="firmware">firmware</a>
-                    
-                      <a href="/tags/#uevent" title="uevent">uevent</a>
+                      <a href="/tags/#Bootloader" title="Bootloader">Bootloader</a>
                     
                 </div>
             
@@ -760,6 +761,12 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
             
         
             
+        
+            
+        
+            
+        
+            
             <a href="/tags/#Android" title="Android" rel="6">Android</a>
             
         
@@ -800,12 +807,6 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
             
         
             
-        
-            
-            <a href="/tags/#Thermal" title="Thermal" rel="2">Thermal</a>
-            
-        
-            
             <a href="/tags/#定时器" title="定时器" rel="2">定时器</a>
             
         
@@ -818,8 +819,6 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
             
         
             
-            <a href="/tags/#调试" title="调试" rel="2">调试</a>
-            
         
             
         
@@ -844,11 +843,7 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
             
         
             
-        
-            
-        
-            
-        
+            <a href="/tags/#Thermal" title="Thermal" rel="2">Thermal</a>
             
         
             
@@ -892,6 +887,14 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
             
         
             
+            <a href="/tags/#调试" title="调试" rel="2">调试</a>
+            
+        
+            
+        
+            
+        
+            
         
             
         
@@ -922,6 +925,8 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
             
         
             
+            <a href="/tags/#Performance" title="Performance" rel="3">Performance</a>
+            
         
             
         
@@ -935,8 +940,6 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
         
             
         
-            
-            <a href="/tags/#Performance" title="Performance" rel="2">Performance</a>
             
         
             
@@ -1012,6 +1015,10 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
     <ul>
       
         <li>
+          <a href="2024/03/15/Futex%E6%9C%BA%E5%88%B6%E7%9A%84%E5%86%85%E6%A0%B8%E4%BC%98%E5%8C%96/">Futex机制的内核优化</a>
+        </li>
+      
+        <li>
           <a href="2024/01/12/Qcom-Thermal-Engine-frame-analysis/">手机温控中枢：高通 Thermal Engine 框架分析</a>
         </li>
       
@@ -1025,10 +1032,6 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
       
         <li>
           <a href="2023/11/10/Qcom_mvp/">浅析高通 mvp 进程优先调度</a>
-        </li>
-      
-        <li>
-          <a href="2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/">eBPF初体验：Android设备网络优化实践</a>
         </li>
       
     </ul>
@@ -1051,7 +1054,7 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
         
     <h5>ARCHIVES</h5>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/03/">March 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
 
         <hr>
@@ -1061,8 +1064,6 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
     <h5>categories</h5>
     <div class="widget">
       <ul>
-        
-          <a href="categories/#无线通讯"><li>无线通讯</li></a>
         
           <a href="categories/#调度器"><li>调度器</li></a>
         
@@ -1074,6 +1075,8 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
         
           <a href="categories/#电源管理"><li>电源管理</li></a>
         
+          <a href="categories/#无线通讯"><li>无线通讯</li></a>
+        
           <a href="categories/#电源管理"><li>电源管理</li></a>
         
           <a href="categories/#多媒体"><li>多媒体</li></a>
@@ -1082,35 +1085,37 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
         
           <a href="categories/#进程管理与通信"><li>进程管理与通信</li></a>
         
+          <a href="categories/#温升与功耗"><li>温升与功耗</li></a>
+        
           <a href="categories/#时间管理"><li>时间管理</li></a>
+        
+          <a href="categories/#调试与稳定性"><li>调试与稳定性</li></a>
         
           <a href="categories/#中断管理"><li>中断管理</li></a>
         
           <a href="categories/#存储"><li>存储</li></a>
         
-          <a href="categories/#程序设计"><li>程序设计</li></a>
-        
           <a href="categories/#系统管理和维护"><li>系统管理和维护</li></a>
         
-          <a href="categories/#Bootloader"><li>Bootloader</li></a>
+          <a href="categories/#程序设计"><li>程序设计</li></a>
         
           <a href="categories/#MTP"><li>MTP</li></a>
         
-          <a href="categories/#Security"><li>Security</li></a>
+          <a href="categories/#Bootloader"><li>Bootloader</li></a>
         
           <a href="categories/#linux"><li>linux</li></a>
         
-          <a href="categories/#android"><li>android</li></a>
+          <a href="categories/#Security"><li>Security</li></a>
         
-          <a href="categories/#温升与功耗"><li>温升与功耗</li></a>
-        
-          <a href="categories/#调试与稳定性"><li>调试与稳定性</li></a>
+          <a href="categories/#Display"><li>Display</li></a>
         
           <a href="categories/#性能"><li>性能</li></a>
         
+          <a href="categories/#储存"><li>储存</li></a>
+        
           <a href="categories/#调度器"><li>调度器</li></a>
         
-          <a href="categories/#储存"><li>储存</li></a>
+          <a href="categories/#android"><li>android</li></a>
         
       </ul>
     </div>

@@ -160,7 +160,7 @@
 
                         
                         <li>
-                            <a href="/categories/">Categories</a>
+                            <a href="/about/">About</a>
                         </li>
                         
                     
@@ -174,14 +174,14 @@
 
                         
                         <li>
-                            <a href="/tags/">Tags</a>
+                            <a href="/categories/">Categories</a>
                         </li>
                         
                     
 
                         
                         <li>
-                            <a href="/about/">About</a>
+                            <a href="/tags/">Tags</a>
                         </li>
                         
                     
@@ -322,9 +322,88 @@
 
     
 
+    
+
+    
+
 
 
 <!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/16//linux-thermal-framework-intro.html/">
+                <h2 class="post-title">
+                    Linux Thermal 框架解析 
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    Linux Thermal 是 Linux 系统下温度控制相关的模块，主要用来控制系统运行过程中芯片产生的热量，使芯片温度和设备外壳温度维持在一个安全、舒适的范围。
+那下面我们就来一起看看对于温度控制这样一个需求，Linux 内核是怎么实现的。
+Thermal 的主要框架要实现一个温度控制的需求，试想一下我们是不是最少要有获取温度的设备和控制温度的设备这两个最基本的东西？当然附带的也会产生一......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Zhang Xirui on
+                    2016-07-16
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#Thermal" title="Thermal">Thermal</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/11//linux-process-stop.html/">
+                <h2 class="post-title">
+                    Linux 进程中 Stop, Park, Freeze
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    在调试内核的时候，经常会碰到几个相近的概念：进程 stop、进程 park、进程 freeze。这几个名词看起来都是停止进程，那么他们之间的区别和应用场景在分别是什么呢？下面就来分析一番。
+
+本文的代码分析基于 Linux kernel 3.18.22，最好的学习方法还是 “RTFSC”
+
+1. 进程 stop进程 stop 分成两种：用户进程 stop 和内核进程 stop。
+用户进程 s......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2016-07-11
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#kthread_stop" title="kthread_stop">kthread_stop</a>
+                    
+                      <a href="/tags/#kthread_park" title="kthread_park">kthread_park</a>
+                    
+                      <a href="/tags/#freeze_processes" title="freeze_processes">freeze_processes</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
 
     
 
@@ -623,79 +702,6 @@ Framework    这一......
 
     
 
-    
-
-        <div class="post-preview">
-
-            <a href="/2016/05/02//gps-introduction.html/">
-                <h2 class="post-title">
-                    Android 5.1 上的 MTK GPS
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    本文主要介绍手机上几种常见的定位技术，以及 Android 5.1 上的 MTK GPS。
-几种常见的定位技术介绍纯 GPS 定位数据直接来源于卫星，即搜星，然后下载卫星数据。通过卫星的位置（从卫星上接收），卫星到接收机的距离来测算接收机的位置
-在无辅助信息的条件下用 GPS 定位，需捕获到至少四颗卫星（因为卫星和接收机都有时间差，4 个未知数需 4 个方程才能解）
-蜂窝基站 / WIFI定......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Yin ShunQing on
-                    2016-05-02
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#gps" title="gps">gps</a>
-                    
-                      <a href="/tags/#定位技术" title="定位技术">定位技术</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
-    
-
-        <div class="post-preview">
-
-            <a href="/2016/04/15//intro-wrapfs.html/">
-                <h2 class="post-title">
-                    WrapFS 简介
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    初识 WrapFSWrapFS 是一种堆栈式文件系统，堆栈式文件系统的一个基本功能就是把操作和参数转换成底层文件系统的操作和参数。这就意味着我们会在 WrapFS 层上创建一个文件对象后会在底层文件对应着创建一个对象，要说明的是，WrapFS 层的这个文件对象只保存在内存里面，断电后会消失，真正文件里面的数据保存在底层文件系统里面。
-
-WrapFS 的意义从 WrapFS 的发明者有这样的回......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Li Yong on
-                    2016-04-15
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#Linux" title="Linux">Linux</a>
-                    
-                      <a href="/tags/#WrapFS" title="WrapFS">WrapFS</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
 
 
 <!-- Pager -->
@@ -777,6 +783,12 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
             
         
             
+        
+            
+        
+            
+        
+            
             <a href="/tags/#Android" title="Android" rel="6">Android</a>
             
         
@@ -817,12 +829,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
             
         
             
-        
-            
-            <a href="/tags/#Thermal" title="Thermal" rel="2">Thermal</a>
-            
-        
-            
             <a href="/tags/#定时器" title="定时器" rel="2">定时器</a>
             
         
@@ -835,8 +841,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
             
         
             
-            <a href="/tags/#调试" title="调试" rel="2">调试</a>
-            
         
             
         
@@ -861,11 +865,7 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
             
         
             
-        
-            
-        
-            
-        
+            <a href="/tags/#Thermal" title="Thermal" rel="2">Thermal</a>
             
         
             
@@ -909,6 +909,14 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
             
         
             
+            <a href="/tags/#调试" title="调试" rel="2">调试</a>
+            
+        
+            
+        
+            
+        
+            
         
             
         
@@ -939,6 +947,8 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
             
         
             
+            <a href="/tags/#Performance" title="Performance" rel="3">Performance</a>
+            
         
             
         
@@ -952,8 +962,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
             
         
-            
-            <a href="/tags/#Performance" title="Performance" rel="2">Performance</a>
             
         
             
@@ -1029,6 +1037,10 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
     <ul>
       
         <li>
+          <a href="../../2024/03/15/Futex%E6%9C%BA%E5%88%B6%E7%9A%84%E5%86%85%E6%A0%B8%E4%BC%98%E5%8C%96/">Futex机制的内核优化</a>
+        </li>
+      
+        <li>
           <a href="../../2024/01/12/Qcom-Thermal-Engine-frame-analysis/">手机温控中枢：高通 Thermal Engine 框架分析</a>
         </li>
       
@@ -1042,10 +1054,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
       
         <li>
           <a href="../../2023/11/10/Qcom_mvp/">浅析高通 mvp 进程优先调度</a>
-        </li>
-      
-        <li>
-          <a href="../../2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/">eBPF初体验：Android设备网络优化实践</a>
         </li>
       
     </ul>
@@ -1068,7 +1076,7 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
     <h5>ARCHIVES</h5>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2024/03/">March 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
 
         <hr>
@@ -1078,8 +1086,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
     <h5>categories</h5>
     <div class="widget">
       <ul>
-        
-          <a href="categories/#无线通讯"><li>无线通讯</li></a>
         
           <a href="categories/#调度器"><li>调度器</li></a>
         
@@ -1091,6 +1097,8 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
           <a href="categories/#电源管理"><li>电源管理</li></a>
         
+          <a href="categories/#无线通讯"><li>无线通讯</li></a>
+        
           <a href="categories/#电源管理"><li>电源管理</li></a>
         
           <a href="categories/#多媒体"><li>多媒体</li></a>
@@ -1099,35 +1107,37 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
           <a href="categories/#进程管理与通信"><li>进程管理与通信</li></a>
         
+          <a href="categories/#温升与功耗"><li>温升与功耗</li></a>
+        
           <a href="categories/#时间管理"><li>时间管理</li></a>
+        
+          <a href="categories/#调试与稳定性"><li>调试与稳定性</li></a>
         
           <a href="categories/#中断管理"><li>中断管理</li></a>
         
           <a href="categories/#存储"><li>存储</li></a>
         
-          <a href="categories/#程序设计"><li>程序设计</li></a>
-        
           <a href="categories/#系统管理和维护"><li>系统管理和维护</li></a>
         
-          <a href="categories/#Bootloader"><li>Bootloader</li></a>
+          <a href="categories/#程序设计"><li>程序设计</li></a>
         
           <a href="categories/#MTP"><li>MTP</li></a>
         
-          <a href="categories/#Security"><li>Security</li></a>
+          <a href="categories/#Bootloader"><li>Bootloader</li></a>
         
           <a href="categories/#linux"><li>linux</li></a>
         
-          <a href="categories/#android"><li>android</li></a>
+          <a href="categories/#Security"><li>Security</li></a>
         
-          <a href="categories/#温升与功耗"><li>温升与功耗</li></a>
-        
-          <a href="categories/#调试与稳定性"><li>调试与稳定性</li></a>
+          <a href="categories/#Display"><li>Display</li></a>
         
           <a href="categories/#性能"><li>性能</li></a>
         
+          <a href="categories/#储存"><li>储存</li></a>
+        
           <a href="categories/#调度器"><li>调度器</li></a>
         
-          <a href="categories/#储存"><li>储存</li></a>
+          <a href="categories/#android"><li>android</li></a>
         
       </ul>
     </div>

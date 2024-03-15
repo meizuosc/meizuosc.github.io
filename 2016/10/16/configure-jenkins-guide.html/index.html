@@ -173,7 +173,7 @@
 
                         
                         <li>
-                            <a href="/categories/">Categories</a>
+                            <a href="/about/">About</a>
                         </li>
                         
                     
@@ -187,14 +187,14 @@
 
                         
                         <li>
-                            <a href="/tags/">Tags</a>
+                            <a href="/categories/">Categories</a>
                         </li>
                         
                     
 
                         
                         <li>
-                            <a href="/about/">About</a>
+                            <a href="/tags/">Tags</a>
                         </li>
                         
                     
@@ -252,13 +252,13 @@
                 <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>如果常常需要给其他相关部门输出固件验证问题，那么用 Jenkins 搭建一个自动化的编译环境会是一个不错的选择。这篇文章简单的介绍了 Jenkins 的基本使用，及如何利用插件进行权限的管理，邮件的发送设置。</p>
 <h3 id="一-在-Ubuntu-上搭建-jenkins"><a href="#一-在-Ubuntu-上搭建-jenkins" class="headerlink" title="一 .  在 Ubuntu 上搭建 jenkins"></a>一 .  在 Ubuntu 上搭建 jenkins</h3><ol>
 <li><p>在终端上执行</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -q -O - http:&#x2F;&#x2F;pkg.jenkins-ci.org&#x2F;debian&#x2F;jenkins-ci.org.key | sudo apt-key add -</span><br></pre></td></tr></table></figure>
+ <figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -q -O - http://pkg.jenkins-ci<span class="meta">.org</span>/debian/jenkins-ci<span class="meta">.org</span>.key | sudo apt-key <span class="keyword">add</span> -</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>在 /etc/apt/sources.list 加上</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deb http:&#x2F;&#x2F;pkg.jenkins-ci.org&#x2F;debian binary&#x2F;</span><br></pre></td></tr></table></figure>
+ <figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deb http:<span class="regexp">//</span>pkg.jenkins-ci.org<span class="regexp">/debian binary/</span></span><br></pre></td></tr></table></figure>
 </li>
 <li><p>更新 package 然后安装 jenkins</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update &amp;&amp; sudo apt-get install jenkins</span><br></pre></td></tr></table></figure>
+ <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-<span class="builtin-name">get</span> update &amp;&amp; sudo apt-<span class="builtin-name">get</span> install jenkins</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>访问 jenkins 页面</p>
 <ul>
@@ -292,7 +292,7 @@
 <p>其中 Default Recipients 为默认的邮件接收对象，Default Subject 为邮件标题，Default Content 为邮件内容。</p>
 <p>变量是一个以 $( 美元符号 ) 开始，并以空格结束的字符串。当一个邮件触发时，主题和内容主体字段的所有变量都会通过真实的值动态地替换。同样，变量中的“值”能包含其它的变量，都将被替换成真实的内容。</p>
 <p>常用的属性如下 :</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$&#123;PROJECT_NAME&#125;：显示项目的全名</span><br><span class="line">$&#123;BUILD_NUMBER&#125;: 显示当前构建的编号</span><br><span class="line">$&#123;CAUSE&#125;: 显示此次构建的触发用户</span><br><span class="line">$&#123;JENKINS_URL&#125;： 显示 Jenkins 服务器的 url 地址（可在系统设置页面修改）</span><br><span class="line">$&#123;BUILD_LOG&#125;： 显示最终构建的日志</span><br><span class="line">$&#123;BUILD_STATUS&#125;：显示当前构建的状态 ( 失败、成功等 )</span><br><span class="line">$&#123;CHANGES &#125; ：显示上一次构建之后的变化</span><br></pre></td></tr></table></figure>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$&#123;PROJECT_NAME&#125;</span>：显示项目的全名</span><br><span class="line"><span class="variable">$&#123;BUILD_NUMBER&#125;</span>: 显示当前构建的编号</span><br><span class="line"><span class="variable">$&#123;CAUSE&#125;</span>: 显示此次构建的触发用户</span><br><span class="line"><span class="variable">$&#123;JENKINS_URL&#125;</span>： 显示 Jenkins 服务器的 url 地址（可在系统设置页面修改）</span><br><span class="line"><span class="variable">$&#123;BUILD_LOG&#125;</span>： 显示最终构建的日志</span><br><span class="line"><span class="variable">$&#123;BUILD_STATUS&#125;</span>：显示当前构建的状态 ( 失败、成功等 )</span><br><span class="line"><span class="variable">$&#123;CHANGES &#125;</span> ：显示上一次构建之后的变化</span><br></pre></td></tr></table></figure>
 <p>项目配置中选择构建后操作 Editable Email Notification，如果不设置，则使用系统的默认设置，</p>
 <p>也可在高级设置中，设置触发邮件发送的条件及接收人。</p>
 <ul>

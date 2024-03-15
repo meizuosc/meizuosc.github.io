@@ -175,7 +175,7 @@
 
                         
                         <li>
-                            <a href="/categories/">Categories</a>
+                            <a href="/about/">About</a>
                         </li>
                         
                     
@@ -189,14 +189,14 @@
 
                         
                         <li>
-                            <a href="/tags/">Tags</a>
+                            <a href="/categories/">Categories</a>
                         </li>
                         
                     
 
                         
                         <li>
-                            <a href="/about/">About</a>
+                            <a href="/tags/">Tags</a>
                         </li>
                         
                     
@@ -259,7 +259,7 @@
 <h2 id="基于调度器的-CPU-调频策略"><a href="#基于调度器的-CPU-调频策略" class="headerlink" title="基于调度器的 CPU 调频策略"></a>基于调度器的 CPU 调频策略</h2><p>内核调度器中的 CFS 调度类是通过 PELT(per entity load tracking) 来统计各个 Task 的负载（capacity），并映射到 0 ~ 1024（最大值可在编译时指定）。内核当中的负载均衡就是通过这些统计值来平衡各个 CPU 之间的任务。而基于调度器的 cpufreq governor 的主要原理就是把各个 CPU 的 capacity 映射到 CPU 频率，来完成调频动作，capacity 越高，当前 CPU 负载越高，所以频率也调的很高。</p>
 <p>而当前内核社区中，已经有两个成形的方案。一个是 ARM 和 Linaro 主导的项目 - cpufreq_sched，属于 EAS 的一部分。而另外一个 Intel 主导的项目 - schedutil。</p>
 <h3 id="cpufreq-sched"><a href="#cpufreq-sched" class="headerlink" title="cpufreq_sched"></a>cpufreq_sched</h3><p>cpufreq_sched<sup><a href="#fn_sched_freq" id="reffn_sched_freq">sched_freq</a></sup> 本身逻辑比较简单，当 cfs, rt, deadline 3 个调度类中的 capacity 出现变化的时候，就调用 <code>update_cpu_capacity_request()</code> 来更新当前 policy 下 CPU 的频率。cpufreq 中的 policy 有可能包含多个 CPU，所以这里要选择其中最大的 capacity 来代表整个 policy 的负载。capacity 到 CPU 频率，是通过如下代码按比例转换的：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">freq_new &#x3D; capacity * policy-&gt;max &gt;&gt; SCHED_CAPACITY_SHIFT</span><br></pre></td></tr></table></figure>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">freq_new</span> = capacity * policy-&gt;max &gt;&gt; SCHED_CAPACITY_SHIFT</span><br></pre></td></tr></table></figure>
 <p><code>SCHED_CAPACITY_SHIFT</code> 一般是 10，即 capacity 的最大值 1024。假定当前 policy 允许的最大 CPU 频率是 1.2GHz，capacity 为 500，那么对应的频率是 586Mhz。如果我们直接把 CPU 设置在这个频率上，会导致一些性能上的下降。所以 cpufreq_sched 会在最终的 capacity 基础上，乘上 1.25，相当于在当前 capacity 的基础上增加 20%。</p>
 <p>从 cpufreq_sched 的实现，我们可以看到整个调频动作，都是从调度器中直接设置下来的，cpufreq_sched 自身并没有去统计各个 CPU 的负载。而这种做法也让 CPU 的频率可以快速的响应负载变化，理论上讲，当前平台的 cpufreq 驱动最小调频间隔是多少，那么 cpufreq_sched 就可以做到多少。相比于 interactive 20ms 的调频间隔，cpufreq_sched 不到 1ms 的调频间隔简直是天壤之别。下图分别是 interactive 和 sched 在不同负载下 CPU 频率图：</p>
 <ul>
