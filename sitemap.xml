@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://kernel.meizu.com/2024/05/27/Linux-Page-Table-Check/</loc>
+    
+    <lastmod>2024-05-27T09:25:55.606Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2024/05/16/TouchScreen-Basics/</loc>
     
     <lastmod>2024-05-16T03:07:43.629Z</lastmod>

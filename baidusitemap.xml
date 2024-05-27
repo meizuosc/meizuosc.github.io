@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://kernel.meizu.com/2024/05/27/Linux-Page-Table-Check/</loc>
+    <lastmod>2024-05-27</lastmod>
+  </url>
+  <url>
     <loc>https://kernel.meizu.com/2024/05/16/TouchScreen-Basics/</loc>
     <lastmod>2024-05-16</lastmod>
   </url>
