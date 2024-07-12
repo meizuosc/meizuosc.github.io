@@ -8,8 +8,32 @@
     </url>
 
     <url>
+        <loc>https://kernel.meizu.com/2024/05/27/Linux-Page-Table-Check/</loc>
+        <lastmod>2024-07-12T09:50:59.936Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/2024/07/12/sub-system-cgroup-freezer-in-Linux-kernel/</loc>
+        <lastmod>2024-07-12T09:27:05.931Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/2024/05/16/TouchScreen-Basics/</loc>
+        <lastmod>2024-05-16T03:07:43.629Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://kernel.meizu.com/2024/03/15/Futex%E6%9C%BA%E5%88%B6%E7%9A%84%E5%86%85%E6%A0%B8%E4%BC%98%E5%8C%96/</loc>
-        <lastmod>2024-03-15T10:16:12.133Z</lastmod>
+        <lastmod>2024-03-18T01:27:10.133Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -136,7 +160,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/05/02//gps-introduction.html/</loc>
+        <loc>https://kernel.meizu.com/2016/04/15//intro-wrapfs.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -144,7 +168,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/04/15//intro-wrapfs.html/</loc>
+        <loc>https://kernel.meizu.com/2016/05/02//gps-introduction.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -160,7 +184,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/05/21//zram-introduction.html/</loc>
+        <loc>https://kernel.meizu.com/2016/05/18//android-sensor-framework.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -168,7 +192,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/05/18//android-sensor-framework.html/</loc>
+        <loc>https://kernel.meizu.com/2016/05/21//zram-introduction.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -192,14 +216,6 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/06/19//nonlinear-regression.html/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
         <loc>https://kernel.meizu.com/2016/06/26//lockcreen-password.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -208,7 +224,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/07/04//linux-signal.html/</loc>
+        <loc>https://kernel.meizu.com/2016/06/19//nonlinear-regression.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -224,7 +240,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/07/20//linux-tick-and-tickless.html/</loc>
+        <loc>https://kernel.meizu.com/2016/07/04//linux-signal.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -232,7 +248,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/08/06//bfs-porting.html/</loc>
+        <loc>https://kernel.meizu.com/2016/07/20//linux-tick-and-tickless.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -248,7 +264,15 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/08/21//linux-workqueue.html/</loc>
+        <loc>https://kernel.meizu.com/2016/08/06//bfs-porting.html/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/2016/09/12//android-m-external-storage.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -272,14 +296,6 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2016/09/12//android-m-external-storage.html/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
         <loc>https://kernel.meizu.com/2016/10/16//configure-jenkins-guide.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -288,7 +304,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2017/09/07//samsun-uboot-fastboot-command.html/</loc>
+        <loc>https://kernel.meizu.com/2016/08/21//linux-workqueue.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -312,7 +328,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/2017/11/18//memory%20management%20-%20ion.html/</loc>
+        <loc>https://kernel.meizu.com/2017/09/07//samsun-uboot-fastboot-command.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -321,6 +337,14 @@
 
     <url>
         <loc>https://kernel.meizu.com/2017/12/27//tee.html/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/2017/11/18//memory%20management%20-%20ion.html/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>

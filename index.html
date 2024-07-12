@@ -330,9 +330,46 @@
 
     
 
+    
+
 
 
 <!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2024/07/12/sub-system-cgroup-freezer-in-Linux-kernel/">
+                <h2 class="post-title">
+                    进程冻结技术：深入探究 Linux 内核中的 cgroup freezer 子系统
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    
+kernel version：5.15.119cpu architecture：ARM64cgroup version：cgroup v2
+
+一、背景介绍cgroup 最初由 Google 工程师 Paul Menage 和 Rohit Seth 在 2006 年提出，是一种细粒度资源控制的Linux内核机制。于 2007 年合并到 Linux 内核主线中。然而 Google 原生系统直到......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by BA.Fu on
+                    2024-07-12
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#freeze_processes" title="freeze_processes">freeze_processes</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
 
     
 
@@ -640,44 +677,6 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
 
     
 
-    
-
-        <div class="post-preview">
-
-            <a href="/2023/07/07/Face-recognition-block-analysis/">
-                <h2 class="post-title">
-                    人脸解锁带来的安卓系统崩溃之谜！
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    问题背景用户反馈开启人脸解锁后，偶现密码解锁、指纹解锁、人脸解锁均无法使用，系统卡死随后出现安卓重启。
-问题分析SWT之初步释疑查看android SWT(Software Watchdog Timeout)日志，发现android.ui线程卡死。1Subject: Blocked in handler on ui thread (android.ui)
-查看android.ui堆栈，可以看......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Huang xixin on
-                    2023-07-07
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#Security" title="Security">Security</a>
-                    
-                      <a href="/tags/#Stability" title="Stability">Stability</a>
-                    
-                      <a href="/tags/#Trustzone" title="Trustzone">Trustzone</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
 
 
 <!-- Pager -->
@@ -794,6 +793,8 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
         
             
         
+            
+            <a href="/tags/#freeze_processes" title="freeze_processes" rel="2">freeze_processes</a>
             
         
             
@@ -1009,6 +1010,10 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
     <ul>
       
         <li>
+          <a href="2024/07/12/sub-system-cgroup-freezer-in-Linux-kernel/">进程冻结技术：深入探究 Linux 内核中的 cgroup freezer 子系统</a>
+        </li>
+      
+        <li>
           <a href="2024/05/27/Linux-Page-Table-Check/">内核内存稳定性新特性：Page Table Check 机制解读</a>
         </li>
       
@@ -1022,10 +1027,6 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
       
         <li>
           <a href="2024/01/12/Qcom-Thermal-Engine-frame-analysis/">手机温控中枢：高通 Thermal Engine 框架分析</a>
-        </li>
-      
-        <li>
-          <a href="2023/12/13/Full-stack-resolution-of-the-Linux-time-subsystem/">从硬件到软件，Linux 时间子系统全栈解析</a>
         </li>
       
     </ul>
@@ -1048,7 +1049,7 @@ eBPF is a revolutionary technology with origins in the Linux kernel that can run
         
     <h5>ARCHIVES</h5>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/05/">May 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/03/">March 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/07/">July 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/05/">May 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/03/">March 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2023/07/">July 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="archives/2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
 
         <hr>

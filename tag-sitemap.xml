@@ -3,21 +3,35 @@
 
 
     <url>
-        <loc>https://kernel.meizu.com/tags/Performance/</loc>
-        <lastmod>2024-03-15T10:16:12.133Z</lastmod>
+        <loc>https://kernel.meizu.com/tags/Linux/</loc>
+        <lastmod>2024-07-12T09:50:59.936Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/tags/freeze-processes/</loc>
+        <lastmod>2024-07-12T09:27:05.931Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://kernel.meizu.com/tags/Thermal/</loc>
-        <lastmod>2024-01-12T13:19:49.911Z</lastmod>
+        <lastmod>2024-05-16T03:07:43.629Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/monotonic-time/</loc>
+        <loc>https://kernel.meizu.com/tags/Performance/</loc>
+        <lastmod>2024-03-18T01:27:10.133Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/tags/clocksource/</loc>
         <lastmod>2023-12-13T09:23:20.255Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -31,7 +45,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/clocksource/</loc>
+        <loc>https://kernel.meizu.com/tags/monotonic-time/</loc>
         <lastmod>2023-12-13T09:23:20.255Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -276,6 +290,13 @@
     </url>
 
     <url>
+        <loc>https://kernel.meizu.com/tags/fastboot/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://kernel.meizu.com/tags/Trusted-Execution-Environment/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -290,7 +311,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/fastboot/</loc>
+        <loc>https://kernel.meizu.com/tags/Workqueue/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -305,13 +326,6 @@
 
     <url>
         <loc>https://kernel.meizu.com/tags/Jenkins/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/%25E5%25A4%2596%25E7%25BD%25AE%25E5%25AD%2598%25E5%2582%25A8/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -381,28 +395,7 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/Workqueue/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/%25E5%25A4%259A%25E7%25BA%25A7%25E5%25AE%2589%25E5%2585%25A8/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/%25E7%25B1%25BB%25E5%259E%258B%25E5%25BC%25BA%25E5%2588%25B6/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/SELinux/</loc>
+        <loc>https://kernel.meizu.com/tags/%25E5%25A4%2596%25E7%25BD%25AE%25E5%25AD%2598%25E5%2582%25A8/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -430,21 +423,21 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/freeze-processes/</loc>
+        <loc>https://kernel.meizu.com/tags/%25E5%25A4%259A%25E7%25BA%25A7%25E5%25AE%2589%25E5%2585%25A8/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/kthread-park/</loc>
+        <loc>https://kernel.meizu.com/tags/%25E7%25B1%25BB%25E5%259E%258B%25E5%25BC%25BA%25E5%2588%25B6/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/kthread-stop/</loc>
+        <loc>https://kernel.meizu.com/tags/SELinux/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -465,21 +458,14 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/%25E5%25AF%2586%25E7%25A0%2581/</loc>
+        <loc>https://kernel.meizu.com/tags/kthread-park/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/%25E9%2594%2581%25E5%25B1%258F/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/lockcreen/</loc>
+        <loc>https://kernel.meizu.com/tags/kthread-stop/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -507,6 +493,27 @@
     </url>
 
     <url>
+        <loc>https://kernel.meizu.com/tags/%25E5%25AF%2586%25E7%25A0%2581/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/tags/%25E9%2594%2581%25E5%25B1%258F/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/tags/lockcreen/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://kernel.meizu.com/tags/ISP/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -522,20 +529,6 @@
 
     <url>
         <loc>https://kernel.meizu.com/tags/cpuidle/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/sensor/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/Android/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -563,6 +556,20 @@
     </url>
 
     <url>
+        <loc>https://kernel.meizu.com/tags/sensor/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/tags/Android/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://kernel.meizu.com/tags/SLUB/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -577,20 +584,6 @@
     </url>
 
     <url>
-        <loc>https://kernel.meizu.com/tags/WrapFS/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/tags/Linux/</loc>
-        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://kernel.meizu.com/tags/%25E5%25AE%259A%25E4%25BD%258D%25E6%258A%2580%25E6%259C%25AF/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -599,6 +592,13 @@
 
     <url>
         <loc>https://kernel.meizu.com/tags/gps/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/tags/WrapFS/</loc>
         <lastmod>2023-06-15T13:17:08.380Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
