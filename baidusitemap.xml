@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://kernel.meizu.com/2024/12/06/Isolated-count-mismatch-analysis/</loc>
+    <lastmod>2024-12-06</lastmod>
+  </url>
+  <url>
     <loc>https://kernel.meizu.com/2024/05/27/Linux-Page-Table-Check/</loc>
     <lastmod>2024-07-12</lastmod>
   </url>
@@ -59,10 +63,6 @@
   <url>
     <loc>https://kernel.meizu.com/2023/07/04/Android-R-AVB2-0/</loc>
     <lastmod>2023-08-07</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2023/07/04/Display-frame-app-communicates-with-SurfaceFlinger/</loc>
-    <lastmod>2023-07-04</lastmod>
   </url>
   <url>
     <loc>https://kernel.meizu.com/2018/11/23//implementation-of-loading-fw-from-userspace.html/</loc>

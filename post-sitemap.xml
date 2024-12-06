@@ -8,6 +8,14 @@
     </url>
 
     <url>
+        <loc>https://kernel.meizu.com/2024/12/06/Isolated-count-mismatch-analysis/</loc>
+        <lastmod>2024-12-06T06:43:49.094Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://kernel.meizu.com/2024/05/27/Linux-Page-Table-Check/</loc>
         <lastmod>2024-07-12T09:50:59.936Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -122,14 +130,6 @@
     <url>
         <loc>https://kernel.meizu.com/2023/07/04/Android-R-AVB2-0/</loc>
         <lastmod>2023-08-07T01:41:28.579Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/2023/07/04/Display-frame-app-communicates-with-SurfaceFlinger/</loc>
-        <lastmod>2023-07-04T08:17:12.349Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
