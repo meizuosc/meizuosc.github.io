@@ -2,16 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://kernel.meizu.com/2024/12/06/Isolated-count-mismatch-analysis/</loc>
+    <loc>https://kernel.meizu.com/2024/12/06/Submit-patch-implementations-to-the-Linux-kernel-community/</loc>
     
-    <lastmod>2024-12-25T03:04:33.569Z</lastmod>
+    <lastmod>2024-12-25T08:45:30.583Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2024/12/06/Submit-patch-implementations-to-the-Linux-kernel-community/</loc>
+    <loc>https://kernel.meizu.com/2024/12/25/%25E7%2589%25A9%25E6%25A0%25BC%25E8%2580%258C%25E5%2590%258E%25E7%259F%25A5%25E8%2587%25B3-WALT%25E8%25B0%2583%25E5%25BA%25A6%25E5%2599%25A8%25E4%25B9%258BRTG/</loc>
     
-    <lastmod>2024-12-25T03:04:33.557Z</lastmod>
+    <lastmod>2024-12-25T08:41:30.428Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2024/12/06/Isolated-count-mismatch-analysis/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.569Z</lastmod>
     
   </url>
   

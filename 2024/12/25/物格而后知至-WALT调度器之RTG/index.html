@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          物格而后知至：WALT调度器之RTG - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2024/12/25/物格而后知至-WALT调度器之RTG/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                        </div>
+                        <h1>物格而后知至：WALT调度器之RTG</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Bo.Chen on
+                            2024-12-25
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="1-引言"><a href="#1-引言" class="headerlink" title="1. 引言"></a><strong>1. 引言</strong></h1><p><img src="1.webp" alt=""></p>
+<p>我们在《浅析高通 mvp 进程优先调度》一文中有提到 RTG 任务是 mvp 进程优先调度的其中一种任务类型，然而 RTG 的的影响范围不仅仅是进程优先调度。下面再带大家物格而后知至：再研读高通 WALT 调度器中的RTG。</p>
+<p>RTG（Related Thread Group）是高通引入的一个特性，目的是将关联的进程加入到同一个group组中，用于提升性能。比如显示相关的主线程和render线程就可以加入到相同的RTG组中，根据实际需求，对其进行一些特殊处理。可以<br>将其调度到同一个CPU簇上，使得它们可以共享相同的cache资源，减少cache miss；也可以聚合RTG组里的任务负载，提升CPU的频率，达到性能提升的目的。RTG对于选核也会产生一定的影响。除此之外，在RTG的基础上引申出来很&gt;多其它的特性，如优先调度等。本文在分析时难免出现错误和遗漏，欢迎批评指正。</p>
+<h1 id="2-RTG总体说明"><a href="#2-RTG总体说明" class="headerlink" title="2. RTG总体说明"></a><strong>2. RTG总体说明</strong></h1><p><img src="2.webp" alt=""></p>
+<p>RTG在内核中定义了一个独立的结构体，但是它在内核中并非以一个独立的模块存在，而是散落在WALT的各处代码中：</p>
+<ol>
+<li>用户空间可以通过/proc文件节点将某个任务设置到RTG的不同组中</li>
+<li>在将任务加到cgroup中时，会同时将任务添加到RTG中，默认”top-app” cgroup中的任务设置到默认RTG 组，其它任务通过sysctl设置到其它RTG组</li>
+<li>在WALT FREQ GOV调频的过程中会参考CPU当前是否运行RTG任务，做出调频决策，如果是则会影响其调频行为；在某些场景下，CPU也会累加RTG任务的负载，起到聚合调频的作用</li>
+<li>在WALT CFS和RT任务选核的过程中会参考CPU当前是否运行RTG任务，或要选核的任务是否位于RTG，做出选核决策，如果是则会影响其选核行为</li>
+</ol>
+<h1 id="3-RTG相关数据结构"><a href="#3-RTG相关数据结构" class="headerlink" title="3. RTG相关数据结构"></a><strong>3. RTG相关数据结构</strong></h1><p><img src="3.webp" alt=""></p>
+<ol>
+<li>walt_related_thread_group<br>用于管理RTG任务，位于同一个RTG组的任务一般被调度到同一个CPU（cluste）运行，共享cache，提升性能。它维护了一个taks链表，RTG组内所有的任务将链接到此链表；RTG的skip_min显示他倾向的选核策略，如果为true，则选<br>择大核或超大核运行，略过小核;</li>
+<li>walt_cpu_load<br>用于管理CPU负载，其中rtgb_active将影响CPU Busy的延迟时间（如进入lpm的时间），如果rtgb_active为true则会延长CPU某一个状态的时间，避免频繁进出状态引发抖动；rtgb_active也会影响调频，当rtgb_active为true时，  则会优先满足RTG组任务的util，从而影响了调频频率;</li>
+<li>waltgov_cpu<br>用于管理CPU的WALT调频，它的walt_load中的rtgb_active会影响CPU的调频和CPU状态延迟时间;</li>
+<li>waltgov_tunables<br>作为walt gov的旋钮，它确定了不同算力CPU的boost频率，记录在rtg_boost_freq里，rtg_boost_freq主要作为CPU调频时的参考，如对于RTG任务调频时，将参考这个值, 相当于会对频率做一些抬升;</li>
+<li>waltgov_policy<br>用于管理cluster的walt调频，它的rtg_boost_util是参考waltgov_tunables的rtg_boost_freq得到的boot util，在调频时也会参考这个值;</li>
+<li>walt_sched_stats<br>walt运行队列的统计数据，它的nr_rtg_high_prio_tasks代表队列中高优先级任务的个数。它对CPU状态延迟时间和选核都有影响，如果walt_nr_rtg_high_prio大于一定的阈值，则任务选核时将略过这个CPU，避免与RTG任务产生竞<br>争</li>
+</ol>
+<h1 id="4-RTG初始化"><a href="#4-RTG初始化" class="headerlink" title="4. RTG初始化"></a><strong>4. RTG初始化</strong></h1><p>RTG相关的初始化是在WALT的初始化过程中完成的，主要通过walt_init和waltgov_init：</p>
+<h2 id="WALT初始化"><a href="#WALT初始化" class="headerlink" title="WALT初始化"></a>WALT初始化</h2><p>WALT初始化主要调用walt_init，与RTG相关的初始化工作主要包含：<br>(1) walt_init会遍历所有的walt_task_group，对其进行初始化，其中对colocate的初始化会影响到RTG，可以看到只有”top-app” task_group的colocate置为true，colocate会影响cgroup任务的RTG分组;<br>(2) 注册了cpu cgroup attach的vendor hook回调。这个回调的主要功能是在任务加入到cgroup时，将任务也加入到RTG组中<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt.c</span><br><span class="line">static void walt_init(struct work_struct *work)</span><br><span class="line">    |- walt_init_tg_pointers();--------------------------（1）</span><br><span class="line">    |   |_ css_for_each_child(css, top_css)</span><br><span class="line">    |         walt_update_tg_pointer(css);</span><br><span class="line">    |_register_walt_hooks()-----------------------------（2）</span><br><span class="line">        |_ register_trace_android_rvh_cpu_cgroup_attach(android_rvh_cpu_cgroup_attach, NULL);</span><br></pre></td></tr></table></figure></p>
+<h2 id="WALT-governor初始化"><a href="#WALT-governor初始化" class="headerlink" title="WALT governor初始化"></a>WALT governor初始化</h2><p>WALT governor初始化主要通过waltgov_init对walt调频器进行初始化，这里仅列出与RTG相关的部分，它会根据CPU的类型，设定RTG boost频率；这个RTG boost频率将来对RTG任务的调频会产生影响，参考 RTG影响调频 一节。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/cpufreq_walt.c</span><br><span class="line">static int waltgov_init(struct cpufreq_policy *policy)</span><br><span class="line">    |- struct waltgov_tunables *tunables;</span><br><span class="line">    |- tunables = kzalloc(sizeof(*tunables), GFP_KERNEL);</span><br><span class="line">                                                                                                                                                                                            |  ......</span><br><span class="line">    |_ if (is_min_possible_cluster_cpu(policy-&gt;cpu))</span><br><span class="line">            tunables-&gt;rtg_boost_freq = DEFAULT_SILVER_RTG_BOOST_FREQ;</span><br><span class="line">      else if (is_max_possible_cluster_cpu(policy-&gt;cpu))</span><br><span class="line">            tunables-&gt;rtg_boost_freq = DEFAULT_PRIME_RTG_BOOST_FREQ;</span><br><span class="line">      else</span><br><span class="line">            tunables-&gt;rtg_boost_freq = DEFAULT_GOLD_RTG_BOOST_FREQ;</span><br></pre></td></tr></table></figure><br>对于不同类型的CPU簇，定义了不同的RTG boost频率阈值如下，可以看到不同算力的cluster，它的boost频率定义也不一样：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/cpufreq_walt.c</span><br><span class="line">#define DEFAULT_SILVER_RTG_BOOST_FREQ 1000000</span><br><span class="line">#define DEFAULT_GOLD_RTG_BOOST_FREQ 768000</span><br><span class="line">#define DEFAULT_PRIME_RTG_BOOST_FREQ 0</span><br></pre></td></tr></table></figure></p>
+<h1 id="5-将任务加入RTG组"><a href="#5-将任务加入RTG组" class="headerlink" title="5. 将任务加入RTG组"></a><strong>5. 将任务加入RTG组</strong></h1><p>有两种方法可以将任务设置到RTG组：通过sysctl进行设置；通过cgroup进行设置。</p>
+<h2 id="通过sysctl设置进程到RTG组"><a href="#通过sysctl设置进程到RTG组" class="headerlink" title="通过sysctl设置进程到RTG组"></a>通过sysctl设置进程到RTG组</h2><p>通过sysctl可以将一个WALT任务添加到RTG组中，操作方法举例如下，其中pidxx为任务的pid：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># echo pidxx &gt; /proc/sys/walt/sched_task_read_pid</span><br><span class="line"># echo pidxx group_idxx &gt; /proc/sys/walt/sched_group_id</span><br></pre></td></tr></table></figure></p>
+<h2 id="通过cgroup设置进程到RTG组"><a href="#通过cgroup设置进程到RTG组" class="headerlink" title="通过cgroup设置进程到RTG组"></a>通过cgroup设置进程到RTG组</h2><p>前面介绍WAL初始化时，提到会注册cpu cgroup attach的vendor hook回调，任务在加入到某个cgroup中时，会触发执行android_rvh_cpu_cgroup_attach，它会遍历cgroup task group里的任务，将其加入到RTG组中。如walt_task_group的colocate为真则加入到RTG 默认组（ID为DEFAULT_CGROUP_COLOC_ID）；否则不允许加入到RTG组。在前面walt_init中可以看到只有”top-app” task group中的任务才可以加入到默认RTG默认组，这也预示着默认情况下，只&gt;有“top-app” task group组的任务享有RTG的的”待遇“，如调频/选核等。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt.c</span><br><span class="line">static void android_rvh_cpu_cgroup_attach(void *unused,</span><br><span class="line">    |        struct cgroup_taskset *tset)</span><br><span class="line">    |- struct task_group *tg;</span><br><span class="line">    |- cgroup_taskset_first(tset, &amp;css);</span><br><span class="line">    |- tg = container_of(css, struct task_group, css);</span><br><span class="line">    |- wtg = (struct walt_task_group *) tg-&gt;android_vendor_data1;</span><br><span class="line">    |_ cgroup_taskset_for_each(task, css, tset)</span><br><span class="line">           grp_id = wtg-&gt;colocate ? DEFAULT_CGROUP_COLOC_ID : 0;</span><br><span class="line">           __sched_set_group_id(task, grp_id);</span><br></pre></td></tr></table></figure></p>
+<h1 id="6-RTG-的-CFS-选核"><a href="#6-RTG-的-CFS-选核" class="headerlink" title="6. RTG 的 CFS 选核"></a><strong>6. RTG 的 CFS 选核</strong></h1><p>RTG影响选核主要发生在唤醒一个进程时。选核的主要原则是：如果被唤醒的是RTG组的任务，则它会倾向于选择算力充足的cluster；如果被唤醒的是其它任务，则它倾向于与RTG组的任务分开，不运行在同一个CPU上。<br>(1) 通过set_preferred_cluster来选择一个倾向的cluster，这个过程会受RTG组任务的影响；<br>(2) 通过walt_select_task_rq_fair选择一个 cpu来运行<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/core.c</span><br><span class="line">static int</span><br><span class="line">try_to_wake_up(struct task_struct *p, unsigned int state, </span><br><span class="line">    |              int wake_flags)</span><br><span class="line">    |    |_ android_rvh_try_to_wake_up(unused, p)</span><br><span class="line">    |        |_ if (update_preferred_cluster(grp, p, old_load, false))</span><br><span class="line">    |             set_preferred_cluster(grp);---------------------(1)</span><br><span class="line">    |                |_ _set_preferred_cluster(grp)</span><br><span class="line">    |- cpu = select_task_rq(p, p-&gt;wake_cpu, wake_flags | WF_TTWU)</span><br><span class="line">    |    |_ select_task_rq_fair(p, cpu, wake_flags)</span><br><span class="line">    |        |_ walt_select_task_rq_fair(void *unused, </span><br><span class="line">    |            p, prev_cpu, sd_flag, wake_flags, target_cpu)----(2)</span><br><span class="line">    |_ ttwu_queue(p, cpu, wake_flags)</span><br></pre></td></tr></table></figure></p>
+<h2 id="set-preferred-cluster"><a href="#set-preferred-cluster" class="headerlink" title="set_preferred_cluster"></a>set_preferred_cluster</h2><p>对于RTG任务，在选核时会选取满足RTG算力的最佳的cluster，保存在walt_related_thread_group的preferred_cluster:<br>(1) 循环遍历RTG组里所有的任务，如果任务p的boost  policy为SCHED_BOOST_ON_BIG，表示需要至少在大核上面运行，为后续选核遍历做index指导；否则累加RTG组所有任务的负载，以此作为选核的依据，将来也会用来做聚合调频&gt;；如果运行时间太短，则任务是一个新任务，退出不做选核操作；<br>(2) update_best_cluster根据combined_demand来更新cluster，主要是更新walt_related_thread_group的skip_min, 它决定了更倾向于哪个cluster，如果为true则倾向于大核<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt.c</span><br><span class="line">static void _set_preferred_cluster(struct walt_related_thread_group *grp)</span><br><span class="line">    |- u64 combined_demand = 0;</span><br><span class="line">    |  bool group_boost = false</span><br><span class="line">    |- list_for_each_entry(wts, &amp;grp-&gt;tasks, grp_list)---------------(1)</span><br><span class="line">    |    p = wts_to_ts(wts);</span><br><span class="line">    |    if (task_boost_policy(p) == SCHED_BOOST_ON_BIG)</span><br><span class="line">    |            group_boost = true;</span><br><span class="line">    |            break;</span><br><span class="line">    |</span><br><span class="line">    |    if (wts-&gt;mark_start <span class="tag">&lt; <span class="attr">wallclock</span> <span class="attr">-</span></span></span><br><span class="line"><span class="tag">    |        (<span class="attr">sched_ravg_window</span> * <span class="attr">RAVG_HIST_SIZE</span>))</span></span><br><span class="line"><span class="tag">    |            <span class="attr">continue</span>;</span></span><br><span class="line"><span class="tag">    |</span></span><br><span class="line"><span class="tag">    |    <span class="attr">combined_demand</span> += <span class="string">wts-</span>&gt;</span>coloc_demand;</span><br><span class="line">    |    if (!trace_sched_set_preferred_cluster_enabled())</span><br><span class="line">    |            if (combined_demand &gt; sched_group_upmigrate)</span><br><span class="line">    |                    break;</span><br><span class="line">    |- grp-&gt;last_update = wallclock;</span><br><span class="line">    |_ update_best_cluster(grp, combined_demand, group_boost);-------(2)</span><br></pre></td></tr></table></figure></p>
+<h2 id="walt-select-task-rq-fair"><a href="#walt-select-task-rq-fair" class="headerlink" title="walt_select_task_rq_fair"></a>walt_select_task_rq_fair</h2><p>walt_select_task_rq_fair为任务选取一个合适的运行队列，这里特别说明下sync标志，在Linux内核调度器中，WF_SYNC标志用于表示同步唤醒（sync wakeup）。同步唤醒是指在唤醒操作后，唤醒者（waker）即将进入睡眠状态的&gt;场景。具体来说，当一个任务（waker）唤醒另一个任务（wakee）后，如果WF_SYNC标志被设置，这意味着waker很快会进入阻塞状态，因此调度器会倾向于将wakee放置在waker当前运行的CPU上，以减少上下文切换和提高效率，因此<br>处于性能考虑，如果当前任务和唤醒的任务都是RTG任务，则避免将其调度到同个CPU上：</p>
+<p>(1) walt_get_indicies会确定一个选核的范围，对于RTG任务，选核会从cluster1开始，而非从cluster0开始；<br>(2) 如果任务p和当前运行的是都是RTG任务，那么尽量避免将任务p调度到与当前任务相同的CPU上；<br>(3) walt_find_best_target选择最佳的cpu，在选择CPU时，尽量分散高优先级的RTG任务，以避免它们相互抢占，同时优先选择剩余容量最大的CPU。这是一种优化策略，旨在提高系统的性能和响应速度。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt_cfs.c</span><br><span class="line">walt_select_task_rq_fair(void *unused, p, prev_cpu, sd_flag, wake_flags, target_cpu)</span><br><span class="line">    |- int sync;</span><br><span class="line">    |  sync = (wake_flags &amp; WF_SYNC) &amp;&amp; !(current-&gt;flags &amp; PF_EXITING);</span><br><span class="line">    |_ *target_cpu=walt_find_energy_efficient_cpu(p, prev_cpu, sync, sibling_count_hint)</span><br><span class="line">        |- walt_get_indicies(p, &amp;order_index, &amp;end_index, task_boost, uclamp_boost,</span><br><span class="line">        |                          &amp;energy_eval_needed);------------------------(1)</span><br><span class="line">        |      |_ walt_task_skip_min_cpu(p)</span><br><span class="line">        |- is_rtg = task_in_related_thread_group(p);</span><br><span class="line">        |- curr_is_rtg = task_in_related_thread_group(cpu_rq(cpu)-&gt;curr)</span><br><span class="line">        |- if (sync &amp;&amp; (need_idle || (is_rtg &amp;&amp; curr_is_rtg)))</span><br><span class="line">        |    sync = 0;-----------------------------------------------------------(2)</span><br><span class="line">        |_ walt_find_best_target(NULL, candidates, p, &amp;fbt_env)-----------------（3）</span><br></pre></td></tr></table></figure><br>walt_find_best_target的实现如下，在选择CPU时，尽量分散高优先级的RTG任务，以避免它们相互抢占，同时优先选择剩余容量最大的CPU。这是一种优化策略，旨在提高系统的性能和响应速度。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt_cfs.c</span><br><span class="line">static void walt_find_best_target(struct sched_domain *sd,</span><br><span class="line">                                        cpumask_t *candidates,</span><br><span class="line">                                        struct task_struct *p,</span><br><span class="line">                                        struct find_best_target_env *fbt_env)</span><br><span class="line">    |- unsigned int target_nr_rtg_high_prio = UINT_MAX;</span><br><span class="line">    |  bool rtg_high_prio_task = task_rtg_high_prio(p);</span><br><span class="line">    |_ for_each_cpu(i, &amp;visit_cpus)</span><br><span class="line">            if (rtg_high_prio_task) &#123;</span><br><span class="line">                    if (walt_nr_rtg_high_prio(i) &gt; target_nr_rtg_high_prio)</span><br><span class="line">                            continue;</span><br><span class="line">                    /* Favor CPUs with maximum spare capacity */</span><br><span class="line">                    if (walt_nr_rtg_high_prio(i) == target_nr_rtg_high_prio &amp;&amp;</span><br><span class="line">                                    spare_cap <span class="tag">&lt; <span class="attr">target_max_spare_cap</span>)</span></span><br><span class="line"><span class="tag">                            <span class="attr">continue</span>;</span></span><br><span class="line"><span class="tag">            &#125; <span class="attr">else</span> &#123;</span></span><br><span class="line"><span class="tag">                    /* <span class="attr">Favor</span> <span class="attr">CPUs</span> <span class="attr">with</span> <span class="attr">maximum</span> <span class="attr">spare</span> <span class="attr">capacity</span> */</span></span><br><span class="line">                    if (spare_cap &lt; target_max_spare_cap)</span><br><span class="line">                            continue;</span><br><span class="line">            &#125;</span><br><span class="line">            target_max_spare_cap = spare_cap;</span><br><span class="line">            target_nr_rtg_high_prio = walt_nr_rtg_high_prio(i);</span><br><span class="line">            target_cpu_cluster = i;</span><br></pre></td></tr></table></figure></p>
+<h1 id="7-RTG-的-RT-选核"><a href="#7-RTG-的-RT-选核" class="headerlink" title="7. RTG 的 RT 选核"></a><strong>7. RTG 的 RT 选核</strong></h1><p>walt_select_task_rq_rt在为rt任务选核过程中，会对当前CPU的状态进行判断，如果CPU当前运行的任务属于低延迟任务（如RTG任务）或RTG高优先级任务（RT任务且位于RTG）数不为0，则不会将RT任务调度到此cpu core上, 以避&gt;免与RTG任务争夺资源。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt_rt.c</span><br><span class="line">static void walt_select_task_rq_rt(void *unused, struct task_struct *task, int cpu,</span><br><span class="line">                                        int sd_flag, int wake_flags, int *new_cpu)</span><br><span class="line">    |_ walt_rt_energy_aware_wake_cpu(task, &amp;lowest_mask_reduced, ret, &amp;target)</span><br><span class="line">        |_ for (cluster = 0; cluster <span class="tag">&lt; <span class="attr">num_sched_clusters</span>; <span class="attr">cluster</span>++)</span></span><br><span class="line"><span class="tag">                <span class="attr">for_each_cpu_and</span>(<span class="attr">cpu</span>, <span class="attr">lowest_mask</span>, &amp;<span class="attr">cpu_array</span>[<span class="attr">order_index</span>][<span class="attr">cluster</span>])</span></span><br><span class="line"><span class="tag">                    |<span class="attr">-</span> <span class="attr">lt</span> = <span class="string">(walt_low_latency_task(cpu_rq(cpu)-</span>&gt;</span>curr) ||</span><br><span class="line">                    |                    walt_nr_rtg_high_prio(cpu));</span><br><span class="line">                    |_ if (lt &amp;&amp; !best_cpu_lt)</span><br><span class="line">                            continue;</span><br></pre></td></tr></table></figure></p>
+<h1 id="8-RTG-的负载均衡选核"><a href="#8-RTG-的负载均衡选核" class="headerlink" title="8. RTG 的负载均衡选核"></a><strong>8. RTG 的负载均衡选核</strong></h1><p>负载均衡指的是让CPU获得与其算力匹配的负载，广义的负载均衡包含：负载均衡（load balance）、任务放置（task placement）、主动均衡（active upmigration）。前面简要介绍过RTG对任务放置的影响，下面主要介绍RTG对负<br>载均衡（load balance）的影响，这里仅考虑CFS任务。</p>
+<p>那么触发负载均衡（load balance）的时机有哪些呢？概括的讲，主要包含有两种情况：<br>(1)当系统tick事件发生时会通过软中断触发负载均衡（load balance）<br>periodic balance，找到调度域中负载最重的调度组，将其上的runnable任务拉到本CPU以便让该调度域上各个调度组的负载处于均衡的状态，让 busy cpu 之间负载均衡。<br>nohz idle load banlance，本CPU任务太重，其他任务处于 idle，需要通过ipi将idle的cpu唤醒来进行负载均衡。<br>(2)当scheduler选取下一个任务时，如果rq没有可运行的任务，此时只能执行idle线程，就会通过newidle_balance来触发new idle load balance。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/fair.c</span><br><span class="line">static int load_balance(int this_cpu, struct rq *this_rq,------------------------（1）</span><br><span class="line">                        struct sched_domain *sd, enum cpu_idle_type idle,</span><br><span class="line">                        int *continue_balancing)</span><br><span class="line">    |_ detach_tasks(&amp;env)</span><br><span class="line">        |_ can_migrate_task(p, env)</span><br><span class="line">            |_ trace_android_rvh_can_migrate_task(p, env-&gt;dst_cpu, &amp;can_migrate)</span><br><span class="line">                |_ walt_can_migrate_task(void *unused, p, env-&gt;dst_cpu, can_migrate)</span><br><span class="line">                    |_ _walt_can_migrate_task(p, dst_cpu, to_lower, to_higher, true)</span><br></pre></td></tr></table></figure><br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/core.c</span><br><span class="line">static void __sched notrace __schedule(unsigned int sched_mode)-----------------（2）</span><br><span class="line">    |_ pick_next_task(rq, prev, &amp;rf)</span><br><span class="line">        |_ put_prev_task_balance(rq, prev, rf)</span><br><span class="line">            |_ for_class_range(class, prev-&gt;sched_class, &amp;idle_sched_class)</span><br><span class="line">                    class-&gt;balance(rq, prev, rf)</span><br><span class="line">                    balance_fair(rq, struct prev, rf)</span><br><span class="line">                        |_ newidle_balance(rq, rf)</span><br><span class="line">                            |_ trace_android_rvh_sched_newidle_balance(this_rq, rf, &amp;pulled_task, &amp;done);</span><br><span class="line">                                 |_ walt_newidle_balance(this_rq, rf, pulled_task, done, false)</span><br><span class="line">                                    |_ walt_lb_pull_tasks(this_cpu, busy_cpu, pulled_task_struct);</span><br><span class="line">                                        |_ list_for_each_entry_reverse(p, &amp;src_rq-&gt;cfs_tasks, se.group_node)</span><br><span class="line">                                              if (!_walt_can_migrate_task(p, dst_cpu, to_lower, to_higher, false))</span><br><span class="line">                                                     continue;</span><br></pre></td></tr></table></figure><br>如上两种触发负载均衡（load balance)的场景都会调用_walt_can_migrate_task，它是用来判断任务p是否可以迁移的函数，walt_get_rtg_status返回的就是任务p所在RTG的skip_min状态，这里仅列出与RTG相关的内容：<br>如果没有强制要求迁移到某个核的前提下，对于RTG组的任务会做一些判断，如果任务要求运行在大核上（walt_related_thread_group的skip_min为true），则任务不能迁移到算力比当前CPU低的CPU上。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt_lb.c</span><br><span class="line">static inline bool _walt_can_migrate_task(struct task_struct *p, int dst_cpu,</span><br><span class="line">                                          bool to_lower, bool to_higher, bool force)</span><br><span class="line">    |- struct walt_rq *wrq = &amp;per_cpu(walt_rq, task_cpu(p));</span><br><span class="line">    |  struct walt_task_struct *wts = (struct walt_task_struct *) p-&gt;android_vendor_data1;</span><br><span class="line">    |_ if (to_lower)</span><br><span class="line">            if (!force &amp;&amp; walt_get_rtg_status(p))</span><br><span class="line">                    return false;</span><br></pre></td></tr></table></figure></p>
+<h1 id="9-RTG-的调频策略"><a href="#9-RTG-的调频策略" class="headerlink" title="9.  RTG 的调频策略"></a>9. <strong> RTG 的调频策略</strong></h1><p>walt负载跟踪中，对RTG组任务的util是单独统计的，RTG组的util可以影响到CPU的调频，主要表现在：<br>(1) 某些场景下(如点击或滑动)，RTG组任务的util会累加到当前CPU的util上，起到聚合调频的作用，从而拉高了频率;<br>(2) RTG任务自身运行时，影响调频。初始化时waltgov_init会根据CPU簇的算力，设定CPU簇的boost频率，这个boost频率又可以根据CPU算力转换为util，这个util是比实际util大的，如果此时有RTG任务在运行时，util就就会<br>   影响到cpu的调频，保证cpu不低于某个频率。这里影响到的RTG任务主要是”top-app” cgroup任务，因为其它的task group任务不会自动加入到RTG组中，除非手动加入。</p>
+<p>具体分析如下：<br>(1) waltgov_get_util获取cpu的util，这个util将用于估算所需要的频率。freq_policy_load在某些场景（如滑动或点击）会将CPU当前的util和RTG组任务的util进行累加，作为后续选频的依据，这也就是所谓的”RTG聚合调频”;__cpu_util_freq_walt也会初始化walt_load-&gt;rtgb_active，它来源于rtgb_active，rtgb_active在walt_irq_work设置，后面可以看到walt_load-&gt;rtgb_active会最终影响到util的计算，如果为true会在wg_policy-&gt;rtg_boost_uti与计算的util之间选取最大值;<br>(2) 以wg_policy-&gt;tunables-&gt;rtg_boost_freq为目标频率，得到rtg_boost_util，保存在wg_policy-&gt;rtg_boost_util，rtg_boost_freq是在waltgov_init时根据不同的簇进行初始化；<br>(3) walt_load-&gt;rtgb_active如果为true则会选取当前util和wg_policy-&gt;rtg_boost_util的最大值作为util；<br>(4) 根据util值得到下一个候选频率<br>(5) 执行调频<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/cpufreq_walt.c</span><br><span class="line">static void waltgov_update_freq(struct waltgov_callback *cb, u64 time, </span><br><span class="line">                unsigned int flags)</span><br><span class="line">|- struct waltgov_cpu *wg_cpu = container_of(cb, struct waltgov_cpu, cb);</span><br><span class="line">|  unsigned long hs_util, rtg_boost_util</span><br><span class="line">|- wg_cpu-&gt;util = waltgov_get_util(wg_cpu);--------------------------------(1)</span><br><span class="line">|  |_ cpu_util_freq_walt(wg_cpu-&gt;cpu, &amp;wg_cpu-&gt;walt_load, &amp;wg_cpu-&gt;reasons)</span><br><span class="line">|     |_ __cpu_util_freq_walt(cpu, walt_load, reason)</span><br><span class="line">|        | //某些场景下会聚合RTG的负载</span><br><span class="line">|        |- scale_time_to_util(freq_policy_load(rq, reason));</span><br><span class="line">|            | //ed_task为true,表示任务唤醒前经过较长时间的睡眠，应该被“关照”</span><br><span class="line">|            |_ if (walt_load &amp;&amp; wrq-&gt;ed_task)</span><br><span class="line">|                  walt_load-&gt;rtgb_active = rtgb_active</span><br><span class="line">|- if (wg_policy-&gt;max != wg_cpu-&gt;max)--------------------------------------（2）</span><br><span class="line">|     rtg_boost_util = target_util(wg_policy,//根据频率获取到目标util</span><br><span class="line">|                         wg_policy-&gt;tunables-&gt;rtg_boost_freq);</span><br><span class="line">|     wg_policy-&gt;rtg_boost_util = rtg_boost_util;//这个目标util用于选频</span><br><span class="line">|- next_f = waltgov_next_freq_shared(wg_cpu, time);</span><br><span class="line">|  |- for_each_cpu(j, policy-&gt;cpus)</span><br><span class="line">|  |     waltgov_walt_adjust(j_wg_cpu, j_util, j_nl, &amp;util, &amp;max);--------（3）</span><br><span class="line">|  |     |- bool is_rtg_boost = wg_cpu-&gt;walt_load.rtgb_active;</span><br><span class="line">|  |     |_if (is_rtg_boost &amp;&amp; (!cpumask_test_cpu(wg_cpu-&gt;cpu,</span><br><span class="line">|  |                cpu_partial_halt_mask) || !is_state1()))</span><br><span class="line">|  |           max_and_reason(util, wg_policy-&gt;rtg_boost_util, wg_cpu,</span><br><span class="line">|  |                      CPUFREQ_REASON_RTG_BOOST);</span><br><span class="line">|  |_return get_next_freq(wg_policy, util, max, wg_cpu, time)-------------（4）</span><br><span class="line">|_ waltgov_fast_switch(wg_policy, time, next_f)---------------------------（5）</span><br></pre></td></tr></table></figure><br>那么RTG任务的聚合发生在什么地方呢？如上rtgb_active又是在何时初始化的呢？主要在walt_irq_work中完成：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt.c</span><br><span class="line">                                                                                                                                                                                        static void waltgov_update_freq(struct waltgov_callback *cb, u64 time, </span><br><span class="line">                unsigned int flags)</span><br><span class="line">|- struct waltgov_cpu *wg_cpu = container_of(cb, struct waltgov_cpu, cb);</span><br><span class="line">|  unsigned long hs_util, rtg_boost_util</span><br><span class="line">|- wg_cpu-&gt;util = waltgov_get_util(wg_cpu);--------------------------------(1)</span><br><span class="line">|  |_ cpu_util_freq_walt(wg_cpu-&gt;cpu, &amp;wg_cpu-&gt;walt_load, &amp;wg_cpu-&gt;reasons)</span><br><span class="line">|     |_ __cpu_util_freq_walt(cpu, walt_load, reason)</span><br><span class="line">|        | //某些场景下会聚合RTG的负载</span><br><span class="line">|        |- scale_time_to_util(freq_policy_load(rq, reason));</span><br><span class="line">|            | //ed_task为true,表示任务唤醒前经过较长时间的睡眠，应该被“关照”</span><br><span class="line">|            |_ if (walt_load &amp;&amp; wrq-&gt;ed_task)</span><br><span class="line">|                  walt_load-&gt;rtgb_active = rtgb_active</span><br><span class="line">|- if (wg_policy-&gt;max != wg_cpu-&gt;max)--------------------------------------（2）</span><br><span class="line">|     rtg_boost_util = target_util(wg_policy,//根据频率获取到目标util</span><br><span class="line">|                         wg_policy-&gt;tunables-&gt;rtg_boost_freq);</span><br><span class="line">|     wg_policy-&gt;rtg_boost_util = rtg_boost_util;//这个目标util用于选频</span><br><span class="line">|- next_f = waltgov_next_freq_shared(wg_cpu, time);</span><br><span class="line">|  |- for_each_cpu(j, policy-&gt;cpus)</span><br><span class="line">|  |     waltgov_walt_adjust(j_wg_cpu, j_util, j_nl, &amp;util, &amp;max);--------（3）</span><br><span class="line">|  |     |- bool is_rtg_boost = wg_cpu-&gt;walt_load.rtgb_active;</span><br><span class="line">|  |     |_if (is_rtg_boost &amp;&amp; (!cpumask_test_cpu(wg_cpu-&gt;cpu,</span><br><span class="line">|  |                cpu_partial_halt_mask) || !is_state1()))</span><br><span class="line">|  |           max_and_reason(util, wg_policy-&gt;rtg_boost_util, wg_cpu,</span><br><span class="line">|  |                      CPUFREQ_REASON_RTG_BOOST);</span><br><span class="line">|  |_return get_next_freq(wg_policy, util, max, wg_cpu, time)-------------（4）</span><br><span class="line">|_ waltgov_fast_switch(wg_policy, time, next_f)---------------------------（5）</span><br></pre></td></tr></table></figure><br>那么RTG任务的聚合发生在什么地方呢？如上rtgb_active又是在何时初始化的呢？主要在walt_irq_work中完成：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt.c</span><br><span class="line">static void walt_irq_work(struct irq_work *irq_work)</span><br><span class="line">    |- __walt_irq_work_locked(is_migration, is_asym_migration,</span><br><span class="line">    |_        is_shared_rail_migration, &amp;lock_cpus);</span><br><span class="line">        |- u64 total_grp_load = 0;</span><br><span class="line">        |- for_each_sched_cluster(cluster)</span><br><span class="line">        |     u64 aggr_grp_load = 0;</span><br><span class="line">        |     for_each_cpu(cpu, &amp;cluster-&gt;cpus)</span><br><span class="line">        |         /* update aggr_grp_load for all clusters, all cpus */</span><br><span class="line">        |         aggr_grp_load += wrq-&gt;grp_time.prev_runnable_sum;</span><br><span class="line">        |     cluster-&gt;aggr_grp_load = aggr_grp_load;</span><br><span class="line">        |     total_grp_load += aggr_grp_load</span><br><span class="line">        |_ if (total_grp_load)</span><br><span class="line">                 rtgb_active = is_rtgb_active();</span><br><span class="line">           else</span><br><span class="line">                 rtgb_active = false;</span><br></pre></td></tr></table></figure><br>__walt_irq_work_locked中会遍历每个簇中的cpu，将每个cpu上的RTG任务负载累加到簇的aggr_grp_load中，这个累加值就会在某些场景下（滑动或点击）用于CPU的聚合调频。<br>如上对于聚合调频影响路径可以概括为：</p>
+<ol>
+<li>初始化时设定walt_task_group的colocate标记，如果设为true，则task group中的任务会被加入到RTG默认组;</li>
+<li>RTG组任务的util是被单独统计的，在walt负载跟踪时会更新，在walt_irq_work会累加cpu簇的每个cpu上运行的RTG任务的util，保存在簇的aggr_grp_load中;</li>
+<li>在某些sched_boost场景下（如滑动或点击），会将cpu当前util与RTG组的util即簇的aggr_grp_load累加，做聚合调频</li>
+</ol>
+<h1 id="10-RTG-推迟-cpu-进入-idle"><a href="#10-RTG-推迟-cpu-进入-idle" class="headerlink" title="10. RTG 推迟 cpu 进入 idle"></a><strong>10. RTG 推迟 cpu 进入 idle</strong></h1><p>RTG会影响CPU busy的延迟时间，一个典型的例子是CPU进入LPM(Low Power Mode)模式的时间。我们知道当CPU处于空闲状态时，它会执行Idle Task。Idle Task是内核中的一个特殊线程，负责在CPU没有任务执行时管理CPU的电源状&gt;态。Idle Task通过cpuidle_select函数，根据CPU idle governor的策略选择一个合适的LPM模式，并进入到这个模式。当有任务需要执行或者中断发生时，CPU会从LPM模式中退出，恢复到正常工作状态。<br>LPM有多个模式，分为C状态和D状态，其中C状态又分为C0,C1,C4,D状态又分为D0，D1，D4，进出不同的LPM模式，花费的时间是不同的，层级越高花费的时间越多；同时，不同层级引发的功耗也不同。因此系统在保持一定负载量的情<br>况下，CPU在idle间隙，如果频繁进出LPM模式，将会导致性能下降，也会引起一定的功耗。相比来说，此时保持LPM模式浅休眠一定时间，降低进出LPM模式的频率，反而可以避免性能下降，也可减少功耗。在这种背景下，针对RTG任<br>务，设置了CPU busy的延迟时间，避免频繁进出 LPM 状态，减少功耗增加，并且可能避免性能 2ms 的响应延时。如下将分别说明延迟时间的更新方式、更新时机以及对进出LPM模式的影响。</p>
+<h2 id="更新延迟时间"><a href="#更新延迟时间" class="headerlink" title="更新延迟时间"></a>更新延迟时间</h2><p>有如下几种情况会修改这个延迟时间：<br>(1)RTG任务处于boost的时间超过MAX_RTGB_TIME；<br>(2)通过proc文件节点进行修改<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt.c</span><br><span class="line">static void walt_irq_work(struct irq_work *irq_work)----------------------(1)</span><br><span class="line">    |_ core_ctl_check(wrq-&gt;window_start, wakeup_ctr_sum)</span><br><span class="line">        |_ update_running_avg(window_start, wakeup_ctr_sum)</span><br><span class="line">            |_ sched_get_nr_running_avg()</span><br><span class="line">                |_ if (any_hyst_time &amp;&amp; get_rtgb_active_time() &gt;= MAX_RTGB_TIME)</span><br><span class="line">                      sched_update_hyst_times();</span><br></pre></td></tr></table></figure><br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/sched_avg.c</span><br><span class="line">int sched_busy_hyst_handler(struct ctl_table *table, int write,-----------(2)</span><br><span class="line">            void __user *buffer, size_t *lenp, loff_t *ppos)</span><br><span class="line">    |_ sched_update_hyst_times()</span><br></pre></td></tr></table></figure><br>sched_update_hyst_times判断rtgb_active为true，表示当前cpu具有一定的负荷，就会更新coloc_hyst_time，coloc_hyst_time会影响到busy_hyst_end_time的更新，后者是延迟结束时间，对于CPU busy时间，busy_hyst_end_time会影响CPU进入LPM模式的时间。<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/sched_avg.c</span><br><span class="line">void sched_update_hyst_times(void)</span><br><span class="line">    |- bool rtgb_active;</span><br><span class="line">    |  rtgb_active = is_rtgb_active() &amp;&amp; (sched_boost_type != CONSERVATIVE_BOOST)</span><br><span class="line">    |                    &amp;&amp; (get_rtgb_active_time() <span class="tag">&lt; <span class="attr">MAX_RTGB_TIME</span>)</span></span><br><span class="line"><span class="tag">    |<span class="attr">_</span> <span class="attr">for_each_possible_cpu</span>(<span class="attr">cpu</span>)</span></span><br><span class="line"><span class="tag">         <span class="attr">per_cpu</span>(<span class="attr">coloc_hyst_time</span>, <span class="attr">cpu</span>) = <span class="string">((BIT(cpu)</span></span></span><br><span class="line"><span class="tag">                 &amp; <span class="attr">sysctl_sched_coloc_busy_hyst_enable_cpus</span>)</span></span><br><span class="line"><span class="tag">                 &amp;&amp; <span class="attr">rtgb_active</span>) ?</span></span><br><span class="line"><span class="tag">                                                    <span class="attr">sysctl_sched_coloc_busy_hyst_cpu</span>[<span class="attr">cpu</span>] <span class="attr">:</span> <span class="attr">0</span>;</span></span><br></pre></td></tr></table></figure><br>那么busy_hyst_end_time是在哪里更新的呢？在入队、出队、update misfit时都会都会调用sched_update_nr_prod，进而更新busy_hyst_end_time，如下是更新busy_hyst_end_time的时机：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//入队, kernel/sched/walt/walt.c</span><br><span class="line">static void android_rvh_enqueue_task(void *unused, struct rq *rq,</span><br><span class="line">                struct task_struct *p, int flags)</span><br><span class="line">    |_ sched_update_nr_prod(rq-&gt;cpu, 1)</span><br></pre></td></tr></table></figure><br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//出队, kernel/sched/walt/walt.c</span><br><span class="line">static void android_rvh_dequeue_task(void *unused, struct rq *rq,</span><br><span class="line">                struct task_struct *p, int flags)</span><br><span class="line">    |_ sched_update_nr_prod(rq-&gt;cpu, -1)</span><br></pre></td></tr></table></figure><br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//misfit, kernel/sched/walt/walt.c</span><br><span class="line">static void android_rvh_update_misfit_status(void *unused, struct task_struct *p,</span><br><span class="line">                struct rq *rq, bool *need_update)</span><br><span class="line">    |_ sched_update_nr_prod(rq-&gt;cpu, 0)</span><br></pre></td></tr></table></figure><br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">其中</span><br><span class="line">sched_update_nr_prod实现如下：</span><br><span class="line"></span><br><span class="line">//kernel/sched/walt/sched_avg.cvoid sched_update_nr_prod(int cpu, int enq)</span><br><span class="line">    |_ if (enq)</span><br><span class="line">        update_busy_hyst_end_time(cpu, enq, nr_running, curr_time);</span><br></pre></td></tr></table></figure><br>update_busy_hyst_end_time的更新如下：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/sched_avg.c</span><br><span class="line">static inline void update_busy_hyst_end_time(int cpu, int enq,</span><br><span class="line">                                unsigned long prev_nr_run, u64 curr_time)</span><br><span class="line">    |- agg_hyst_time = max(max(hyst_trigger ? per_cpu(hyst_time, cpu) : 0,</span><br><span class="line">    |                        coloc_trigger ? per_cpu(coloc_hyst_time, cpu) : 0),</span><br><span class="line">    |                        util_load_trigger ? per_cpu(util_hyst_time, cpu) : 0);</span><br><span class="line">    |_ atomic64_set(&amp;per_cpu(busy_hyst_end_time, cpu), curr_time + agg_hyst_time);</span><br></pre></td></tr></table></figure></p>
+<h2 id="LPM推迟进入"><a href="#LPM推迟进入" class="headerlink" title="LPM推迟进入"></a>LPM推迟进入</h2><p>RTG对延迟时间的更新有影响，只有rtgb处于active状态才会对percpu变量coloc_hyst_time进行更新,根据前面分析，coloc_hyst_time间接会影响到busy_hyst_end_time的更新，进而会影响到CPU进入LPM模式的时间。我们知道CPU在<br>空闲时会执行idle流程，执行到lpm_select，lpm_select将检查是否符合进入LPM的条件：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//drivers/cpuidle/governors/qcom-lpm.c</span><br><span class="line">static int lpm_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,</span><br><span class="line">                      bool *stop_tick)</span><br><span class="line">    |- ktime_t delta_tick;</span><br><span class="line">                            |  uint64_t duration_ns;</span><br><span class="line">    |- duration_ns = tick_nohz_get_sleep_length(&amp;delta_tick);</span><br><span class="line">    |_ if (lpm_disallowed(duration_ns, dev-&gt;cpu))</span><br><span class="line">                goto done;</span><br></pre></td></tr></table></figure><br>lpm_select通过lpm_disallowed来检查是否进LPM莫斯，如果它返回0代表还有剩余时间，不允许进入LPM模式，最终如果lpm_disallowed返回true则表示本轮检查不允许进入lpm模式，具体实现如下：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">static bool lpm_disallowed(s64 sleep_ns, int cpu)</span><br><span class="line">&#123;</span><br><span class="line">#if IS_ENABLED(CONFIG_SCHED_WALT)</span><br><span class="line">        struct lpm_cpu *cpu_gov = per_cpu_ptr(&amp;lpm_cpu_data, cpu);</span><br><span class="line">        uint64_t bias_time = 0;</span><br><span class="line">#endif</span><br><span class="line">        if (!check_cpu_isactive(cpu))</span><br><span class="line">                return false;</span><br><span class="line"></span><br><span class="line">        if ((sleep_disabled || sleep_ns <span class="tag">&lt; <span class="attr">0</span>))</span></span><br><span class="line"><span class="tag">                <span class="attr">return</span> <span class="attr">true</span>;</span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag">#<span class="attr">if</span> <span class="attr">IS_ENABLED</span>(<span class="attr">CONFIG_SCHED_WALT</span>)</span></span><br><span class="line"><span class="tag">        <span class="attr">if</span> (!<span class="attr">sched_lpm_disallowed_time</span>(<span class="attr">cpu</span>, &amp;<span class="attr">bias_time</span>)) &#123;</span></span><br><span class="line"><span class="tag">                <span class="attr">cpu_gov-</span>&gt;</span>last_idx = 0;</span><br><span class="line">                cpu_gov-&gt;bias = bias_time;</span><br><span class="line">                return true;</span><br><span class="line">        &#125;</span><br><span class="line">#endif</span><br><span class="line">        return false;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>sched_lpm_disallowed_time用于获取进入LPM前的剩余时间，剩余时间大于0，表示不需要进入LPM模式：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//drivers/cpuidle/governors/qcom-lpm.c</span><br><span class="line">static bool lpm_disallowed(s64 sleep_ns, int cpu)</span><br><span class="line">    |_ sched_lpm_disallowed_time(cpu, &amp;bias_time)//获取到timeout剩余时间</span><br><span class="line">        |- u64 now = sched_clock();</span><br><span class="line">        |- u64 bias_end_time = atomic64_read(&amp;per_cpu(busy_hyst_end_time, cpu));</span><br><span class="line">        |_ if (now <span class="tag">&lt; <span class="attr">bias_end_time</span>)</span></span><br><span class="line"><span class="tag">              *<span class="attr">timeout</span> = <span class="string">bias_end_time</span> <span class="attr">-</span> <span class="attr">now</span>;</span></span><br><span class="line"><span class="tag">              <span class="attr">return</span> <span class="attr">0</span>; /* <span class="attr">shallowest</span> <span class="attr">c-state</span> */</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="11-RTG-的优先调度"><a href="#11-RTG-的优先调度" class="headerlink" title="11. RTG 的优先调度"></a><strong>11. RTG 的优先调度</strong></h1><p>在滑动场景 优先级小于119的”top-app” cfs task（RTG默认组）都会进入到mvp list 中进行优先调度，减少runnable时间；walt_cfs_enqueue_task通过获取任务p的mvp优先级，然后插入到mvp list中执行优先调度，其中RTG任务&gt;的mvp优先级为WALT_RTG_MVP：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt_cfs.c</span><br><span class="line">void walt_cfs_enqueue_task(struct rq *rq, struct task_struct *p)</span><br><span class="line">    | //获取任务P的mvp优先级</span><br><span class="line">    |- int mvp_prio = walt_get_mvp_task_prio(p);</span><br><span class="line">    |    |_ if (task_rtg_high_prio(p))</span><br><span class="line">    |            return WALT_RTG_MVP</span><br><span class="line">    |- wts-&gt;mvp_prio = mvp_prio;</span><br><span class="line">    |_ walt_cfs_insert_mvp_task(wrq, wts, task_on_cpu(rq, p));</span><br></pre></td></tr></table></figure><br>这里task_rtg_high_prio主要是为了获取任务p是否为RTG高优先级任务，其中滑动场景sysctl_walt_rtg_cfs_boost_prio为119，非滑动场景sysctl_walt_rtg_cfs_boost_prio为99：<br><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">//kernel/sched/walt/walt.h</span><br><span class="line">static inline bool task_rtg_high_prio(struct task_struct *p)</span><br><span class="line">&#123;</span><br><span class="line">        return task_in_related_thread_group(p) &amp;&amp;</span><br><span class="line">                (p-&gt;prio <span class="tag">&lt;<span class="name">=</span> <span class="attr">sysctl_walt_rtg_cfs_boost_prio</span>);</span></span><br><span class="line"><span class="tag">&#125;</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="12-总结"><a href="#12-总结" class="headerlink" title="12. 总结"></a><strong>12. 总结</strong></h1><p>RTG在内核空间并非一个独立的模块存在，而是散落在各处代码中，用户空间可以通过/proc文件节点将某个任务设置到RTG的不同group中；也可以在设置任务到cgroup中时，同时将任务设置到RTG中，默认top-app cgroup中的任务设<br>置到默认RTG组。RTG对调频、选核、优先调度及负载均衡，均产生一定的影响：</p>
+<ol>
+<li>在WALT GOV调频的过程中，根据当前场景（如滑动或点击时）需求，将RTG组的负载累加到当前CPU负载上，从而引起聚合调频；同时，如果当前CPU运行的是RTG任务，其调频频率也不会低于预定的阈值，相当于对RTG任务做了一&gt;定的频率提升;</li>
+<li>在WALT CFS和RT任务选核的过程中会参考CPU当前是否运行RTG任务，或要选核的任务是否位于RTG，如果是则会影响其选核行为，会优先选择算力强的CPU核;</li>
+<li>在RTG的基础上衍生出对优先调度的支持，对top-app的RTG任务，会进行优先调度</li>
+</ol>
+<hr>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><h4 id="1-https-mp-weixin-qq-com-s-ESxJdwZKiZkJ-z6eFzxaag-浅析高通-mvp-进程优先调度"><a href="#1-https-mp-weixin-qq-com-s-ESxJdwZKiZkJ-z6eFzxaag-浅析高通-mvp-进程优先调度" class="headerlink" title="[1]https://mp.weixin.qq.com/s/ESxJdwZKiZkJ-z6eFzxaag 浅析高通 mvp 进程优先调度"></a>[1]<a href="https://mp.weixin.qq.com/s/ESxJdwZKiZkJ-z6eFzxaag" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/ESxJdwZKiZkJ-z6eFzxaag</a> 浅析高通 mvp 进程优先调度</h4><h4 id="2-https-blog-csdn-net-feelabclihu-article-details-124507331-调度器分支之RTG"><a href="#2-https-blog-csdn-net-feelabclihu-article-details-124507331-调度器分支之RTG" class="headerlink" title="[2]https://blog.csdn.net/feelabclihu/article/details/124507331 调度器分支之RTG"></a>[2]<a href="https://blog.csdn.net/feelabclihu/article/details/124507331" target="_blank" rel="noopener">https://blog.csdn.net/feelabclihu/article/details/124507331</a> 调度器分支之RTG</h4><h4 id="3-http-www-wowotech-net-process-management-load-balance-html-CFS任务的负载均衡（概述）"><a href="#3-http-www-wowotech-net-process-management-load-balance-html-CFS任务的负载均衡（概述）" class="headerlink" title="[3]http://www.wowotech.net/process_management/load_balance.html CFS任务的负载均衡（概述）"></a>[3]<a href="http://www.wowotech.net/process_management/load_balance.html" target="_blank" rel="noopener">http://www.wowotech.net/process_management/load_balance.html</a> CFS任务的负载均衡（概述）</h4>
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    
+                    <li class="next">
+                        <a href="/2024/12/06/Submit-patch-implementations-to-the-Linux-kernel-community/" data-toggle="tooltip" data-placement="top" title="向 Linux 内核社区提交 patch 实操要点">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#1-引言"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">1. 引言</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#2-RTG总体说明"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">2. RTG总体说明</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#3-RTG相关数据结构"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">3. RTG相关数据结构</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#4-RTG初始化"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">4. RTG初始化</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#WALT初始化"><span class="toc-nav-number">4.1.</span> <span class="toc-nav-text">WALT初始化</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#WALT-governor初始化"><span class="toc-nav-number">4.2.</span> <span class="toc-nav-text">WALT governor初始化</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#5-将任务加入RTG组"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">5. 将任务加入RTG组</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#通过sysctl设置进程到RTG组"><span class="toc-nav-number">5.1.</span> <span class="toc-nav-text">通过sysctl设置进程到RTG组</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#通过cgroup设置进程到RTG组"><span class="toc-nav-number">5.2.</span> <span class="toc-nav-text">通过cgroup设置进程到RTG组</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#6-RTG-的-CFS-选核"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">6. RTG 的 CFS 选核</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#set-preferred-cluster"><span class="toc-nav-number">6.1.</span> <span class="toc-nav-text">set_preferred_cluster</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#walt-select-task-rq-fair"><span class="toc-nav-number">6.2.</span> <span class="toc-nav-text">walt_select_task_rq_fair</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#7-RTG-的-RT-选核"><span class="toc-nav-number">7.</span> <span class="toc-nav-text">7. RTG 的 RT 选核</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#8-RTG-的负载均衡选核"><span class="toc-nav-number">8.</span> <span class="toc-nav-text">8. RTG 的负载均衡选核</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#9-RTG-的调频策略"><span class="toc-nav-number">9.</span> <span class="toc-nav-text">9.  RTG 的调频策略</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#10-RTG-推迟-cpu-进入-idle"><span class="toc-nav-number">10.</span> <span class="toc-nav-text">10. RTG 推迟 cpu 进入 idle</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#更新延迟时间"><span class="toc-nav-number">10.1.</span> <span class="toc-nav-text">更新延迟时间</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#LPM推迟进入"><span class="toc-nav-number">10.2.</span> <span class="toc-nav-text">LPM推迟进入</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#11-RTG-的优先调度"><span class="toc-nav-number">11.</span> <span class="toc-nav-text">11. RTG 的优先调度</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#12-总结"><span class="toc-nav-number">12.</span> <span class="toc-nav-text">12. 总结</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#参考资料"><span class="toc-nav-number">12.1.</span> <span class="toc-nav-text">参考资料</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#1-https-mp-weixin-qq-com-s-ESxJdwZKiZkJ-z6eFzxaag-浅析高通-mvp-进程优先调度"><span class="toc-nav-number">12.1.0.1.</span> <span class="toc-nav-text">[1]https:&#x2F;&#x2F;mp.weixin.qq.com&#x2F;s&#x2F;ESxJdwZKiZkJ-z6eFzxaag 浅析高通 mvp 进程优先调度</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#2-https-blog-csdn-net-feelabclihu-article-details-124507331-调度器分支之RTG"><span class="toc-nav-number">12.1.0.2.</span> <span class="toc-nav-text">[2]https:&#x2F;&#x2F;blog.csdn.net&#x2F;feelabclihu&#x2F;article&#x2F;details&#x2F;124507331 调度器分支之RTG</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#3-http-www-wowotech-net-process-management-load-balance-html-CFS任务的负载均衡（概述）"><span class="toc-nav-number">12.1.0.3.</span> <span class="toc-nav-text">[3]http:&#x2F;&#x2F;www.wowotech.net&#x2F;process_management&#x2F;load_balance.html CFS任务的负载均衡（概述）</span></a></li></ol></li></ol></li></ol></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://kernel.meizu.com/2024/12/06/Isolated-count-mismatch-analysis/</loc>
+    <loc>https://kernel.meizu.com/2024/12/06/Submit-patch-implementations-to-the-Linux-kernel-community/</loc>
     <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2024/12/06/Submit-patch-implementations-to-the-Linux-kernel-community/</loc>
+    <loc>https://kernel.meizu.com/2024/12/25/%E7%89%A9%E6%A0%BC%E8%80%8C%E5%90%8E%E7%9F%A5%E8%87%B3-WALT%E8%B0%83%E5%BA%A6%E5%99%A8%E4%B9%8BRTG/</loc>
+    <lastmod>2024-12-25</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2024/12/06/Isolated-count-mismatch-analysis/</loc>
     <lastmod>2024-12-25</lastmod>
   </url>
   <url>
