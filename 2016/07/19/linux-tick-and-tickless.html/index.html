@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Linux Tick 和 Tickless - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2016/07/19//linux-tick-and-tickless.html/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                            
+                              <a class="tag" href="/tags/#定时器" title="定时器">定时器</a>
+                            
+                        </div>
+                        <h1>Linux Tick 和 Tickless</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Zheng Wei on
+                            2016-07-19
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>Tick，即周期性产生的 timer 中断事件，可用于系统时间管理、进程信息统计、低精度 timer 处理等等。这样就会有一个问题，那就是在系统空闲的时候也还是周期性的产生中断，系统会被周期性的唤醒导致功耗的增加，这对于追求低功耗的嵌入式设备来说是很难接受的。为此，内核开发者提出了动态时钟的概念，即在系统空闲阶段停掉周期性的时钟达到节省功耗的目的。内核可以通过配置项 CONFIG_NO_HZ 及 CONFIG_NO_HZ_IDLE 来打开该功能，这样在系统空闲的时候就可以停掉 tick 一段时间，但并不是完全没有 tick 了，当有除了 idle 进程之外的其它进程运行的时候会恢复 tick 。</p>
+<h2 id="Tick-事件"><a href="#Tick-事件" class="headerlink" title="Tick 事件"></a>Tick 事件</h2><h3 id="clock-event-device"><a href="#clock-event-device" class="headerlink" title="clock_event_device"></a>clock_event_device</h3><p>clock_event_device，代表一个可以产生时钟事件的硬件时钟设备，这样的时钟设备就像单片机的定时器，可以对它编程设置要触发的定时时间，在定时时间到达的时候产生中断，它可以工作在周期模式或者单触发模式。周期模式就是周期性的产生 timer 中断事件，这和 tick 的定义很像。</p>
+<p>clock_event_device 结构定义如下：</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">clock_event_device</span> &#123;</span></span><br><span class="line">	/* 回调函数指针，在硬件时钟设备的中断服务程序中调用 *<span class="regexp">/</span></span><br><span class="line"><span class="regexp">	void			(*event_handler)(struct clock_event_device *);</span></span><br><span class="line"><span class="regexp">	/</span>* 设置下一个定时时间，以 counter 的 cycle 数值为参数 *<span class="regexp">/</span></span><br><span class="line"><span class="regexp">	int			(*set_next_event)(unsigned long evt,</span></span><br><span class="line"><span class="regexp">						  struct clock_event_device *);</span></span><br><span class="line"><span class="regexp">	/</span>* 设置下一个定时时间，要设置的定时时间是 ktime 格式，要配合 CLOCK_EVT_FEAT_KTIME 标记使用 *<span class="regexp">/</span></span><br><span class="line"><span class="regexp">	int			(*set_next_ktime)(ktime_t expires,</span></span><br><span class="line"><span class="regexp">						  struct clock_event_device *);</span></span><br><span class="line"><span class="regexp">	ktime_t			next_event;</span></span><br><span class="line"><span class="regexp">	u64			max_delta_ns;</span></span><br><span class="line"><span class="regexp">	u64			min_delta_ns;</span></span><br><span class="line"><span class="regexp">	u32			mult;</span></span><br><span class="line"><span class="regexp">	u32			shift;</span></span><br><span class="line"><span class="regexp">	enum clock_event_mode	mode;</span></span><br><span class="line"><span class="regexp">	unsigned int		features;</span></span><br><span class="line"><span class="regexp">	unsigned long		retries;</span></span><br><span class="line"><span class="regexp">	void			(*broadcast)(const struct cpumask *mask);</span></span><br><span class="line"><span class="regexp">	void			(*set_mode)(enum clock_event_mode mode,</span></span><br><span class="line"><span class="regexp">					    struct clock_event_device *);</span></span><br><span class="line"><span class="regexp">	void			(*suspend)(struct clock_event_device *);</span></span><br><span class="line"><span class="regexp">	void			(*resume)(struct clock_event_device *);</span></span><br><span class="line"><span class="regexp">	unsigned long		min_delta_ticks;</span></span><br><span class="line"><span class="regexp">	unsigned long		max_delta_ticks;</span></span><br><span class="line"><span class="regexp">	const char		*name;</span></span><br><span class="line"><span class="regexp">	int			rating;</span></span><br><span class="line"><span class="regexp">	int			irq;</span></span><br><span class="line"><span class="regexp">	const struct cpumask	*cpumask;</span></span><br><span class="line"><span class="regexp">	struct list_head	list;</span></span><br><span class="line"><span class="regexp">	struct module		*owner;</span></span><br><span class="line"><span class="regexp">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>SMP 系统，每个 CPU 都有一个只属于自己的 local timer 用于提供时钟事件服务，在 CPU 启动的时候通过调用 percpu_timer_setup 函数完成初始化工作。以三星 exynos7420 平台为例，percpu_timer_setup 函数最终调用 exynos4_local_timer_setup 函数来初始化每个 CPU 的 local timer ，配置和注册 clock_event_device。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line">static irqreturn_t exynos4<span class="constructor">_mct_tick_isr(<span class="params">int</span> <span class="params">irq</span>, <span class="params">void</span> <span class="operator">*</span><span class="params">dev_id</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">struct</span> mct_clock_event_device *mevt = dev_id;</span><br><span class="line">	<span class="keyword">struct</span> clock_event_device *evt = mevt-&gt;evt;</span><br><span class="line">	exynos4<span class="constructor">_mct_tick_stop(<span class="params">mevt</span>, 0)</span>;</span><br><span class="line">	<span class="comment">/* 调用 clock_event_device 的 event_handler */</span></span><br><span class="line">	evt-&gt;event<span class="constructor">_handler(<span class="params">evt</span>)</span>;</span><br><span class="line">	return IRQ_HANDLED;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static <span class="constructor">DEFINE_PER_CPU(<span class="params">struct</span> <span class="params">irqaction</span>, <span class="params">percpu_mct_irq</span>)</span> = &#123;</span><br><span class="line">	.flags          = IRQF_TIMER <span class="pattern-match">| <span class="constructor">IRQF_NOBALANCING</span>,</span></span><br><span class="line"><span class="pattern-match">	<span class="operator">/</span><span class="operator">*</span> 中断处理程序 <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	.handler        = exynos4<span class="constructor">_mct_tick_isr</span>,</span></span><br><span class="line"><span class="pattern-match">&#125;;</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">static <span class="built_in">int</span> exynos4<span class="constructor">_local_timer_setup(<span class="params">struct</span> <span class="params">clock_event_device</span> <span class="operator">*</span><span class="params">evt</span>)</span></span></span><br><span class="line"><span class="pattern-match">&#123;</span></span><br><span class="line"><span class="pattern-match">	<span class="keyword">struct</span> mct<span class="constructor">_clock_event_device</span> <span class="operator">*</span>mevt;</span></span><br><span class="line"><span class="pattern-match">	unsigned <span class="built_in">int</span> cpu = smp<span class="constructor">_processor_id()</span>;</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">	mevt = this<span class="constructor">_cpu_ptr(&amp;<span class="params">percpu_mct_tick</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">	mevt-&gt;evt = evt;</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">	mevt-&gt;base = <span class="constructor">EXYNOS4_MCT_L_BASE(<span class="params">cpu</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">	<span class="operator">/</span><span class="operator">*</span> 每个 <span class="constructor">CPU</span> local timer 的名字分别为 mct<span class="constructor">_tick0</span>, mct<span class="constructor">_tick1</span> <span class="operator">...</span> mct<span class="constructor">_tick7</span> <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	snprintf(mevt-&gt;name, sizeof(mevt-&gt;name), "mct<span class="constructor">_tick</span>%d", cpu);</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">	evt-&gt;name = mevt-&gt;name;</span></span><br><span class="line"><span class="pattern-match">	evt-&gt;cpumask = cpumask<span class="constructor">_of(<span class="params">cpu</span>)</span>;  <span class="operator">/</span><span class="operator">*</span> 属于哪个 <span class="constructor">CPU</span> <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	<span class="operator">/</span><span class="operator">*</span> 设置下次触发的时间，即把时间编程到定时器 <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	evt-&gt;set<span class="constructor">_next_event</span> = exynos4<span class="constructor">_tick_set_next_event</span>;</span></span><br><span class="line"><span class="pattern-match">	<span class="operator">/</span><span class="operator">*</span> 设置工作模式，例如周期模式，单触发模式等 <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	evt-&gt;set<span class="constructor">_mode</span> = exynos4<span class="constructor">_tick_set_mode</span>;</span></span><br><span class="line"><span class="pattern-match">	<span class="operator">/</span><span class="operator">*</span> 支持周期模式和单触发模式 <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	evt-&gt;features = <span class="constructor">CLOCK_EVT_FEAT_PERIODIC</span> | <span class="constructor">CLOCK_EVT_FEAT_ONESHOT</span>;</span></span><br><span class="line"><span class="pattern-match">	evt-&gt;rating = 450;</span></span><br><span class="line"><span class="pattern-match">	tick<span class="constructor">_base_cnt</span> = 0;</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">	<span class="keyword">if</span> (!soc<span class="constructor">_is_exynos5433()</span>) &#123;</span></span><br><span class="line"><span class="pattern-match">		tick<span class="constructor">_base_cnt</span> = 1;</span></span><br><span class="line"><span class="pattern-match">		exynos4<span class="constructor">_mct_write(<span class="params">tick_base_cnt</span>, <span class="params">mevt</span>-&gt;<span class="params">base</span> + MCT_L_TCNTB_OFFSET)</span>;</span></span><br><span class="line"><span class="pattern-match">	&#125;</span></span><br><span class="line"><span class="pattern-match">	<span class="operator">/</span><span class="operator">*</span> exynos7420 每个 <span class="constructor">CPU</span> 的 local timer 都是使用的 <span class="constructor">SPI</span> 类型中断 <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	<span class="keyword">if</span> (mct<span class="constructor">_int_type</span> <span class="operator">==</span> <span class="constructor">MCT_INT_SPI</span>) &#123;</span></span><br><span class="line"><span class="pattern-match">		<span class="keyword">struct</span> irqaction <span class="operator">*</span>mct<span class="constructor">_irq</span> = this<span class="constructor">_cpu_ptr(&amp;<span class="params">percpu_mct_irq</span>)</span>;</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">		mct<span class="constructor">_irq</span>-&gt;dev<span class="constructor">_id</span> = mevt;</span></span><br><span class="line"><span class="pattern-match">		evt-&gt;irq = mct<span class="constructor">_irqs</span>[<span class="constructor">MCT_L0_IRQ</span> + cpu];</span></span><br><span class="line"><span class="pattern-match">		irq<span class="constructor">_set_affinity(<span class="params">evt</span>-&gt;<span class="params">irq</span>, <span class="params">cpumask_of</span>(<span class="params">cpu</span>)</span>);</span></span><br><span class="line"><span class="pattern-match">		enable<span class="constructor">_irq(<span class="params">evt</span>-&gt;<span class="params">irq</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">	&#125; <span class="keyword">else</span> &#123;</span></span><br><span class="line"><span class="pattern-match">		enable<span class="constructor">_percpu_irq(<span class="params">mct_irqs</span>[MCT_L0_IRQ], 0)</span>;</span></span><br><span class="line"><span class="pattern-match">	&#125;</span></span><br><span class="line"><span class="pattern-match">	<span class="operator">/</span><span class="operator">*</span> 配置和注册 clock<span class="constructor">_event_device</span> <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">	clockevents<span class="constructor">_config_and_register(<span class="params">evt</span>, <span class="params">clk_rate</span> <span class="operator">/</span> (<span class="params">tick_base_cnt</span> + 1)</span>,</span></span><br><span class="line"><span class="pattern-match">					0xf, 0x7fffffff);</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">	return 0;</span></span><br><span class="line"><span class="pattern-match">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>Exynos7420 平台 local timer 使用的是 SPI 类型的中断，它可以直接唤醒 idle 状态的 CPU，这样就不需要使用 broadcast framework 了。MTK 平台 CPU 的 local timer 一般使用 PPI 中断，它不具有唤醒处于 idle 状态的 CPU 的能力，所以需要一个 global HW timer 作为 broadcast tick，由它来服务每个 CPU，例如将 tick 事件广播到 CPU，唤醒 CPU 等等。</p>
+<h3 id="tick-device"><a href="#tick-device" class="headerlink" title="tick_device"></a>tick_device</h3><p>tick_device，tick 设备，是对 clock_event_device 及其工作模式的封装：</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tick_device</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">clock_event_device</span> *<span class="title">evtdev</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">enum</span> <span class="title">tick_device_mode</span> <span class="title">mode</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>tick_device_mode 只有两种模式，TICKDEV_MODE_PERIODIC 和 TICKDEV_MODE_ONESHOT，即周期模式和单触发模式。在 clock_event_device 注册的时候，tick_device 通过 tick_check_new_device 和 tick_setup_device 函数绑定一个属于该 CPU 且精度最高的 clock_event_device。这样，tick_device 工作在 TICKDEV_MODE_PERIODIC 模式时可以产生周期性的时钟事件，传统意义上的 tick 就是这么来的。周期模式下，clock_event_device 的 event_handler 被设置为 tick_periodic ，每个 tick 事件到来时 tick_periodic 就会被调用，它会通过 update_process_times 函数进行系统时间的更新、到期 hrtimer 的处理、TIMER_SOFTIRQ 软中断处理、进程信息更新及负载均衡等等。</p>
+<h2 id="模拟-tick-事件"><a href="#模拟-tick-事件" class="headerlink" title="模拟 tick 事件"></a>模拟 tick 事件</h2><h3 id="低分辨率定时器"><a href="#低分辨率定时器" class="headerlink" title="低分辨率定时器"></a>低分辨率定时器</h3><p>低分辨率定时器是基于 HZ 来实现的，精度为 1/HZ，内核 HZ 一般配置为 100，那么低分辨率定时器的精度就是 10ms。对定时器精度要求不高的内核模块还在大量使用低分辨率定时器，例如 CPU DVFS，CPU Hotplug 等。内核通过 time_list  结构体来描述低分辨率定时器。</p>
+<h3 id="高精度定时器"><a href="#高精度定时器" class="headerlink" title="高精度定时器"></a>高精度定时器</h3><p>高精度定时器可以提供纳秒级别的定时精度，以满足对时间精度要求严格的内核模块，例如音频模块，内核通过 hrtimer 结构体来描述高精度定时器。在系统启动的开始阶段，高精度定时器只能工作在低精度周期模式，在条件满足之后的某个阶段就会切换到高精度单触发模式。上面所说的 tick_periodic 函数，最后会调用 hrtimer_run_pending 函数来判断是否可以切换到高精度模式。另外，动态时钟也是在这里判断和切换的。流程如下：</p>
+<p>tick_periodic -&gt; update_process_times -&gt; run_local_timers -&gt; raise_softirq(TIMER_SOFTIRQ) == run_timer_softirq -&gt; hrtimer_run_pending</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">void hrtimer<span class="constructor">_run_pending(<span class="params">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* 如果 hrtimer 已经是高精度模式则返回 */</span></span><br><span class="line">	<span class="keyword">if</span> (hrtimer<span class="constructor">_hres_active()</span>)</span><br><span class="line">		return;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (tick<span class="constructor">_check_oneshot_change(!<span class="params">hrtimer_is_hres_enabled</span>()</span>))</span><br><span class="line">		hrtimer<span class="constructor">_switch_to_hres()</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">int</span> tick<span class="constructor">_init_highres(<span class="params">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	return tick<span class="constructor">_switch_to_oneshot(<span class="params">hrtimer_interrupt</span>)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static <span class="built_in">int</span> hrtimer<span class="constructor">_switch_to_hres(<span class="params">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">int</span> i, cpu = smp<span class="constructor">_processor_id()</span>;</span><br><span class="line">	<span class="keyword">struct</span> hrtimer_cpu_base *base = &amp;per<span class="constructor">_cpu(<span class="params">hrtimer_bases</span>, <span class="params">cpu</span>)</span>;</span><br><span class="line">	unsigned long flags;</span><br><span class="line">	<span class="comment">/* 如果已经是高精度模式了，则返回 */</span></span><br><span class="line">	<span class="keyword">if</span> (base-&gt;hres_active)</span><br><span class="line">		return <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">	local<span class="constructor">_irq_save(<span class="params">flags</span>)</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (tick<span class="constructor">_init_highres()</span>) &#123;</span><br><span class="line">		local<span class="constructor">_irq_restore(<span class="params">flags</span>)</span>;</span><br><span class="line">		printk(KERN_WARNING <span class="string">"Could not switch to high resolution "</span></span><br><span class="line">				    <span class="string">"mode on CPU %d\n"</span>, cpu);</span><br><span class="line">		return <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/* 表示工作在高精度模式了 */</span></span><br><span class="line">	base-&gt;hres_active = <span class="number">1</span>;</span><br><span class="line">	for (i = <span class="number">0</span>; i &lt; HRTIMER_MAX_CLOCK_BASES; i++)</span><br><span class="line">		base-&gt;clock_base<span class="literal">[<span class="identifier">i</span>]</span>.resolution = KTIME_HIGH_RES;</span><br><span class="line">	<span class="comment">/* 创建一个 hrtimer 来模拟 tick，初始化这个 hrtimer */</span></span><br><span class="line">	tick<span class="constructor">_setup_sched_timer()</span>;</span><br><span class="line">	<span class="comment">/* "Retrigger" the interrupt to get things going */</span></span><br><span class="line">	retrigger<span class="constructor">_next_event(NULL)</span>;</span><br><span class="line">	local<span class="constructor">_irq_restore(<span class="params">flags</span>)</span>;</span><br><span class="line">	return <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最终，通过 hrtimer_switch_to_hres 完成低精度周期模式到高精度单触发模式的切换。tick_device 的工作模式变成了 TICKDEV_MODE_ONESHOT，其 clock_event_device 的 event_handler 被替换为 hrtimer_interrupt。至此，tick_device 不能再定期产生 tick 事件了，但是系统还离不开 tick 事件，所以内核通过一个 hrtimer 模拟了 tick，这个是在 tick_setup_sched_timer 函数中完成的。</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">void tick_setup_sched_timer(void)</span><br><span class="line">&#123;</span><br><span class="line">	struct tick_sched *ts = &amp;__get_cpu_var(tick_cpu_sched);</span><br><span class="line">	ktime_t now = ktime_get();</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Emulate tick processing via per-CPU hrtimers:</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">/* 初始化用作模拟 tick 的 hrtimer */</span></span><br><span class="line">	<span class="function"><span class="title">hrtimer_init</span>(&amp;ts-&gt;</span>sched_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);</span><br><span class="line">	<span class="comment">/* 设置该 hrtimer 的回调函数 */</span></span><br><span class="line">	<span class="function"><span class="title">ts</span>-&gt;</span>sched_timer.function = tick_sched_timer;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Get the next period (per cpu) */</span></span><br><span class="line">	<span class="function"><span class="title">hrtimer_set_expires</span>(&amp;ts-&gt;</span>sched_timer, tick_init_jiffy_update());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (;;) &#123;</span><br><span class="line">	     	<span class="comment">/* tick_period 就是一个 tick 周期，HZ 为 100 的话就是 10ms */</span></span><br><span class="line">		<span class="function"><span class="title">hrtimer_forward</span>(&amp;ts-&gt;</span>sched_timer, now, tick_period);</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* 启动 hrtimer，加入 hrtimer 红黑树，如果这个 hrtimer 的到期时间是最近的，*/</span></span><br><span class="line">                <span class="comment">/* 还会把它编程到硬件时钟设备，即 clock_event_device */</span></span><br><span class="line">		<span class="function"><span class="title">hrtimer_start_expires</span>(&amp;ts-&gt;</span>sched_timer,</span><br><span class="line">				      HRTIMER_MODE_ABS_PINNED);</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* Check, if the timer was already in the past */</span></span><br><span class="line">		<span class="function"><span class="title">if</span> (hrtimer_active(&amp;ts-&gt;</span>sched_timer))</span><br><span class="line">			break;</span><br><span class="line">		now = ktime_get();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">#ifdef CONFIG_NO_HZ_COMMON</span><br><span class="line">	<span class="keyword">if</span> (tick_nohz_enabled)</span><br><span class="line">		<span class="comment">/* NO_HZ 的工作模式，表明是使用的 hrtimer 实现 NO_HZ */</span></span><br><span class="line">		<span class="function"><span class="title">ts</span>-&gt;</span>nohz_mode = NOHZ_MODE_HIGHRES;</span><br><span class="line">#endif</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，sched_timer 就是模拟 tick 使用的 hrtimer，在其回调函数 tick_sched_timer 中会设置下次触发时间为 tick_period，这样就可以定期产生 tick 事件了。另外，还会通过 tick_sched_handle 函数调用 update_process_times 函数，相信很多人对 u pdate_process_times 很眼熟，前面说的系统时间的更新、到期 hrtimer 的处理、TIMER_SOFTIRQ 软中断处理、进程信息更新及负载均衡等等就是由它完成的。所以说利用 hrtimer 很完美的模拟了 tick 。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">static enum hrtimer_restart tick<span class="constructor">_sched_timer(<span class="params">struct</span> <span class="params">hrtimer</span> <span class="operator">*</span><span class="params">timer</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">struct</span> tick_sched *ts =</span><br><span class="line">		container<span class="constructor">_of(<span class="params">timer</span>, <span class="params">struct</span> <span class="params">tick_sched</span>, <span class="params">sched_timer</span>)</span>;</span><br><span class="line">	<span class="keyword">struct</span> pt_regs *regs = get<span class="constructor">_irq_regs()</span>;</span><br><span class="line">	ktime_t now = ktime<span class="constructor">_get()</span>;</span><br><span class="line"></span><br><span class="line">	tick<span class="constructor">_sched_do_timer(<span class="params">now</span>)</span>;   <span class="comment">/* 更新时间 */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Do not call, when we are not in irq context and have</span></span><br><span class="line"><span class="comment">	 * no valid regs pointer</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (regs)</span><br><span class="line">		<span class="comment">/* tick_sched_handle 会调用 update_process_times 函数 */</span></span><br><span class="line">		tick<span class="constructor">_sched_handle(<span class="params">ts</span>, <span class="params">regs</span>)</span>;</span><br><span class="line">	<span class="comment">/* 设置下次触发时间为 tick_period */</span></span><br><span class="line">	hrtimer<span class="constructor">_forward(<span class="params">timer</span>, <span class="params">now</span>, <span class="params">tick_period</span>)</span>;</span><br><span class="line"></span><br><span class="line">	return HRTIMER_RESTART;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="tickless"><a href="#tickless" class="headerlink" title="tickless"></a>tickless</h2><p>tickless，即上面所说的动态时钟，之所以被称为 tickless，估计是为了更好的和 tick 联系起来。另外，并不是真的没有 tick 了，只是在系统空闲的时候停掉 tick 一段时间。使能了动态时钟之后，周期时钟的开关就由 idle 进程控制，当满足条件时就可以停掉 tick 若干时间，这个流程如下：</p>
+<p>cpu_idle_loop -&gt; tick_nohz_idle_enter -&gt; __tick_nohz_idle_enter -&gt; tick_nohz_stop_sched_tick</p>
+<p>最后，通过 tick_nohz_stop_sched_tick 停止掉若干 tick。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">static void cpu<span class="constructor">_idle_loop(<span class="params">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">		<span class="comment">/* 开始进入 NO_HZ idle */</span></span><br><span class="line">		tick<span class="constructor">_nohz_idle_enter()</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">while</span> (!need<span class="constructor">_resched()</span>) &#123;</span><br><span class="line">			check<span class="constructor">_pgt_cache()</span>;</span><br><span class="line">			rmb<span class="literal">()</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (cpu<span class="constructor">_is_offline(<span class="params">smp_processor_id</span>()</span>))</span><br><span class="line">				arch<span class="constructor">_cpu_idle_dead()</span>;</span><br><span class="line"></span><br><span class="line">			local<span class="constructor">_irq_disable()</span>;</span><br><span class="line">			arch<span class="constructor">_cpu_idle_enter()</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (cpu_idle_force_poll<span class="operator"> || </span>tick<span class="constructor">_check_broadcast_expired()</span>) &#123;</span><br><span class="line">				cpu<span class="constructor">_idle_poll()</span>;</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				<span class="keyword">if</span> (!current<span class="constructor">_clr_polling_and_test()</span>) &#123;</span><br><span class="line">					stop<span class="constructor">_critical_timings()</span>;</span><br><span class="line">					rcu<span class="constructor">_idle_enter()</span>;</span><br><span class="line">					arch<span class="constructor">_cpu_idle()</span>;</span><br><span class="line">					<span class="constructor">WARN_ON_ONCE(<span class="params">irqs_disabled</span>()</span>);</span><br><span class="line">					rcu<span class="constructor">_idle_exit()</span>;</span><br><span class="line">					start<span class="constructor">_critical_timings()</span>;</span><br><span class="line">				&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">					local<span class="constructor">_irq_enable()</span>;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="constructor">__current_set_polling()</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			arch<span class="constructor">_cpu_idle_exit()</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">/* 有其它进程运行，退出 NO_HZ，恢复之前的周期时钟 */</span></span><br><span class="line">		tick<span class="constructor">_nohz_idle_exit()</span>;</span><br><span class="line">		schedule<span class="constructor">_preempt_disabled()</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>停掉 tick 若干时间，那么这个若干时间是怎么得来的呢？系统此时处于空闲状态只有 idle 进程在运行，还要处理可能产生的中断，但是无法获知除了定时器中断以外的其它中断何时产生，而定时器第一个即将到期的中断时间是可以得到的，在这个时间到期之前都可以停掉 tick，由此得到需要停掉的 tick 数。另外，停掉 tick 的时间不能超过 clock_event_device 的 max_delta_ns，不然可能会造成 clocksource 的溢出。</p>
+<p>回顾一下 tick 事件产生时的工作流程。首先是中断处理函数 exynos4_mct_tick_isr 被运行，它会调用 clock_event_device 的 event_handler，即 hrtimer_interrupt，hrtimer_interrupt 会调用 __run_hrtimer 处理到期的 hrtimer， tick_sched_timer 这个 hrtimer 的回调函数 tick_sched_timer 被调用，tick_sched_timer 会把下次唤醒时间设置为 tick_period，相当于恢复了周期时钟。如果没有别的进程需要运行，恢复周期时钟的做法显然是不合理的，我们需要的是在第一个定时时间到来之前停止若干 tick。 通过前面的内容可以了解到 tick 产生时会触发 TIMER_SOFTIRQ 软中断，所以内核在软中断的 irq_exit 函数中做了些手脚，解决了刚才所说的周期时钟恢复的问题，流程如下：</p>
+<p>irq_exit -&gt; tick_irq_exit -&gt; tick_nohz_irq_exit -&gt; __tick_nohz_idle_enter -&gt; tick_nohz_stop_sched_tick</p>
+<p>看到了熟悉的身影 tick_nohz_stop_sched_tick，通过它又可以停掉若干的 tick。</p>
+<p>tick_irq_exit  函数如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">static inline void tick<span class="constructor">_irq_exit(<span class="params">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">#ifdef CONFIG_NO_HZ_COMMON</span><br><span class="line">	<span class="built_in">int</span> cpu = smp<span class="constructor">_processor_id()</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Make sure that timer wheel updates are propagated */</span></span><br><span class="line">	<span class="keyword">if</span> ((idle<span class="constructor">_cpu(<span class="params">cpu</span>)</span><span class="operator"> &amp;&amp; </span>!need<span class="constructor">_resched()</span>)<span class="operator"> || </span>tick<span class="constructor">_nohz_full_cpu(<span class="params">cpu</span>)</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">in</span><span class="constructor">_interrupt()</span>)</span><br><span class="line">			tick<span class="constructor">_nohz_irq_exit()</span>;</span><br><span class="line">	&#125;</span><br><span class="line">#endif</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果有别的进程需要运行，<code>need_resched()</code> 就会为 1，就不能进入 tick_nohz_irq_exit 函数，也就无法停掉若干 tick，下次唤醒的时间就还是一个 tick_period。</p>
+<p>没有使能 tickless，tick 周期性产生，如下图所示：</p>
+<p><img src="tick.jpg" alt="Tick"></p>
+<p>配置了 tickless，tick 会被停掉若干时间，变得没有规律，如下图所示：</p>
+<p><img src="tickless.jpg" alt="Tickless"></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/07/24//linux-dead-lock-detect-lockdep.html/" data-toggle="tooltip" data-placement="top" title="Linux 死锁检测模块 Lockdep 简介">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/07/15//linux-thermal-framework-intro.html/" data-toggle="tooltip" data-placement="top" title="Linux Thermal 框架解析 ">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                          <a class="tag" href="/tags/#定时器" title="定时器">定时器</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

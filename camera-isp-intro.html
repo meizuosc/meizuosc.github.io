@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          相机系统综述 —— ISP - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com//camera-isp-intro.html">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="css/widget.css">
+
+
+    
+<link rel="stylesheet" href="css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="css/signature.css">
+
+
+    
+<link rel="stylesheet" href="css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                            
+                              <a class="tag" href="/tags/#ISP" title="ISP">ISP</a>
+                            
+                        </div>
+                        <h1>相机系统综述 —— ISP</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Qu Dao on
+                            2016-06-05
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>ISP(Image Signal Processor)，即图像信号处理器，用于处理图像信号传感器输出的图像信号。它在相机系统中占有核心主导的地位，是构成相机的重要设备。</p>
+<h2 id="主要内部构成"><a href="#主要内部构成" class="headerlink" title="主要内部构成"></a>主要内部构成</h2><p>如下图所示，ISP 内部包含 CPU、SUP IP、IF 等设备，事实上，可以认为 ISP 是一个 SOC，可以运行各种算法程序，实时处理图像信号。<br><img src="isp_archi.PNG" alt="ISP 架构"></p>
+<ul>
+<li><p>CPU</p>
+<p>CPU 即中央处理器，可以运行 AF、LSC 等各种图像处理算法，控制外围设备。现代的 ISP 内部的 CPU 一般都是 ARM Cortex-A 系列的，例如 Cortex-A5、Cortex-A7。</p>
+</li>
+<li><p>SUB IP</p>
+<p>SUB IP 是各种功能模块的通称，对图像进行各自专业的处理。常见的 SUB IP 如 DIS、CSC、VRA 等。</p>
+</li>
+<li><p>图像传输接口</p>
+<p>图像传输接口主要分两种，并口 ITU 和串口 CSI。CSI 是 MIPI CSI 的简称，鉴于 MIPI CSI 的诸多优点，在手机相机领域，已经广泛使用 MIPI-CSI 接口传输图像数据和各种自定义数据。外置 ISP 一般包含 MIPI-CSIS 和 MIPI-CSIM 两个接口。内置 ISP 一般只需要 MIPI-CSIS 接口。</p>
+</li>
+<li><p>通用外围设备</p>
+<p>通用外围设备指 I2C、SPI、PWM、UART、WATCHDOG 等。ISP 中包含 I2C 控制器，用于读取 OTP 信息，控制 VCM 等。对于外置 ISP，ISP 本身还是 I2C 从设备。AP 可以通过 I2C 控制 ISP 的工作模式，获取其工作状态等。</p>
+</li>
+</ul>
+<h2 id="主要功能特性"><a href="#主要功能特性" class="headerlink" title="主要功能特性"></a>主要功能特性</h2><p>ISP 作为图像处理的核心器件，拥有十分重要的功能，下图展示了 ISP 处理图像数据的基本流程。</p>
+<p><img src="isp_process.jpg" alt="ISP 处理流程"></p>
+<p>下面针对 ISP 的主要功能特性进行下介绍。</p>
+<ul>
+<li><p>DEMOSAIC</p>
+<p>DEMOSAIC 是 ISP 的主要功能之一。SENSOR 的像素点上覆盖着 CFA，光线通过 CFA 后照射到像素上。CFA 由 R、G、B 三种颜色的遮光罩组成，每种遮光罩只允许一种颜色通过，因此每个像素输出的信号只包含 R、G、B 三者中的一种颜色信息。SENSOR 输出的这种数据就是 BAYER 数据，即通常所说的 RAW 数据。显而易见，RAW 数据所反映的颜色信息不是真实的颜色信息。DEMOSAIC 就是通过插值算法将将每个像素所代表的真实颜色计算出来。</p>
+</li>
+<li><p>FOCUS</p>
+<p>根据光学知识，景物在传感器上成像最清晰时处于合焦平面上。通过更改 LENS 的位置，使得景物在传感器上清晰的成像，是 ISP FOCUS 功能所需要完成的任务。FOCUS 分为手动和自动两种模式。ISP 可以运行 CONTRAST AF、PDAF、LASER AF 等算法实现自动对焦。</p>
+</li>
+<li><p>EXPOSURE</p>
+<p>曝光。EXPOSURE 主要影响图像的明暗程度。ISP 需要实现 AE 功能，通过控制曝光程度，使得图像亮度适宜。</p>
+</li>
+<li><p>WB</p>
+<p>白平衡。白平衡与色温相关，用于衡量图像的色彩真实性和准确性。ISP需要实现 AWB 功能，力求在各种复杂场景下都能精确的还原物体本来的颜色。</p>
+</li>
+<li><p>LSC</p>
+<p>用于消除图像周边和图片中心的不一致性，包含亮度和色度两方面。ISP 需要借助 OTP 中的校准数据完成 LSC 功能。</p>
+</li>
+<li><p>GAMMA CORRECTION</p>
+<p>伽玛校正。传感器对光线的响应和人眼对光线的响应是不同的。伽玛校正就是使得图像看起来符合人眼的特性。</p>
+</li>
+<li><p>CROP&#x2F;RESIZE</p>
+<p>图像剪裁，即改变图像的尺寸。可用于输出不同分辨率的图像。</p>
+</li>
+<li><p>VRA</p>
+<p>视觉识别。用于识别特定的景物，例如人脸识别，车牌识别。ISP 通过各种 VRA 算法，准确的识别特定的景物。</p>
+</li>
+<li><p>DRC</p>
+<p>动态范围校正。动态范围即图像的明暗区间。DRC 可以使得暗处的景物不至于欠曝，而亮处的景物不至于过曝。ISP 需要支持 DRC 功能。</p>
+</li>
+<li><p>CSC</p>
+<p>颜色空间转换。例如，ISP 会将 RGB 信号转化为 YUV 信号输出。</p>
+</li>
+<li><p>IS</p>
+<p>图像稳定。IS 的主要作用是使得图像不要因为手持时轻微的抖动而模糊不清。IS 有很多种，例如 OIS、DIS、EIS。ISP 可以实现 DIS 和 EIS。</p>
+</li>
+</ul>
+<p>事实上，ISP 除了上面提到的主要功能外，还需要支持 DENOISE、CONTRAST、SATURATION、SHARPNESS 等调整功能。</p>
+<h2 id="控制方式"><a href="#控制方式" class="headerlink" title="控制方式"></a>控制方式</h2><p>这里所说的控制方式是 AP 对 ISP 的操控方式。</p>
+<ul>
+<li><p>I2C&#x2F;SPI</p>
+<p>这一般是外置 ISP 的做法。SPI 一般用于下载固件、I2C 一般用于寄存器控制。在内核的 ISP 驱动中，外置 ISP 一般是实现为 I2C 设备，然后封装成 V4L2-SUBDEV。</p>
+</li>
+<li><p>MEM MAP</p>
+<p>这一般是内置 ISP 的做法。将 ISP 内部的寄存器地址空间映射到内核地址空间，</p>
+</li>
+<li><p>MEM SHARE</p>
+<p>这也是内置 ISP 的做法。AP 这边分配内存，然后将内存地址传给 ISP，二者实际上共享同一块内存。因此 AP 对这段共享内存的操作会实时反馈到 ISP 端。</p>
+</li>
+</ul>
+<h2 id="ISP-架构方案"><a href="#ISP-架构方案" class="headerlink" title="ISP 架构方案"></a>ISP 架构方案</h2><p>上文多次提到外置 ISP 和内置 ISP，这实际上是 ISP 的架构方案。</p>
+<h3 id="外置-ISP-架构"><a href="#外置-ISP-架构" class="headerlink" title="外置 ISP 架构"></a>外置 ISP 架构</h3><p>外置 ISP 架构是指在 AP 外部单独布置 ISP 芯片用于图像信号处理。外置 ISP 的架构图一般如下所示：</p>
+<p><img src="isp_ext.PNG" alt="外置 ISP 架构图"></p>
+<p>外置 ISP 架构的优点主要有：</p>
+<ul>
+<li><p>能够提供更优秀的图像质量</p>
+<p>在激烈的市场竞争下，能够存活到现在的外置 ISP 生产厂商在此领域一般都有很深的造诣，积累了丰富的影像质量调试经验，能够提供比内置 ISP 更优秀的性能和效果。因此，选用优质的外置 ISP 能提供专业而且优秀的图像质量。</p>
+</li>
+<li><p>能够支援更丰富的设计规划</p>
+<p>外置 ISP 的选型基本不受 AP 的影响，因此魅族可以从各个优秀 ISP 芯片供应商的众多产品中甄选最合适的器件，从而设计出更多优秀的产品。</p>
+</li>
+<li><p>能够实现产品的差异化</p>
+<p>内置 ISP 是封装在 AP 内部的，是和 AP 紧密的联系在一起，如果 AP 相同，那么 ISP 也就是一样的。因此基于同样 AP 生产出来的手机，其 ISP 的性能也是一样的，可供调教的条件也是固定的，这样就不利于实现产品的差异化。而如果选择外置 ISP，那么同一颗 AP，可以搭配不同型号的 ISP，这样可以实现产品的差异化，为给用户提供更丰富和优质的产品。</p>
+</li>
+</ul>
+<p>外置 ISP 架构的缺点主要有：</p>
+<ul>
+<li><p>成本价格高</p>
+<p>外置 ISP 需要单独购买，其售价往往不菲，而且某些特殊功能还需要额外支付费用。使用外置 ISP，需要进行额外的原理图设计和 LAYOUT，需要使用额外的元器件。</p>
+</li>
+<li><p>开发周期长</p>
+<p>外置 ISP 驱动的设计需要多费精力和时间。使用外置 ISP 时，AP 供应商提供的 ISP 驱动就无法使用，需要额外设计编写外置 ISP 驱动。另外，为了和 AP 进行完美的搭配，将效果最大化，也往往需要付出更多的调试精力。上文也提到，使用外置 ISP，需要进行额外的原理图设计和 LAYOUT，需要使用额外的元器件，这也是需要花费时间进行处理的。</p>
+</li>
+</ul>
+<h3 id="内置-ISP-架构"><a href="#内置-ISP-架构" class="headerlink" title="内置 ISP 架构"></a>内置 ISP 架构</h3><p>内置 ISP 架构是指在 AP 内部嵌入了 ISP IP，直接使用 AP 内部的 ISP 进行图像信号处理。<br>内置 ISP 的架构图一般如下所示：</p>
+<p><img src="isp_int.PNG" alt="内置 ISP 架构图"></p>
+<p>内置 ISP 架构的优点主要有：</p>
+<ul>
+<li><p>能降低成本价格</p>
+<p>内置 ISP 内嵌在 AP 内部，因此无需像外置 ISP 一样需要额外购买，且不占 PCB 空间，无需单独为其设计外围电路，这样就能节省 BOM，降低成本。鉴于大多数用户在选购手机时会将价格因素放在重要的位置，因此降低成本能有效的降低终端成品价格，有利于占领市场。</p>
+</li>
+<li><p>能提高产品的上市速度</p>
+<p>内置 ISP 和 AP 紧密结合，无需进行原理图设计和 LAYOUT 设计，因此可以减小开发周期，加快产品上市的速度。</p>
+</li>
+<li><p>能降低开发难度</p>
+<p>如果使用内置 ISP，那么 AP 供应商能在前期提供相关资料，驱动开发人员可以有充足的时间熟悉相关资料，而且不会存在软件版本适配问题，也不存在平台架构兼容性问题。但是，如果使用外置 ISP，那么 ISP 供应商往往都不能提供针对某个平台的代码&#x2F;资料，而且一般都存在软件版本兼容问题，这就需要驱动开发人员付出额的经历和时间。</p>
+</li>
+</ul>
+<p>使用内置 ISP 当然也有相应的不足之处，具体见上文的分析，这里就不赘述了。</p>
+<p>事实上，鉴于 ISP 的重要性，为了推广其 AP，提高其 AP 竞争力，现在 AP 内置的 ISP 也越来越强大，其性能足以满足手机市场的需求。再加上其一系列优点，现在使用内置 ISP 方案的手机越来越多。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>ISP 是相机系统中重要的组成部分，要了解相机系统，就不能不熟悉 ISP。本文从 ISP 内部构成、功能特性、操控方式等角度介绍了 ISP 的各方面知识。另外，本文还详细的分析了两种架构的 ISP 方案的优缺点，希望能有所裨益。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://source.android.com/devices/camera/index.html">Google Camera</a></li>
+</ul>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="//nonlinear-regression.html" data-toggle="tooltip" data-placement="top" title="球面拟合算法">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="//cpuidle.html" data-toggle="tooltip" data-placement="top" title="CPUIDLE 之低功耗定时器">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                          <a class="tag" href="/tags/#ISP" title="ISP">ISP</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&#34;🌱&#34;,&#34;just do it&#34;,&#34;🍀&#34;]' color='[&#34;rgb(121,93,179)&#34; ,&#34;rgb(76,180,231)&#34; ,&#34;rgb(184,90,154)&#34;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+</body>
+
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          kernel 空间加载用户空间fw实现原理 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com//implementation-of-loading-fw-from-userspace.html">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="css/widget.css">
+
+
+    
+<link rel="stylesheet" href="css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="css/signature.css">
+
+
+    
+<link rel="stylesheet" href="css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#firmware" title="firmware">firmware</a>
+                            
+                              <a class="tag" href="/tags/#uevent" title="uevent">uevent</a>
+                            
+                        </div>
+                        <h1>kernel 空间加载用户空间fw实现原理</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Qu dishui on
+                            2018-11-23
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>随着手机外围器件的集成度和复杂度越来越高, 单纯的设置相关寄存器已经无法使得器件可以正常的工作. 在一般情况下，需要将一个特定的fw下载到器件中, 确保器件可以正常稳定的运行, 比如：camera ois，camera actuator， TP等等. 一般情况下, 有以下三种方案:</p>
+<ul>
+<li>直接将fw data转化为特定的数组，编码在驱动代码中.</li>
+<li>将fw data烧录到一个分区中，需要的时候从分区中load进来.</li>
+<li>将fw打包到某个镜像中，如vendor，system等等，需要的时候从用户空间中load到kernel空间中.</li>
+</ul>
+<p>对于方案1, 直接将其硬编码在驱动代码中, 会造成kernel镜像size变大, 有可能造成镜像超限, 导致kernel启动失败; 并且调试也不方便, 每次修改fw都需要重新编译内核.</p>
+<p>对于方案2, 需要实现预留好空间, 某些时候可能无法满足; 并且一般重新烧录fw, 一般机器需要进入特定的模式, 不利于在线调试.</p>
+<p>对于方案3,  能够有效的避免前两种方案的不足, 在驱动中应用比较广泛, 也是本文叙述的主题.</p>
+<p>下文主要从编程步骤出发, 通过调用的接口来具体分析其中实现的机制.</p>
+<h3 id="一-编程步骤"><a href="#一-编程步骤" class="headerlink" title="一 编程步骤"></a>一 编程步骤</h3><p>linux内核为方案3提供了完整的解决方案, 驱动开发起来也相当的方便, 具体的步骤如下:</p>
+<ol>
+<li>在编译的时候, 将fw打包到具体镜像中. 对于android系统，可以将fw放在&#x2F;etc&#x2F;firmware, &#x2F;vendor&#x2F;firmware, &#x2F;firmware&#x2F;image这几个目录. 当上层服务ueventd接收到kernel上报的请求fw的uevent事件, 会依次搜索这几个目录, 查找对应名称的fw, 并通过节点data传递给kernel.</li>
+<li>由于内核已经封装好了接口, 驱动代码比较简单, 具体如下:</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;linux/firmware.h&gt;</span></span></span><br><span class="line"> ....</span><br><span class="line"><span class="built_in">xxx_func</span>() &#123;</span><br><span class="line"><span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">firmware</span> *fw=<span class="literal">NULL</span>;`</span><br><span class="line">......</span><br><span class="line"><span class="built_in">request_firmware</span>(&amp;fw, fw_name, dev);</span><br><span class="line">.......</span><br><span class="line"><span class="built_in">release_firmware</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有上面的步骤可知, 内核已经把接口封装的相当简洁, 使用简单的接口就可以完成load 用户空间的fw任务. 当然kernel还为我们提供了其他类型接口, 主要是提供了一些其他的特性, 满足特定条件下load 用户空间的fw. 例如, 如果在原子上下文load fw，则只能用request_firmware_nowait()接口, 该接口不会导致进程睡眠. 但是所有的这些接口, 其工作原理是一样, 因此下文将以request_firmware()为入口分析load用户空间fw的原理.</p>
+<h3 id="二-实现原理分析"><a href="#二-实现原理分析" class="headerlink" title="二 实现原理分析"></a>二 实现原理分析</h3><h4 id="2-1-相关结构体介绍"><a href="#2-1-相关结构体介绍" class="headerlink" title="2.1 相关结构体介绍"></a>2.1 相关结构体介绍</h4><p>理解代码最好的入口是熟悉代码使用的数据结构, 理解了代码使用的数据结构, 就基本上可以对代码的实现原理有一个初步的认识. 所以下面熟悉一下相关的数据结构.</p>
+<ul>
+<li>firmware 结构体</li>
+</ul>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">路径:include/linux/firmware.h</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">firmware</span> &#123;</span><br><span class="line">        <span class="type">size_t</span> size;</span><br><span class="line">        <span class="type">const</span> u8 *data;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">page</span> **pages;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* firmware loader private fields */</span></span><br><span class="line">        <span class="type">void</span> *priv;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>该结构体主要用于向驱动导出load 到内核的fw信息, 成员含义如下:<br>size: firmware 数据的大小.<br>data: firmware数据.<br>pages: 指向fw data存储的物理页面.<br>priv: 私有数据指针.</p>
+<ul>
+<li>builtin_fw 结构体</li>
+</ul>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">路径:include/linux/firmware.h</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">builtin_fw</span> &#123;</span><br><span class="line">        <span class="type">char</span> *name;</span><br><span class="line">        <span class="type">void</span> *data;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span> size;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>该结构主要用于描述编译到内核builtin_fw段的fw, 成员含义如下:<br>name: firmware 数据的名称.<br>data: 指向firmware数据的指针.<br>size: firmware的大小.</p>
+<ul>
+<li>firmware_buf结构体</li>
+</ul>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">路径:driver/base/firmware_class.c</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">firmware_buf</span> &#123;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">kref</span> ref;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">list_head</span> list;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">completion</span> completion;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">firmware_cache</span> *fwc;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span> status;</span><br><span class="line">        <span class="type">void</span> *data;</span><br><span class="line">        <span class="type">size_t</span> size;</span><br><span class="line">        <span class="type">size_t</span> allocated_size;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_FW_LOADER_USER_HELPER</span></span><br><span class="line">        <span class="type">bool</span> is_paged_buf;</span><br><span class="line">        <span class="type">bool</span> need_uevent;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">page</span> **pages;</span><br><span class="line">        <span class="type">int</span> nr_pages;</span><br><span class="line">        <span class="type">int</span> page_array_size;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">list_head</span> pending_list;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *fw_id;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>该结构体主要用于存储fw data,以及一些控制状态等等. 部分重要的成员解释如下:<br>completion: 完成量,用于在load fw完成时, 唤醒等待的进程.<br>fwc: 指向全局的fw_cache, 该结构保存了已经load 的fw的相关信息.<br>status: 保存当前的状态.<br>data: 指向保存fw data的kernel虚拟地址.<br>size: fw 的大小.<br>pages: 指向存储fw data的物理页.<br>page_array_size: 分配的物理页的数目.<br>fw_id: fw 的名称.</p>
+<h4 id="2-2-实现原理分析"><a href="#2-2-实现原理分析" class="headerlink" title="2.2 实现原理分析"></a>2.2 实现原理分析</h4><p>request_firmware()和request_firmware_nowait()等接口都是_request_firmware()的一个前端, 仅仅只是传进的参数不一样而已, 因此基于分析request_firmware()的实现来探讨其实现原理, request_firmware()如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">路径:driver/base/firmware_class.<span class="function">c</span></span><br><span class="line"><span class="function"><span class="type">int</span></span></span><br><span class="line"><span class="function"><span class="title">request_firmware</span><span class="params">(<span class="type">const</span> <span class="keyword">struct</span> firmware **firmware_p, <span class="type">const</span> <span class="type">char</span> *name,</span></span></span><br><span class="line"><span class="params"><span class="function">		 <span class="keyword">struct</span> device *device)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">int</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Need to pin this module until return */</span></span><br><span class="line">	__module_get(THIS_MODULE);</span><br><span class="line">	ret = _request_firmware(firmware_p, name, device, <span class="literal">NULL</span>, <span class="number">0</span>,</span><br><span class="line">				FW_OPT_UEVENT | FW_OPT_FALLBACK);</span><br><span class="line">	<span class="built_in">module_put</span>(THIS_MODULE);</span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面来看看_request_firmware()函数的实现:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">路径:driver/base/firmware_class.c</span><br><span class="line"><span class="type">static</span> <span class="type">int</span></span><br><span class="line">_request_firmware(<span class="type">const</span> <span class="keyword">struct</span> firmware **firmware_p, <span class="type">const</span> <span class="type">char</span> *name,</span><br><span class="line">                  <span class="keyword">struct</span> device *device, <span class="type">void</span> *buf, <span class="type">size_t</span> size,</span><br><span class="line">                  <span class="type">unsigned</span> <span class="type">int</span> opt_flags)</span><br><span class="line">&#123;</span><br><span class="line">......</span><br><span class="line">        ret = _request_firmware_prepare(&amp;fw, name, device, buf, size,</span><br><span class="line">                                        opt_flags);</span><br><span class="line">        <span class="keyword">if</span> (ret &lt;= <span class="number">0</span>) <span class="comment">/* error or already assigned */</span></span><br><span class="line">                <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">         ret = <span class="built_in">fw_get_filesystem_firmware</span>(device, fw-&gt;priv);</span><br><span class="line">         <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">                 <span class="keyword">if</span> (!(opt_flags &amp; FW_OPT_NO_WARN))</span><br><span class="line">                         <span class="built_in">dev_dbg</span>(device,</span><br><span class="line">                                  <span class="string">&quot;Firmware %s was not found in kernel paths. rc:%d\n&quot;</span>,</span><br><span class="line">                                  name, ret);</span><br><span class="line">                 <span class="keyword">if</span> (opt_flags &amp; FW_OPT_USERHELPER) &#123;</span><br><span class="line">                         <span class="built_in">dev_err</span>(device, <span class="string">&quot;[%s]Falling back to user helper\n&quot;</span>, __func__);</span><br><span class="line">                         ret = <span class="built_in">fw_load_from_user_helper</span>(fw, name, device,</span><br><span class="line">                                                        opt_flags, timeout);</span><br><span class="line">                 &#125;</span><br><span class="line">         &#125;</span><br><span class="line">......</span><br><span class="line">	 <span class="keyword">if</span> (!ret)</span><br><span class="line">	        ret = <span class="built_in">assign_firmware_buf</span>(fw, device, opt_flags);</span><br><span class="line">......</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在该函数中，会依次从4个地方尝试load 相应的fw, 具体如下:</p>
+<ul>
+<li>从内核中相应的段中查找是否有符合要求的firmware.</li>
+<li>从cache中查找是否有上次load相应的还没有换出firmware.</li>
+<li>直接利用内核中文件接口中读取相应的firmware.</li>
+<li>利用uevent接口load相应的firmware.</li>
+</ul>
+<p>其中, 对于第1种和第2种情况是在_request_firmware_prepare()函数中完成的; 第3种情况是在_request_firmware_prepare()函数中完成的; 第4种情况是在fw_load_from_user_helper()函数中完成的.</p>
+<p>对于第1种情况, 其具体的实现在fw_get_builtin_firmware()函数中, 原理是通过遍历builtin_fw段的firmware, 并比较firmware的name是否相同, 如果相同, 表示匹配上,则将firmware的size和data赋值给驱动传过来的firmware结构体指针, request_firmware就完成load firmware功能, 具体如下:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">路径:drivers/base/firmware_class.c</span><br><span class="line"><span class="type">static</span> <span class="type">int</span></span><br><span class="line">_request_firmware_prepare(<span class="keyword">struct</span> firmware **firmware_p, <span class="type">const</span> <span class="type">char</span> *name,</span><br><span class="line">                          <span class="keyword">struct</span> device *device, <span class="type">void</span> *dbuf, <span class="type">size_t</span> size,</span><br><span class="line">                          <span class="type">unsigned</span> <span class="type">int</span> opt_flags)</span><br><span class="line">&#123;</span><br><span class="line">.......</span><br><span class="line">        *firmware_p = firmware = <span class="built_in">kzalloc</span>(<span class="built_in">sizeof</span>(*firmware), GFP_KERNEL);</span><br><span class="line">        <span class="keyword">if</span> (!firmware) &#123;</span><br><span class="line">                <span class="built_in">dev_err</span>(device, <span class="string">&quot;%s: kmalloc(struct firmware) failed\n&quot;</span>,</span><br><span class="line">                        __func__);</span><br><span class="line">                <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">fw_get_builtin_firmware</span>(firmware, name, dbuf, size)) &#123;</span><br><span class="line">                <span class="built_in">dev_dbg</span>(device, <span class="string">&quot;using built-in %s\n&quot;</span>, name);</span><br><span class="line">                <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">/* assigned */</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">路径:drivers/base/firmware_class.<span class="function">c</span></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">bool</span> <span class="title">fw_get_builtin_firmware</span><span class="params">(<span class="keyword">struct</span> firmware *fw, <span class="type">const</span> <span class="type">char</span> *name,</span></span></span><br><span class="line"><span class="params"><span class="function">                                    <span class="type">void</span> *buf, <span class="type">size_t</span> size)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">builtin_fw</span> *b_fw;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (b_fw = __start_builtin_fw; b_fw != __end_builtin_fw; b_fw++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">strcmp</span>(name, b_fw-&gt;name) == <span class="number">0</span>) &#123;</span><br><span class="line">                        fw-&gt;size = b_fw-&gt;size;</span><br><span class="line">                        fw-&gt;data = b_fw-&gt;data;</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (buf &amp;&amp; fw-&gt;size &lt;= size)</span><br><span class="line">                                <span class="built_in">memcpy</span>(buf, fw-&gt;data, fw-&gt;size);</span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于第2种情况, 其具体的实现在fw_lookup_and_allocate_buf()函数中, 匹配原理和第1种情况相同, 只不过查找实在全局变量fw_cache的链表上查找. fw_cache的 head链表上保存了以前load过的fw的信息,比如name, data, size等等. 其中在函数sync_cached_firmware_buf()中主要检查fw是否已经load到内核空间, 如果没有, 则等待; 否在就调用fw_set_page_data(), 将fw相关的信息赋值到驱动的firmware结构体指针, 具体如下:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">路径:drivers/base/firmware_class.c</span><br><span class="line"><span class="type">static</span> <span class="type">int</span></span><br><span class="line">_request_firmware_prepare(<span class="keyword">struct</span> firmware **firmware_p, <span class="type">const</span> <span class="type">char</span> *name,</span><br><span class="line">                          <span class="keyword">struct</span> device *device, <span class="type">void</span> *dbuf, <span class="type">size_t</span> size,</span><br><span class="line">                          <span class="type">unsigned</span> <span class="type">int</span> opt_flags)</span><br><span class="line">&#123;</span><br><span class="line">........</span><br><span class="line"></span><br><span class="line">        ret = <span class="built_in">fw_lookup_and_allocate_buf</span>(name, &amp;fw_cache, &amp;buf, dbuf, size,</span><br><span class="line">                                        opt_flags);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * bind with &#x27;buf&#x27; now to avoid warning in failure path</span></span><br><span class="line"><span class="comment">         * of requesting firmware.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        firmware-&gt;priv = buf;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (ret &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                ret = <span class="built_in">sync_cached_firmware_buf</span>(buf);</span><br><span class="line">                <span class="keyword">if</span> (!ret) &#123;</span><br><span class="line">                        <span class="built_in">fw_set_page_data</span>(buf, firmware);</span><br><span class="line">                        <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">/* assigned */</span></span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line">.......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">路径:drivers/base/firmware_class.<span class="function">c</span></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">fw_lookup_and_allocate_buf</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *fw_name,</span></span></span><br><span class="line"><span class="params"><span class="function">                                      <span class="keyword">struct</span> firmware_cache *fwc,</span></span></span><br><span class="line"><span class="params"><span class="function">                                      <span class="keyword">struct</span> firmware_buf **buf, <span class="type">void</span> *dbuf,</span></span></span><br><span class="line"><span class="params"><span class="function">                                      <span class="type">size_t</span> size, <span class="type">unsigned</span> <span class="type">int</span> opt_flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">firmware_buf</span> *tmp;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">spin_lock</span>(&amp;fwc-&gt;lock);</span><br><span class="line">        <span class="keyword">if</span> (!(opt_flags &amp; FW_OPT_NOCACHE)) &#123;</span><br><span class="line">                tmp = __fw_lookup_buf(fw_name);</span><br><span class="line">                <span class="keyword">if</span> (tmp) &#123;</span><br><span class="line">                        <span class="built_in">kref_get</span>(&amp;tmp-&gt;ref);</span><br><span class="line">                        <span class="built_in">spin_unlock</span>(&amp;fwc-&gt;lock);</span><br><span class="line">                        *buf = tmp;</span><br><span class="line">                        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line">.......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于第3种情况, 依据内核预先定义好的路径fw_path调用内核文件读写接口kernel_read_file_from_path load入相应的fw, 在fw_finish_direct_load()函数中做了一些load fw后的清理工作,比如设置完成标志等等.</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">路径:drivers/base/firmware_class.<span class="function">c</span></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span></span></span><br><span class="line"><span class="function"><span class="title">fw_get_filesystem_firmware</span><span class="params">(<span class="keyword">struct</span> device *device, <span class="keyword">struct</span> firmware_buf *buf)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="built_in">ARRAY_SIZE</span>(fw_path); i++) &#123;</span><br><span class="line">                <span class="comment">/* skip the unset customized path */</span></span><br><span class="line">                <span class="keyword">if</span> (!fw_path[i][<span class="number">0</span>])</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">                len = <span class="built_in">snprintf</span>(path, PATH_MAX, <span class="string">&quot;%s/%s&quot;</span>,</span><br><span class="line">                               fw_path[i], buf-&gt;fw_id);</span><br><span class="line">                <span class="keyword">if</span> (len &gt;= PATH_MAX) &#123;</span><br><span class="line">                        rc = -ENAMETOOLONG;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                 buf-&gt;size = <span class="number">0</span>;</span><br><span class="line">                 rc = <span class="built_in">kernel_read_file_from_path</span>(path, &amp;buf-&gt;data, &amp;size, msize,</span><br><span class="line">                                                 id);</span><br><span class="line">                 <span class="keyword">if</span> (rc) &#123;</span><br><span class="line">                         <span class="keyword">if</span> (rc == -ENOENT)</span><br><span class="line">                                 <span class="built_in">dev_dbg</span>(device, <span class="string">&quot;loading %s failed with error %d\n&quot;</span>,</span><br><span class="line">                                          path, rc);</span><br><span class="line">                         <span class="keyword">else</span></span><br><span class="line">                                 <span class="built_in">dev_warn</span>(device, <span class="string">&quot;loading %s failed with error %d\n&quot;</span>,</span><br><span class="line">                                          path, rc);</span><br><span class="line">                         <span class="keyword">continue</span>;</span><br><span class="line">                 &#125;</span><br><span class="line">                 <span class="built_in">dev_dbg</span>(device, <span class="string">&quot;direct-loading %s\n&quot;</span>, buf-&gt;fw_id);</span><br><span class="line">                 buf-&gt;size = size;</span><br><span class="line">                 <span class="built_in">fw_finish_direct_load</span>(device, buf);</span><br><span class="line">                 <span class="keyword">break</span>;</span><br><span class="line">         &#125;</span><br><span class="line">......</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>fw_path具体的定义如下, 其中fw_path_para主要用于用户传递定制的路径.</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> fw_path[] = &#123;</span><br><span class="line">        fw_path_para,</span><br><span class="line">        <span class="string">&quot;/data/vendor/vibrator&quot;</span>,</span><br><span class="line">        <span class="string">&quot;/lib/firmware/updates/&quot;</span> UTS_RELEASE,</span><br><span class="line">        <span class="string">&quot;/lib/firmware/updates&quot;</span>,</span><br><span class="line">        <span class="string">&quot;/lib/firmware/&quot;</span> UTS_RELEASE,</span><br><span class="line">        <span class="string">&quot;/lib/firmware&quot;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>当在前三种情况下无法找到对应的fw时,就会进入第4种情况进行查找, 其工作在函数为fw_load_from_user_helper()种实现, 具体如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">fw_load_from_user_helper</span><span class="params">(<span class="keyword">struct</span> firmware *firmware,</span></span></span><br><span class="line"><span class="params"><span class="function">                                    <span class="type">const</span> <span class="type">char</span> *name, <span class="keyword">struct</span> device *device,</span></span></span><br><span class="line"><span class="params"><span class="function">                                    <span class="type">unsigned</span> <span class="type">int</span> opt_flags, <span class="type">long</span> timeout)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">firmware_priv</span> *fw_priv;</span><br><span class="line"></span><br><span class="line">        fw_priv = <span class="built_in">fw_create_instance</span>(firmware, name, device, opt_flags);</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">IS_ERR</span>(fw_priv))</span><br><span class="line">                <span class="keyword">return</span> <span class="built_in">PTR_ERR</span>(fw_priv);</span><br><span class="line"></span><br><span class="line">        fw_priv-&gt;buf = firmware-&gt;priv;</span><br><span class="line">        <span class="keyword">return</span> _request_firmware_load(fw_priv, opt_flags, timeout);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在函数 fw_create_instance() 主要进行了一些设备的初始化工作, 如设备所属的class, groups等等. 具体如下:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">static struct firmware_priv *</span><br><span class="line">fw_create_instance(struct firmware *firmware, const char *fw_name,</span><br><span class="line">                   struct device *device, unsigned int opt_flags)</span><br><span class="line">&#123;</span><br><span class="line">        struct firmware_priv *fw_priv;</span><br><span class="line">        struct device *f_dev;</span><br><span class="line"></span><br><span class="line">        fw_priv = kzalloc(sizeof(*fw_priv), GFP_KERNEL);</span><br><span class="line">        <span class="keyword">if</span> (!fw_priv) &#123;</span><br><span class="line">                fw_priv = ERR_PTR(-ENOMEM);</span><br><span class="line">                goto <span class="keyword">exit</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        fw_priv-&gt;nowait = !!(opt_flags &amp; FW_OPT_NOWAIT);</span><br><span class="line">        fw_priv-&gt;fw = firmware;</span><br><span class="line">        f_dev = &amp;fw_priv-&gt;dev;</span><br><span class="line"></span><br><span class="line">        device_initialize(f_dev);</span><br><span class="line">        dev_set_name(f_dev, <span class="string">&quot;%s&quot;</span>, fw_name);</span><br><span class="line">        f_dev-&gt;parent = device;</span><br><span class="line">        f_dev-&gt;class = &amp;firmware_class;</span><br><span class="line">        f_dev-&gt;groups = fw_dev_attr_groups;</span><br><span class="line"><span class="keyword">exit</span>:</span><br><span class="line">        return fw_priv;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中重点看一下 fw_dev_attr_groups属性集合, 由linux 设备驱动框架原理,当该设备加入到系统中时,会在该设备下生成两个节点data和loading, 后面讲到这两个节点的用处.</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">路径:driver/base/firmware_class.c</span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">attribute_group</span> *fw_dev_attr_groups[] = &#123;</span><br><span class="line">        &amp;fw_dev_attr_group,</span><br><span class="line">        <span class="literal">NULL</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">attribute_group</span> fw_dev_attr_group = &#123;</span><br><span class="line">        .attrs = fw_dev_attrs,</span><br><span class="line">        .bin_attrs = fw_dev_bin_attrs,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">struct</span> <span class="title class_">bin_attribute</span> *fw_dev_bin_attrs[] = &#123;</span><br><span class="line">        &amp;firmware_attr_data,</span><br><span class="line">        <span class="literal">NULL</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">struct</span> <span class="title class_">attribute</span> *fw_dev_attrs[] = &#123;</span><br><span class="line">        &amp;dev_attr_loading.attr,</span><br><span class="line">        <span class="literal">NULL</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">struct</span> <span class="title class_">bin_attribute</span> firmware_attr_data = &#123;</span><br><span class="line">        .attr = &#123; .name = <span class="string">&quot;data&quot;</span>, .mode = <span class="number">0644</span> &#125;,</span><br><span class="line">        .size = <span class="number">0</span>,</span><br><span class="line">        .read = firmware_data_read,</span><br><span class="line">        .write = firmware_data_write,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="title">DEVICE_ATTR</span><span class="params">(loading, <span class="number">0644</span>, firmware_loading_show, firmware_loading_store)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>在_request_firmware_load()函数中, 首先调用device_add()函数将设备注册到系统中, 接着调用kobject_uevent()函数向用户空间上报uevent事件, 最后调用wait_for_completion_killable_timeout()函数等待load fw完成.<br>loading节点写函数如下:</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">路径:driver/base/firmware_class.c</span><br><span class="line"> static ssize_t firmware_loading_store(struct device *dev,</span><br><span class="line">                                       struct device_attribute *attr,</span><br><span class="line">                                       const char *buf, size_t count)</span><br><span class="line"> &#123;</span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">         switch (loading) &#123;</span><br><span class="line">         case <span class="number">1</span>:</span><br><span class="line">                 <span class="comment">/* discarding any previous partial load */</span></span><br><span class="line">                 <span class="function"><span class="title">if</span> (!test_bit(FW_STATUS_DONE, &amp;fw_buf-&gt;</span>status)) &#123;</span><br><span class="line">                         <span class="function"><span class="title">for</span> (i = 0; i &lt; fw_buf-&gt;</span>nr_pages; i++)</span><br><span class="line">                                 __<span class="function"><span class="title">free_page</span>(fw_buf-&gt;</span>pages[i]);</span><br><span class="line">                         <span class="function"><span class="title">vfree</span>(fw_buf-&gt;</span>pages);</span><br><span class="line">                         <span class="function"><span class="title">fw_buf</span>-&gt;</span>pages = NULL;</span><br><span class="line">                         <span class="function"><span class="title">fw_buf</span>-&gt;</span>page_array_size = <span class="number">0</span>;</span><br><span class="line">                         <span class="function"><span class="title">fw_buf</span>-&gt;</span>nr_pages = <span class="number">0</span>;</span><br><span class="line">                         <span class="function"><span class="title">set_bit</span>(FW_STATUS_LOADING, &amp;fw_buf-&gt;</span>status);</span><br><span class="line">                 &#125;</span><br><span class="line">                 break;</span><br><span class="line">         case <span class="number">0</span>:</span><br><span class="line">                 <span class="function"><span class="title">if</span> (test_bit(FW_STATUS_LOADING, &amp;fw_buf-&gt;</span>status)) &#123;</span><br><span class="line">                         int rc;</span><br><span class="line"></span><br><span class="line">                         <span class="function"><span class="title">set_bit</span>(FW_STATUS_DONE, &amp;fw_buf-&gt;</span>status);</span><br><span class="line">                         <span class="function"><span class="title">clear_bit</span>(FW_STATUS_LOADING, &amp;fw_buf-&gt;</span>status);</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line">                         rc = fw_map_pages_buf(fw_buf);</span><br><span class="line">......</span><br><span class="line">                         <span class="function"><span class="title">complete_all</span>(&amp;fw_buf-&gt;</span>completion);</span><br><span class="line">                         break;</span><br><span class="line">                 &#125;</span><br><span class="line">......</span><br><span class="line">         &#125;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当应用程序将fw写入到data节点时,  如果buf-&gt;data已经映射到kernel虚拟地址空间,则调用firmware_rw_buf()直接将fw data copy到buf-&gt;data中; 如果buf-&gt;data为NULL, 则首先调用fw_realloc_buf()函数, 分配物理页, 然后调用firmware_rw()函数将fw data 拷贝到分配的物理页中.<br>data节点写函数如下:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">路径:driver/base/firmware_class.c</span><br><span class="line">static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,</span><br><span class="line">                                   struct bin_attribute *bin_attr,</span><br><span class="line">                                   char *<span class="built_in">buffer</span>, loff_t <span class="built_in">offset</span>, size_t <span class="built_in">count</span>)</span><br><span class="line">&#123;</span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (buf-&gt;data) &#123;</span><br><span class="line">                <span class="keyword">if</span> (<span class="built_in">offset</span> + <span class="built_in">count</span> &gt; buf-&gt;allocated_size) &#123;</span><br><span class="line">                        retval = -ENOMEM;</span><br><span class="line">                        goto out;</span><br><span class="line">                &#125;</span><br><span class="line">                firmware_rw_buf(buf, <span class="built_in">buffer</span>, <span class="built_in">offset</span>, <span class="built_in">count</span>, <span class="literal">false</span>);</span><br><span class="line">                retval = <span class="built_in">count</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                retval = fw_realloc_buffer(fw_priv, <span class="built_in">offset</span> + <span class="built_in">count</span>);</span><br><span class="line">                <span class="keyword">if</span> (retval)</span><br><span class="line">                        goto out;</span><br><span class="line"></span><br><span class="line">                retval = <span class="built_in">count</span>;</span><br><span class="line">                firmware_rw(buf, <span class="built_in">buffer</span>, <span class="built_in">offset</span>, <span class="built_in">count</span>, <span class="literal">false</span>);</span><br><span class="line">        &#125;</span><br><span class="line">.....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当应用程序向该节点写入1时, 如果status的状态不是FW_STATUS_DONE, 则进行一些初始化工作, 为后续load fw做准备工作,  并将status状态设备为FW_STATUS_LOADING.</p>
+<p>当应用程序向该节点写入0时, 设置status的状态为FW_STATUS_DONE, 并调用fw_map_pages_buf函数将保存fw data的pages映射到kernel虚拟地址空间, 变为内核可操作的数据. 然后调用complete_all 唤醒等待的进程. 进程唤醒后,会执行assign_firmware_buf()函数, 将保存在firmware_buf结构中fw信息赋值给request_firmware()的第一个参数, 从而完成fw 的load工作.</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">路径:driver/base/firmware_class.c</span><br><span class="line">static int assign_firmware_buf(struct firmware *fw, struct device *device,</span><br><span class="line">                               unsigned int opt_flags)</span><br><span class="line">&#123;</span><br><span class="line">......</span><br><span class="line">        <span class="comment">/* pass the pages buffer to driver at the last minute */</span></span><br><span class="line">        fw_set_page_data(buf, fw);</span><br><span class="line">......</span><br><span class="line">&#125;</span><br><span class="line">static void fw_set_page_data(struct firmware_buf *buf, struct firmware *fw)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="function"><span class="title">fw</span>-&gt;</span>priv = buf;</span><br><span class="line">#ifdef CONFIG_FW_LOADER_USER_HELPER</span><br><span class="line">        <span class="function"><span class="title">fw</span>-&gt;</span><span class="function"><span class="title">pages</span> = buf-&gt;</span>pages;</span><br><span class="line">#endif</span><br><span class="line">        <span class="function"><span class="title">fw</span>-&gt;</span><span class="function"><span class="title">size</span> = buf-&gt;</span>size;</span><br><span class="line">        <span class="function"><span class="title">fw</span>-&gt;</span><span class="function"><span class="title">data</span> = buf-&gt;</span><span class="keyword">data</span>;</span><br><span class="line"></span><br><span class="line">        pr_debug(<span class="string">&quot;%s: fw-%s buf=%p data=%p size=%u\n&quot;</span>,</span><br><span class="line">                 __<span class="function"><span class="title">func__</span>, buf-&gt;</span><span class="function"><span class="title">fw_id</span>, buf, buf-&gt;</span><span class="keyword">data</span>,</span><br><span class="line">                 (<span class="function"><span class="title">unsigned</span> int)buf-&gt;</span>size);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="三-结束语"><a href="#三-结束语" class="headerlink" title="三 结束语"></a>三 结束语</h3><p>本文以request_firmware()为入口详细探讨了内核load fw的实现原理, 以期大家对这个模块有一个全面的认识. 欢迎大家批评指正, 谢谢！</p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="//android-binder.html" data-toggle="tooltip" data-placement="top" title="Android Binder">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="//android-p-fbe.html" data-toggle="tooltip" data-placement="top" title="Android FBE">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#firmware" title="firmware">firmware</a>
+                        
+                          <a class="tag" href="/tags/#uevent" title="uevent">uevent</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&#34;🌱&#34;,&#34;just do it&#34;,&#34;🍀&#34;]' color='[&#34;rgb(121,93,179)&#34; ,&#34;rgb(76,180,231)&#34; ,&#34;rgb(184,90,154)&#34;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+</body>
+
+</html>

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          进程冻结技术：深入探究 Linux 内核中的 cgroup freezer 子系统 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2024/07/12/sub-system-cgroup-freezer-in-Linux-kernel/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#freeze_processes" title="freeze_processes">freeze_processes</a>
+                            
+                        </div>
+                        <h1>进程冻结技术：深入探究 Linux 内核中的 cgroup freezer 子系统</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by BA.Fu on
+                            2024-07-12
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <blockquote>
+<p>kernel version：5.15.119<br>cpu architecture：ARM64<br>cgroup version：cgroup v2</p>
+</blockquote>
+<h2 id="一、背景介绍"><a href="#一、背景介绍" class="headerlink" title="一、背景介绍"></a>一、背景介绍</h2><p>cgroup 最初由 Google 工程师 Paul Menage 和 Rohit Seth 在 2006 年提出，是一种细粒度资源控制的Linux内核机制。于 2007 年合并到 Linux 内核主线中。然而 Google 原生系统直到 Android 11 或更高版本上才支持 CACHE 应用的 CPU 冻结功能。当应用切换到后台并且没有其他活动时，系统会在一定时间内通过状态判断，将进程 ID 迁移到冻结的 cgroup 节点上，实现冻结 CACHE 应用。这项功能可以减少活跃缓存应用在后台存在时所消耗的 CPU 资源，从而达到节电的目的。当应用再次切换到前台时，系统会将该应用的进程解冻，以实现快速启动。</p>
+<p>对于后台进程冻结，有两套方案，一是 cgroup freezer，二是内核信号 signal SIGSTOP 和 SIGCONT，国内很多手机厂商其实是早于 Android 做进程冻结方案的。而使用 cgroup freezer 方案更成熟更完善，接入后其实仅仅第一步，还有 binder 的 BINDER_FREEZE 冻结，framework层还有很多需要特殊场景，如后台下载、应用中使用桌面小组件、正在播放音频等等。</p>
+<p>cgroup中的Freezer子系统可以用来暂停或恢复控制组中的进程，主要作用如下：</p>
+<ol>
+<li>暂停进程：冻结的进程会被暂停，其所有线程的执行将被停止，包括应用程序的主线程以及任何后台线程。</li>
+<li>资源释放：冻结进程占用的资源，例如CPU、内存资源会被释放。这些资源将被系统重新分配给其他需要执行的进程或系统服务</li>
+<li>功耗节省：被冻结的进程不会在后台运行，因此系统在休眠期间不会被频繁唤醒，可以节省设备的电池消耗。</li>
+<li>快速恢复：冻结的进程可以快速恢复其执行状态。当需要重新激活进程时，系统可以迅速将其恢复到之前的运行状态，而无需重新启动或加载应用程序。 冻结进程并不会终止进程的执行或销毁应用程序。冻结只是暂时挂起进程，以优化资源使用。一旦系统需要再次运行该进程（例如用户重新打开应用程序或系统需要其提供服务），它会被解冻并恢复运行。 </li>
+</ol>
+<p>进程冻结是Android系统中重要的资源管理策略，也是目前主流手机厂商常用的后台管控策略之一，它有助于提高系统性能，同时最大限度地节省设备的资源和电量消耗。下面我们针对 cgroup freezer 的底层实现，看 Linux 内核是如何支撑 Android 的墓碑机制功能的。</p>
+<h2 id="二、cgroup相关组件"><a href="#二、cgroup相关组件" class="headerlink" title="二、cgroup相关组件"></a>二、cgroup相关组件</h2><h3 id="1-检查cgroup-2-文件系统是否已经加载"><a href="#1-检查cgroup-2-文件系统是否已经加载" class="headerlink" title="1. 检查cgroup 2 文件系统是否已经加载"></a>1. 检查cgroup 2 文件系统是否已经加载</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">linux:/ # cat /proc/filesystems | grep cgroup2</span><br><span class="line">nodev cgroup2</span><br></pre></td></tr></table></figure>
+<h3 id="2-挂载"><a href="#2-挂载" class="headerlink" title="2. 挂载"></a>2. 挂载</h3><p>可以用如下命令挂载cgroup文件系统到d目录<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">linux:/ # mount -t cgroup2 none d           </span><br><span class="line">linux:/ #</span><br></pre></td></tr></table></figure></p>
+<p>系统启动后，默认system已经将cgroup v2的文件系统挂载到/sys/fs/cgroup下<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">linux:/ # mount | grep cgroup</span><br><span class="line">none on /dev/blkio type cgroup (rw,nosuid,nodev,noexec,relatime,blkio)</span><br><span class="line">none on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,memory_recursiveprot)</span><br><span class="line">none on /dev/cpuctl type cgroup (rw,nosuid,nodev,noexec,relatime,cpu)</span><br><span class="line">none on /dev/cpuset type cgroup (rw,nosuid,nodev,noexec,relatime,cpuset,noprefix,release_agent=/sbin/cpuset_release_agent)</span><br><span class="line">none on /dev/memcg type cgroup (rw,nosuid,nodev,noexec,relatime,memory)</span><br></pre></td></tr></table></figure></p>
+<h3 id="3-cgroup的父子关系"><a href="#3-cgroup的父子关系" class="headerlink" title="3. cgroup的父子关系"></a>3. cgroup的父子关系</h3><p>初始状态下只有一个root cgroup根节点，所有进程都归属于这个cgroup，可以使用mkdir指令创建新的子cgroup。cpu、memory、freezer等控制资源是自顶向下（top-down）分配的，只有当一个 cgroup 从 parent 获得了某种资源，它才可以继续向下分发。这意味着所有非根”cgroup.subtree_control”文件只能包含在父级的”cgroup.subtree_control”文件中启用的控制器。只有在父级cgroup中启用了控制器时，子级cgroup才能启用控制器，如果一个或多个子级已经启用了某个控制器，则不能禁用该控制器。子孙cgroup数量有限，内核中使用cgroup.max.depth和cgroup.max.descendants来限制，关系图如下：<br><img src="1.png" alt=""></p>
+<h3 id="4-进程与cgroup的关系"><a href="#4-进程与cgroup的关系" class="headerlink" title="4. 进程与cgroup的关系"></a>4. 进程与cgroup的关系</h3><p>cgroup.procs是cgroup与task进程绑定的接口，当读取该文件时，它会逐行列出属于该cgroup的所有进程的PID。将进程的PID写入到cgroup.procs中即可将目标PID进程绑定到该cgroup。进程与cgroup是多对多的关系，一个进程可以绑定到多个cgroup中，一个cgroup可以被多个进程绑定。在kernel中进程的数据结构task_struct与cgroup有关的是如下<em>cgroups、cg_list两个成员:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> &#123;</span></span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_CGROUPS</span></span><br><span class="line">        <span class="comment">/* Control Group info protected by css_set_lock: */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">css_set</span> __<span class="title">rcu</span>            *<span class="title">cgroups</span>;</span></span><br><span class="line">        <span class="comment">/* cg_list protected by css_set_lock and tsk-&gt;alloc_lock: */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>                <span class="title">cg_list</span>;</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</em>cgroups、cg_list成员涉及到了css_set、cgroup_subsys_state、cgroup等几个关键数据结构，下面来分析这几个数据结构</p>
+<h4 id="4-1-css-set数据结构"><a href="#4-1-css-set数据结构" class="headerlink" title="4.1 css_set数据结构"></a>4.1 css_set数据结构</h4><p>task_struct中的*cgroups指针指向了一个css_set结构，而css_set是用来存储与进程相关的cgroups信息，定义如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * A css_set is a structure holding pointers to a set of</span></span><br><span class="line"><span class="comment"> * cgroup_subsys_state objects. This saves space in the task struct</span></span><br><span class="line"><span class="comment"> * object and speeds up fork()/exit(), since a single inc/dec and a</span></span><br><span class="line"><span class="comment"> * list_add()/del() can bump the reference count on the entire cgroup</span></span><br><span class="line"><span class="comment"> * set for a task.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">css_set</span> &#123;</span></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Set of subsystem states, one for each subsystem. This array is</span></span><br><span class="line"><span class="comment">         * immutable after creation apart from the init_css_set during</span></span><br><span class="line"><span class="comment">         * subsystem registration (at boot time).</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cgroup_subsys_state</span> *<span class="title">subsys</span>[<span class="title">CGROUP_SUBSYS_COUNT</span>];</span> <span class="comment">//保存子系统状态的集合，初始化后不可修改</span></span><br><span class="line">                                                        </span><br><span class="line">        ...</span><br><span class="line">        </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">tasks</span>;</span>         <span class="comment">//用来链接所有使用此css_set的task_struct集合</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * List running through all cgroup groups in the same hash</span></span><br><span class="line"><span class="comment">         * slot. Protected by css_set_lock</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">hlist_node</span> <span class="title">hlist</span>;</span>         <span class="comment">//将所有的css_set组成一个hash表</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * List of cgrp_cset_links pointing at cgroups referenced from this</span></span><br><span class="line"><span class="comment">         * css_set.  Protected by css_set_lock.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">cgrp_links</span>;</span>    <span class="comment">//将这个css_set对应的cgroup链接到一起</span></span><br><span class="line"></span><br><span class="line">     ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="4-2-cgroup-subsys-state数据结构"><a href="#4-2-cgroup-subsys-state数据结构" class="headerlink" title="4.2 cgroup_subsys_state数据结构"></a>4.2 cgroup_subsys_state数据结构</h4><p>每个子系统都有属于自己的资源控制统计信息结构，而且每个cgroup中都绑定一个这样的结构，这种资源控制统计信息结构就是通过 cgroup_subsys_state 结构体实现的，其定义如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Per-subsystem/per-cgroup state maintained by the system.  This is the</span></span><br><span class="line"><span class="comment"> * fundamental structural building block that controllers deal with.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Fields marked with "PI:" are public and immutable and may be accessed</span></span><br><span class="line"><span class="comment"> * directly without synchronization.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">cgroup_subsys_state</span> &#123;</span></span><br><span class="line">        <span class="comment">/* PI: the cgroup that this css is attached to */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cgroup</span> *<span class="title">cgroup</span>;</span>    <span class="comment">//连接到对应的cgroup</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/* PI: the cgroup subsystem that this css is attached to */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cgroup_subsys</span> *<span class="title">ss</span>;</span>   <span class="comment">//归属于哪个子系统</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * PI: Subsys-unique ID.  0 is unused and root is always 1.  The</span></span><br><span class="line"><span class="comment">         * matching css can be looked up using css_from_id().</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">int</span> id;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">int</span> flags;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* percpu_ref killing and RCU release */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">work_struct</span> <span class="title">destroy_work</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rcu_work</span> <span class="title">destroy_rwork</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * PI: the parent css.  Placed here for cache proximity to following</span></span><br><span class="line"><span class="comment">         * fields of the containing structure.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cgroup_subsys_state</span> *<span class="title">parent</span>;</span>   父css</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="4-3-cgroup数据结构"><a href="#4-3-cgroup数据结构" class="headerlink" title="4.3 cgroup数据结构"></a>4.3 cgroup数据结构</h4><p>cgroup主要用来控制进程组对各种资源的使用<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">cgroup</span> &#123;</span></span><br><span class="line">        <span class="comment">/* self css with NULL -&gt;ss, points back to this cgroup */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cgroup_subsys_state</span> <span class="title">self</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">long</span> flags;            <span class="comment">/* "unsigned long" so bitops work */</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * The depth this cgroup is at.  The root is at depth zero and each</span></span><br><span class="line"><span class="comment">         * step down the hierarchy increments the level.  This along with</span></span><br><span class="line"><span class="comment">         * ancestor_ids[] can determine whether a given cgroup is a</span></span><br><span class="line"><span class="comment">         * descendant of another without traversing the hierarchy.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">int</span> level;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Maximum allowed descent tree depth */</span></span><br><span class="line">        <span class="keyword">int</span> max_depth;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cgroup_root</span> *<span class="title">root</span>;</span>               <span class="comment">//</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * List of cgrp_cset_links pointing at css_sets with tasks in this</span></span><br><span class="line"><span class="comment">         * cgroup.  Protected by css_set_lock.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">cset_links</span>;</span> <span class="comment">//指向 css_sets 的 cgrp_cset_links 列表，其中包含此 cgroup 中的任务。</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * On the default hierarchy, a css_set for a cgroup with some</span></span><br><span class="line"><span class="comment">         * susbsys disabled will point to css's which are associated with</span></span><br><span class="line"><span class="comment">         * the closest ancestor which has the subsys enabled.  The</span></span><br><span class="line"><span class="comment">         * following lists all css_sets which point to this cgroup's css</span></span><br><span class="line"><span class="comment">         * for the given subsystem.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">e_csets</span>[<span class="title">CGROUP_SUBSYS_COUNT</span>];</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * If !threaded, self.  If threaded, it points to the nearest</span></span><br><span class="line"><span class="comment">         * domain ancestor.  Inside a threaded subtree, cgroups are exempt</span></span><br><span class="line"><span class="comment">         * from process granularity and no-internal-task constraint.</span></span><br><span class="line"><span class="comment">         * Domain level resource consumptions which aren't tied to a</span></span><br><span class="line"><span class="comment">         * specific task are charged to the dom_cgrp.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Used to store internal freezer state */</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cgroup_freezer_state</span> <span class="title">freezer</span>;</span>        <span class="comment">//用于存储内部freezer状态</span></span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>从task到其所属的cgroup之间是没有直接指针相连接的，但是task可以通过一个媒介来获取其所属的cgroup，这个媒介就是css_set和cgroup_subsys_state。通过task_struct -&gt; cgroups -&gt; subsys[ssid] -&gt;cgroup即可访问到管理对应子系统的cgroup。之所以这么设计是因为获取子系统状态的操作预计会频繁发生，而且是在性能关键代码中。然而需要一个task实际的cgroup来执行的操作（尤其是task在cgroups之间迁移的操作）则并没有那么常见。task_struct中的cg_list则是用来连接使用同一个css_set的task的链表，css_set通过tasks来遍历访问此链表。</p>
+<p>对应关系图<br><img src="2.jpeg" alt=""></p>
+<h3 id="5-freeze子系统使用"><a href="#5-freeze子系统使用" class="headerlink" title="5. freeze子系统使用"></a>5. freeze子系统使用</h3><p>做一个小实验：后台运行一个cpu_load.sh的脚本使一个cpu 负载达到100%<br><img src="3.png" alt=""></p>
+<p>PID为8855的进程即我们在跑的脚本，此时它的进程状态为R<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">linux:/ # ps -Ae | grep 8855</span><br><span class="line">root          8855  8619   12470528   4160 0                   0 R sh</span><br></pre></td></tr></table></figure></p>
+<p>在sys/fs/cgroup/目录下面新建一个an_test文件夹，将8855进程加入到an_test组中冻结<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">linux:/sys/fs/cgroup # mkdir an_test</span><br><span class="line">linux:/sys/fs/cgroup #</span><br><span class="line">linux:/sys/fs/cgroup # cd an_test/   </span><br><span class="line">linux:/sys/fs/cgroup/an_test #</span><br><span class="line">linux:/sys/fs/cgroup/an_test # echo 8855 &gt; cgroup.procs</span><br><span class="line">linux:/sys/fs/cgroup/an_test #</span><br><span class="line">linux:/sys/fs/cgroup/an_test # echo 1 &gt; cgroup.freeze</span><br><span class="line">linux:/sys/fs/cgroup/an_test #</span><br></pre></td></tr></table></figure></p>
+<p>这个时候PID为8855的进程已经被我们的cgroup进程组给冻结掉，可以查看进程状态已经从R 切换到S<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">linux:/ # ps -Ae | grep 8855</span><br><span class="line">root          8855  8619   12470528   4160 do_freezer_trap     0 S sh</span><br></pre></td></tr></table></figure></p>
+<p>观察上面的WCHAN可以看到冻结的进程是阻塞在内核的do_freezer_trap函数中 , do_freezer_trap是cgroup freezer中最核心的函数，后面小节会分析。如下是8855进程的调用栈:<br><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">linux:/ # ps -A | grep do_freezer</span><br><span class="line">u0_a224      12571  1334   17204188  92476 do_freezer_trap     0 S com.baidu.searchbox:widgetProvider</span><br><span class="line">u0_a224      24866  1334   17415500 102640 do_freezer_trap     0 S com.baidu.searchbox:bdservice_v1</span><br><span class="line">u0_a224      32727  1334   35535376 106212 do_freezer_trap     0 S com.baidu.searchbox</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">linux:/proc/8855 # cat stack</span><br><span class="line">[&lt;0&gt;] __switch_to+0x28c/0x4dc</span><br><span class="line">[&lt;0&gt;] do_freezer_trap+0xac/0x1bc</span><br><span class="line">[&lt;0&gt;] get_signal+0x4b8/0x940</span><br><span class="line">[&lt;0&gt;] do_signal+0xe0/0x2b4</span><br><span class="line">[&lt;0&gt;] do_notify_resume+0xac/0x1c4</span><br><span class="line">[&lt;0&gt;] el0_interrupt+0x8c/0x13c</span><br><span class="line">[&lt;0&gt;] __el0_irq_handler_common+0x1c/0x2c</span><br><span class="line">[&lt;0&gt;] el0t_64_irq_handler+0x14/0x24</span><br><span class="line">[&lt;0&gt;] el0t_64_irq+0x1b8/0x1bc</span><br><span class="line">linux:/proc/8855 #</span><br></pre></td></tr></table></figure></p>
+<p>后台查看8855被冻结之后，cpu_load.sh进程已经不在后台运行，CPU的整体loading也降低下来<br><img src="4.png" alt=""></p>
+<p>上面是使用cgroup freeze功能冻结进程的过程，下面小节来分析其实现原理。</p>
+<h2 id="三、cgroup-freezer子系统的实现"><a href="#三、cgroup-freezer子系统的实现" class="headerlink" title="三、cgroup freezer子系统的实现"></a>三、cgroup freezer子系统的实现</h2><h3 id="1-cgroup冻结整体流程"><a href="#1-cgroup冻结整体流程" class="headerlink" title="1. cgroup冻结整体流程"></a>1. cgroup冻结整体流程</h3><p><img src="5.jpeg" alt=""></p>
+<p>内核通过了一个比较巧妙的方式实现了冻结流程。它首先为该进程设置了一个信号pending标志TIF_SIGPENDING，但并不向该进程发送实际的信号，然后通过ipi唤醒该进程执行。由于ipi会进行进程内核的中断处理流程，当其处理完成后，会调用ret_to_user函数返回用户态，而该函数会调用信号处理函数检查是否有pending的中断需要处理，由于先前已经设置了信号的pending标志，因此会执行信号处理流程。在信号处理流程中检查进程冻结相关的全局变量是否设置，然后调用__set_current_state将task 设置为interrupt状态 将task 挂起，执行schedule() 让出cpu，进行上下文切换。</p>
+<h3 id="2-设置freezer冻结与解冻"><a href="#2-设置freezer冻结与解冻" class="headerlink" title="2. 设置freezer冻结与解冻"></a>2. 设置freezer冻结与解冻</h3><p>前面实验通过对cgroup目录cgroup.freeze值的修改，来完成了freezer对task限制的设置。将cgroup.freeze值置为1则该cgroup里的进程会全被freeze，置为0则会被unfreeze。这个小节来看看这个设置过程。当用户读写cgroup.freeze这个文件的时候，cgroup中调用的是cgroup_freeze_write函数，内核数据结构如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* cgroup core interface files for the default hierarchy */</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">cftype</span> <span class="title">cgroup_base_files</span>[] = &#123;</span></span><br><span class="line">        &#123;</span><br><span class="line">                .name = <span class="string">"cgroup.procs"</span>,</span><br><span class="line">                .flags = CFTYPE_NS_DELEGATABLE,</span><br><span class="line">                .file_offset = offsetof(struct cgroup, procs_file),</span><br><span class="line">                .<span class="built_in">release</span> = cgroup_procs_release,</span><br><span class="line">                .seq_start = cgroup_procs_start,</span><br><span class="line">                .seq_next = cgroup_procs_next,</span><br><span class="line">                .seq_show = cgroup_procs_show,</span><br><span class="line">                .<span class="built_in">write</span> = cgroup_procs_write,</span><br><span class="line">        &#125;,</span><br><span class="line">        </span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        &#123;</span><br><span class="line">                .name = <span class="string">"cgroup.freeze"</span>,</span><br><span class="line">                .flags = CFTYPE_NOT_ON_ROOT,</span><br><span class="line">                .seq_show = cgroup_freeze_show,</span><br><span class="line">                .<span class="built_in">write</span> = cgroup_freeze_write,</span><br><span class="line">        &#125;,</span><br><span class="line">        ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>文件读写处理函数cgroup_freeze_write函数调用cgroup_freeze_task将cgroup中所有task的jobctl位掩码置位为JOBCTL_TRAP_FREEZE，然后将要冻结的task设置为TIF_SIGPENDIN状态，如果是解冻这里会将task中的jobctl位掩码JOBCTL_TRAP_FREEZE清除，然后执行wake_up_process将task唤醒。调用链路如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">vfs_write</span><br><span class="line">    |-&gt;kernfs_fop_write_iter  </span><br><span class="line">      |-&gt;cgroup_file_write</span><br><span class="line">        |-&gt;cgroup_freeze_write</span><br><span class="line">          |-&gt;cgroup_kn_lock_live       &#x2F;&#x2F;获得文件所在的目录的cgroup实体</span><br><span class="line">          |-&gt;cgroup_freeze</span><br><span class="line">            |-&gt;css_for_each_descendant_pre &#x2F;&#x2F;循环体里对当前目录以及每个子孙目录所代表cgroup实体执行cgroup_do_freeze函数</span><br><span class="line">              |-&gt;cgroup_do_freeze</span><br><span class="line">                |-&gt;set_bit                 &#x2F;&#x2F;将cgroup及子孙cgroup设为freeze状态                  </span><br><span class="line">                |-&gt;cgroup_freeze_task</span><br><span class="line">                  |-&gt;signal_wake_up</span><br><span class="line">                    |-&gt;signal_wake_up_state</span><br><span class="line">                      |-&gt;wake_up_state     </span><br><span class="line">                        |-&gt;try_to_wake_up</span><br><span class="line">                      |-&gt;kick_process      &#x2F;&#x2F;使进程陷入内核态，为返回用户态处理冻结信号做准备    </span><br><span class="line">                  |-&gt;wake_up_process</span><br></pre></td></tr></table></figure></p>
+<p>这里分析几个关键的函数cgroup_freeze、cgroup_do_freeze、cgroup_freeze_task。cgroup_freeze_write会调用到cgroup_kn_lock_live获取要冻结目录的cgroup实体，然后再调到cgroup_freeze中将父cgroup的冻结状态传给各子孙cgroup, cgroup_freeze定义在kernel/cgroup/freezer.c中</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">cgroup_freeze</span><span class="params">(struct cgroup *cgrp, <span class="keyword">bool</span> freeze)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">     ...</span><br><span class="line">     </span><br><span class="line">       <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * Propagate changes downwards the cgroup tree.</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        css_for_each_descendant_pre(css, &amp;cgrp-&gt;self) &#123;</span><br><span class="line">                dsct = css-&gt;cgroup;</span><br><span class="line">     ...</span><br><span class="line">     </span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * Do change actual state: freeze or unfreeze.</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                cgroup_do_freeze(dsct, freeze);</span><br><span class="line">                applied = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">     ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>cgroup_freeze中通过css_for_each_descendant_pre循环将父cgroup的freeze状态传递到各子孙cgroup中，父cgroup被freeze或者unfreeze，其目录下的子cgroup也会被freeze或者unfreeze，执行动作是在函数cgroup_do_freeze中，cgroup_do_freeze会循环遍历cgroup中的task执行cgroup_freeze_task函数做下一步的冻结/解冻操作。如果遇到内核线程则直接跳出该次循环。注意在信号的设计机制里内核线程不会收到信号，信号是针对用户线程或者进程的一种异步机制。所以在cgroup的冻结流程里没有内核线程的处理，但在suspend的冻结中有针对内核线程的处理，有兴趣的可以去看看。这里只讲cgroup中的冻结。cgroup_do_freeze实现如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Freeze or unfreeze all tasks in the given cgroup.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">cgroup_do_freeze</span><span class="params">(struct cgroup *cgrp, <span class="keyword">bool</span> freeze)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">     ...</span><br><span class="line">        css_task_iter_start(&amp;cgrp-&gt;self, <span class="number">0</span>, &amp;it);</span><br><span class="line">        <span class="keyword">while</span> ((task = css_task_iter_next(&amp;it))) &#123;</span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * Ignore kernel threads here. Freezing cgroups containing</span></span><br><span class="line"><span class="comment">                 * kthreads isn't supported.</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                <span class="keyword">if</span> (task-&gt;flags &amp; PF_KTHREAD)   <span class="comment">//遇到内核线程直接跳出该次循环       </span></span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                cgroup_freeze_task(task, freeze);</span><br><span class="line">        &#125;</span><br><span class="line">        css_task_iter_end(&amp;it);</span><br><span class="line">        </span><br><span class="line">      ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>cgroup_freeze_task中会设置task的jobctl位掩码为JOBCTL_TRAP_FREEZE，然后调用signal_wake_up使进程陷入内核态，只有陷入内核态，后面返回用户态才能够处理冻结信号，cgroup_freeze_task实现如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Freeze or unfreeze the task by setting or clearing the JOBCTL_TRAP_FREEZE</span></span><br><span class="line"><span class="comment"> * jobctl bit.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">cgroup_freeze_task</span><span class="params">(struct task_struct *task, <span class="keyword">bool</span> freeze)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">     ...</span><br><span class="line">     </span><br><span class="line">        <span class="keyword">if</span> (freeze) &#123;</span><br><span class="line">                task-&gt;jobctl |= JOBCTL_TRAP_FREEZE;    <span class="comment">//设置冻结标志位</span></span><br><span class="line">                signal_wake_up(task, <span class="literal">false</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                task-&gt;jobctl &amp;= ~JOBCTL_TRAP_FREEZE;   <span class="comment">//清除冻结标志位</span></span><br><span class="line">                wake_up_process(task);                 <span class="comment">//将已经冻结的进程唤醒，选择合适的CPU来运行，这里就是解冻</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        unlock_task_sighand(task, &amp;flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>signal_wake_up会调用signal_wake_up_state先为进程设置TIF_SIGPENDING标志，表明该进程有延迟的信号要等待处理。然后再调用 wake_up_state()唤醒目标进程，如果目标进程在其他的CPU上运行，wake_up_state()将返回0，此时调用 kick_process()向该CPU发送一个处理器核间中断。当中断返回前时，直接调用do_notify_resume()处理该进程的信号。signal_wake_up_state函数实现如下:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Tell a process that it has a new active signal..</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * NOTE! we rely on the previous spin_lock to</span></span><br><span class="line"><span class="comment"> * lock interrupts for us! We can only be called with</span></span><br><span class="line"><span class="comment"> * "siglock" held, and the local interrupt must</span></span><br><span class="line"><span class="comment"> * have been disabled when that got acquired!</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * No need to set need_resched since signal event passing</span></span><br><span class="line"><span class="comment"> * goes through -&gt;blocked</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">signal_wake_up_state</span><span class="params">(struct task_struct *t, <span class="keyword">unsigned</span> <span class="keyword">int</span> state)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        set_tsk_thread_flag(t, TIF_SIGPENDING);</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * TASK_WAKEKILL also means wake it up in the stopped/traced/killable</span></span><br><span class="line"><span class="comment">         * case. We don't check t-&gt;state here because there is a race with it</span></span><br><span class="line"><span class="comment">         * executing another processor and just now entering stopped state.</span></span><br><span class="line"><span class="comment">         * By using wake_up_state, we ensure the process will wake up and</span></span><br><span class="line"><span class="comment">         * handle its death signal.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (!wake_up_state(t, state | TASK_INTERRUPTIBLE))</span><br><span class="line">                kick_process(t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>根据signal_wake_up_state函数的代码逻辑，如果目标进程不在runqueue上，则wake_up_state函数会将其放在runqueue上并返回true；如果进程已经处于runqueue上了，则返回false，才会执行kick_process。下面我们来看看kick_process函数的实现：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/***</span></span><br><span class="line"><span class="comment"> * kick_process - kick a running thread to enter/exit the kernel</span></span><br><span class="line"><span class="comment"> * @p: the to-be-kicked thread</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Cause a process which is running on another CPU to enter</span></span><br><span class="line"><span class="comment"> * kernel-mode, without any delay. (to get signals handled.)</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">NOTE:</span> this function doesn't have to take the runqueue lock,</span></span><br><span class="line"><span class="comment"> * because all it wants to ensure is that the remote task enters</span></span><br><span class="line"><span class="comment"> * the kernel. If the IPI races and the task has been migrated</span></span><br><span class="line"><span class="comment"> * to another CPU then no harm is done and the purpose has been</span></span><br><span class="line"><span class="comment"> * achieved as well.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">kick_process</span><span class="params">(struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">int</span> cpu;</span><br><span class="line"></span><br><span class="line">        preempt_disable();</span><br><span class="line">        cpu = task_cpu(p);</span><br><span class="line">        <span class="keyword">if</span> ((cpu != smp_processor_id()) &amp;&amp; task_curr(p))</span><br><span class="line">                smp_send_reschedule(cpu);</span><br><span class="line">        preempt_enable();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>函数的注释已经写得很清楚，kick_process的目的就是让进程陷入内核态。而smp_send_reschedule本质就是给进程所在的核发个IPI中断，从而导致正在运行的进程被打断陷入内核态。到这里cgroup这边freeze的前置工作已经做完，所有即将进入freeze的task已经被kernel置位为JOBCTL_TRAP_FREEZE和处于TIF_SIGPENDING的状态，真正执行进程冻结挂起的操作是放在signal的信号处理这边来执行。</p>
+<h3 id="3-冻结信号处理"><a href="#3-冻结信号处理" class="headerlink" title="3. 冻结信号处理"></a>3. 冻结信号处理</h3><p>信号真正得到执行的时机是进程执行完异常/中断/系统调用，从内核态返回到用户态的时刻，所以永远不要指望你所发送的信号能像硬件中断那般随时处理，进程信号处理只是异步通信机制，没有像真正的硬件中断那样能随时改变cpu的执行流。正常的用户进程是会频繁的在用户态和内核态之间切换的 (这种切换包括：系统调用，缺页异常，系统中断..)，所以信号能很快得到执行。</p>
+<p>前面小节已经讲过cgroup组中要被freeze的task已经将其_TIF_SIGPENDING置位。进程的_TIF_SIGPENDING置位，表明该进程有pending信号需要处理。因此会执行信号处理流程。<br>信号处理过程中会检查task中的freeze标志位已设置，故进程将执行关键冻结函数do_freeze_trap。调用链路如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">exit_to_user_mode</span><br><span class="line">prepare_exit_to_user_mode</span><br><span class="line">do_notify_resume</span><br><span class="line">  |-&gt;do_signal</span><br><span class="line">    |-&gt;get_signal</span><br><span class="line">      |-&gt;do_freezer_trap</span><br><span class="line">        |-&gt;__set_current_state    &#x2F;&#x2F;进程即将进入冻结休眠，将进程设置为TASK_INTERRUPTIBLE，可以被signal唤醒</span><br><span class="line">        |-&gt;clear_thread_flag</span><br><span class="line">        |-&gt;cgroup_enter_frozen</span><br><span class="line">          |-&gt;cgroup_update_frozen</span><br><span class="line">            |-&gt;cgroup_propagate_frozen</span><br><span class="line">        |-&gt;freezable_schedule</span><br><span class="line">          |-&gt;schedule</span><br><span class="line">            |-&gt;__schedule</span><br><span class="line">              |-&gt;deactivate_task</span><br><span class="line">                |-&gt;dequeue_task</span><br></pre></td></tr></table></figure>
+<p>调用栈打印：<br><img src="6.png" alt=""></p>
+<p>这里分析几个关键函数do_notify_resume、get_signal、do_freezer_trap、freezable_shedule。函数do_notify_resume定义在arch/arm64/kernel/signal.c中，该函数检查如果当前任务设置了标志位_TIF_SIGPENDING，则调用do_signal()处理信号，代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">do_notify_resume</span><span class="params">(struct pt_regs *regs, <span class="keyword">unsigned</span> <span class="keyword">long</span> thread_flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">       ...</span><br><span class="line">       </span><br><span class="line">                        <span class="keyword">if</span> (thread_flags &amp; (_TIF_SIGPENDING | _TIF_NOTIFY_SIGNAL))</span><br><span class="line">                                do_signal(regs);</span><br><span class="line">       ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>do_signal中调用到get_signal函数从线程私有的pending链表或者线程组共享的pending链表中，找到pending信号，如果需要投递到用户态去执行，返回1。如果没有需要投递到用户态去执行的pending信号，返回0。如果遇到需要kernel处理的信号，在该函数内部就会消化掉。get_signal实现如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">get_signal</span><span class="params">(struct ksignal *ksig)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span> (unlikely(uprobe_deny_signal()))</span><br><span class="line"><span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* Do this once, we can't return to user-mode if freezing() == T.</span></span><br><span class="line"><span class="comment">* do_signal_stop() and ptrace_stop() do freezable_schedule() and</span></span><br><span class="line"><span class="comment">* thus do not need another check after return.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 这里的freeze系统在suspend时会调用suspend_freeze_processes()来freeze线程</span></span><br><span class="line"><span class="comment">// 实际上也是唤醒线程，让线程在ret_to_user时刻去freeze自己，这个跟cgroup中的freeze无关</span></span><br><span class="line">try_to_freeze();</span><br><span class="line"></span><br><span class="line">relock:</span><br><span class="line">spin_lock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* Every stopped thread goes here after wakeup. Check to see if</span></span><br><span class="line"><span class="comment">* we should notify the parent, prepare_signal(SIGCONT) encodes</span></span><br><span class="line"><span class="comment">* the CLD_ si_code into SIGNAL_CLD_MASK bits.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">if</span> (unlikely(signal-&gt;flags &amp; SIGNAL_CLD_MASK)) &#123;</span><br><span class="line"><span class="keyword">int</span> why;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (signal-&gt;flags &amp; SIGNAL_CLD_CONTINUED)</span><br><span class="line">why = CLD_CONTINUED;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">why = CLD_STOPPED;</span><br><span class="line"></span><br><span class="line">signal-&gt;flags &amp;= ~SIGNAL_CLD_MASK;</span><br><span class="line"></span><br><span class="line">spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* Notify the parent that we're continuing.  This event is</span></span><br><span class="line"><span class="comment">* always per-process and doesn't make whole lot of sense</span></span><br><span class="line"><span class="comment">* for ptracers, who shouldn't consume the state via</span></span><br><span class="line"><span class="comment">* wait(2) either, but, for backward compatibility, notify</span></span><br><span class="line"><span class="comment">* the ptracer of the group leader too unless it's gonna be</span></span><br><span class="line"><span class="comment">* a duplicate.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">read_lock(&amp;tasklist_lock);</span><br><span class="line">do_notify_parent_cldstop(current, <span class="literal">false</span>, why);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (ptrace_reparented(current-&gt;group_leader))</span><br><span class="line">do_notify_parent_cldstop(current-&gt;group_leader,</span><br><span class="line"><span class="literal">true</span>, why);</span><br><span class="line">read_unlock(&amp;tasklist_lock);</span><br><span class="line"></span><br><span class="line"><span class="keyword">goto</span> relock;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (;;) &#123;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">k_sigaction</span> *<span class="title">ka</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Has this task already been marked for death? */</span></span><br><span class="line"><span class="keyword">if</span> (signal_group_exit(signal)) &#123;</span><br><span class="line">ksig-&gt;info.si_signo = signr = SIGKILL;</span><br><span class="line">sigdelset(&amp;current-&gt;pending.signal, SIGKILL);</span><br><span class="line">trace_signal_deliver(SIGKILL, SEND_SIG_NOINFO,</span><br><span class="line">&amp;sighand-&gt;action[SIGKILL - <span class="number">1</span>]);</span><br><span class="line">recalc_sigpending();</span><br><span class="line"><span class="keyword">goto</span> fatal;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (unlikely(current-&gt;jobctl &amp; JOBCTL_STOP_PENDING) &amp;&amp;</span><br><span class="line">do_signal_stop(<span class="number">0</span>))</span><br><span class="line"><span class="keyword">goto</span> relock;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (unlikely(current-&gt;jobctl &amp;</span><br><span class="line">(JOBCTL_TRAP_MASK | JOBCTL_TRAP_FREEZE))) &#123;</span><br><span class="line"><span class="keyword">if</span> (current-&gt;jobctl &amp; JOBCTL_TRAP_MASK) &#123;</span><br><span class="line">do_jobctl_trap();</span><br><span class="line">spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (current-&gt;jobctl &amp; JOBCTL_TRAP_FREEZE) &#123;</span><br><span class="line">do_freezer_trap();      <span class="comment">//cgroup freeze处理，开始真正执行进程冻结挂起操作，在ret_to_user时刻去执行</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">goto</span> relock;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* If the task is leaving the frozen state, let's update</span></span><br><span class="line"><span class="comment">* cgroup counters and reset the frozen bit.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">if</span> (unlikely(cgroup_task_frozen(current))) &#123;</span><br><span class="line">spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line">cgroup_leave_frozen(<span class="literal">false</span>);</span><br><span class="line"><span class="keyword">goto</span> relock;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* Signals generated by the execution of an instruction</span></span><br><span class="line"><span class="comment">* need to be delivered before any other pending signals</span></span><br><span class="line"><span class="comment">* so that the instruction pointer in the signal stack</span></span><br><span class="line"><span class="comment">* frame points to the faulting instruction.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">signr = dequeue_synchronous_signal(&amp;ksig-&gt;info);</span><br><span class="line"><span class="keyword">if</span> (!signr)</span><br><span class="line">signr = dequeue_signal(current, &amp;current-&gt;blocked, &amp;ksig-&gt;info);  <span class="comment">//从信号pending队列中，取出优先级最高的信号</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (!signr)</span><br><span class="line"><span class="keyword">break</span>; <span class="comment">/* will return 0 */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (unlikely(current-&gt;ptrace) &amp;&amp; (signr != SIGKILL) &amp;&amp;</span><br><span class="line">!(sighand-&gt;action[signr <span class="number">-1</span>].sa.sa_flags &amp; SA_IMMUTABLE)) &#123;</span><br><span class="line">signr = ptrace_signal(signr, &amp;ksig-&gt;info);</span><br><span class="line"><span class="keyword">if</span> (!signr)</span><br><span class="line"><span class="keyword">continue</span>;</span><br><span class="line">&#125;</span><br><span class="line">                                       <span class="comment">//下面这些逻辑跟冻结没什么关联，备注一下以便日后分析signal机制</span></span><br><span class="line">ka = &amp;sighand-&gt;action[signr<span class="number">-1</span>];   <span class="comment">//从信号处理数组sighand中，取出信号对应的处理函数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Trace actually delivered signals. */</span></span><br><span class="line">trace_signal_deliver(signr, &amp;ksig-&gt;info, ka);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (ka-&gt;sa.sa_handler == SIG_IGN) <span class="comment">/* Do nothing.  */</span>      <span class="comment">//信号处理的第一种方法：忽略</span></span><br><span class="line"><span class="keyword">continue</span>;</span><br><span class="line"><span class="keyword">if</span> (ka-&gt;sa.sa_handler != SIG_DFL) &#123;    <span class="comment">//信号处理的第二种方法，调用用户态注册的处理函数  </span></span><br><span class="line"><span class="comment">/* Run the handler.  */</span>              <span class="comment">//获取到用户态的处理函数指针，返回调用handle_signal来执行</span></span><br><span class="line">ksig-&gt;ka = *ka;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (ka-&gt;sa.sa_flags &amp; SA_ONESHOT)</span><br><span class="line">ka-&gt;sa.sa_handler = SIG_DFL;</span><br><span class="line"></span><br><span class="line"><span class="keyword">break</span>; <span class="comment">/* will return non-zero "signr" value */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* Now we are doing the default action for this signal.     //信号处理的第三种方法，调用默认的内核态处理函数</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">if</span> (sig_kernel_ignore(signr)) <span class="comment">/* Default is nothing. */</span></span><br><span class="line"><span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">* Global init gets no signals it doesn't want.</span></span><br><span class="line"><span class="comment">* Container-init gets no signals it doesn't want from same</span></span><br><span class="line"><span class="comment">* container.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* Note that if global/container-init sees a sig_kernel_only()</span></span><br><span class="line"><span class="comment">* signal here, the signal must have been generated internally</span></span><br><span class="line"><span class="comment">* or must have come from an ancestor namespace. In either</span></span><br><span class="line"><span class="comment">* case, the signal cannot be dropped.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">if</span> (unlikely(signal-&gt;flags &amp; SIGNAL_UNKILLABLE) &amp;&amp;</span><br><span class="line">!sig_kernel_only(signr))</span><br><span class="line"><span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line">  </span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在信号处理流程中检查task中的jobctl标志位是否被设置成JOBCTL_TRAP_FREEZE，条件成立则执行do_freezer_trap开始走进程挂起流程，do_freezer_trap实现如下:<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * do_freezer_trap - handle the freezer jobctl trap</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Puts the task into frozen state, if only the task is not about to quit.</span></span><br><span class="line"><span class="comment"> * In this case it drops JOBCTL_TRAP_FREEZE.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * CONTEXT:</span></span><br><span class="line"><span class="comment"> * Must be called with @current-&gt;sighand-&gt;siglock held,</span></span><br><span class="line"><span class="comment"> * which is always released before returning.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">do_freezer_trap</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function">        __<span class="title">releases</span><span class="params">(&amp;current-&gt;sighand-&gt;siglock)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * If there are other trap bits pending except JOBCTL_TRAP_FREEZE,</span></span><br><span class="line"><span class="comment">         * let's make another loop to give it a chance to be handled.</span></span><br><span class="line"><span class="comment">         * In any case, we'll return back.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((current-&gt;jobctl &amp; (JOBCTL_PENDING_MASK | JOBCTL_TRAP_FREEZE)) !=</span><br><span class="line">             JOBCTL_TRAP_FREEZE) &#123;</span><br><span class="line">                spin_unlock_irq(&amp;current-&gt;sighand-&gt;siglock);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Now we're sure that there is no pending fatal signal and no</span></span><br><span class="line"><span class="comment">         * pending traps. Clear TIF_SIGPENDING to not get out of schedule()</span></span><br><span class="line"><span class="comment">         * immediately (if there is a non-fatal signal pending), and</span></span><br><span class="line"><span class="comment">         * put the task into sleep.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"></span><br><span class="line">        pr_info(<span class="string">"current_jobctl_value: %d"</span>, current-&gt;jobctl);</span><br><span class="line">        __set_current_state(TASK_INTERRUPTIBLE);</span><br><span class="line">        clear_thread_flag(TIF_SIGPENDING);</span><br><span class="line">        spin_unlock_irq(&amp;current-&gt;sighand-&gt;siglock);</span><br><span class="line">        cgroup_enter_frozen();</span><br><span class="line">        freezable_schedule();  <span class="comment">//进程挂起，主动调度出cpu</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>freezable_schedule调到调度函数<strong>schedule里去，</strong>schedule定义在 kernel/sched/core.c 中，在 __schedule() 中接受一个参数，该参数为 bool 型，false 表示非抢占，自愿调度，而 true 则相反。freeze中的调度是主动调度让出CPU。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Like schedule(), but should not block the freezer. */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">freezable_schedule</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        freezer_do_not_count();</span><br><span class="line">        schedule();</span><br><span class="line">        freezer_count();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="四、最后"><a href="#四、最后" class="headerlink" title="四、最后"></a>四、最后</h2><p>确定何时冻结、何时解冻、何时再冻结进程其实是一个复杂的问题，需要维护一个流程图来管理不同的场景。在本文中，我们只是简单介绍了内核冻结功能的实现逻辑。在 Android Framework 层还涉及到低内存时内存整理时解冻、dump进程信息时解冻、发送和接收广播临时解冻、持有文件锁解冻等策略。</p>
+<h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p><a href="https://juejin.cn/post/7264949719275880482" target="_blank" rel="noopener">https://juejin.cn/post/7264949719275880482</a><br><a href="https://docs.kernel.org/admin-guide/cgroup-v2.html" target="_blank" rel="noopener">https://docs.kernel.org/admin-guide/cgroup-v2.html</a><br><a href="https://lwn.net/Articles/785081/" target="_blank" rel="noopener">https://lwn.net/Articles/785081/</a></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2024/12/06/Isolated-count-mismatch-analysis/" data-toggle="tooltip" data-placement="top" title="一次山重水复疑无路的卡死问题根源分析">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2024/05/27/Linux-Page-Table-Check/" data-toggle="tooltip" data-placement="top" title="内核内存稳定性新特性：Page Table Check 机制解读">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#一、背景介绍"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">一、背景介绍</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#二、cgroup相关组件"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">二、cgroup相关组件</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-检查cgroup-2-文件系统是否已经加载"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">1. 检查cgroup 2 文件系统是否已经加载</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#2-挂载"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">2. 挂载</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#3-cgroup的父子关系"><span class="toc-nav-number">2.3.</span> <span class="toc-nav-text">3. cgroup的父子关系</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#4-进程与cgroup的关系"><span class="toc-nav-number">2.4.</span> <span class="toc-nav-text">4. 进程与cgroup的关系</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#4-1-css-set数据结构"><span class="toc-nav-number">2.4.1.</span> <span class="toc-nav-text">4.1 css_set数据结构</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#4-2-cgroup-subsys-state数据结构"><span class="toc-nav-number">2.4.2.</span> <span class="toc-nav-text">4.2 cgroup_subsys_state数据结构</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#4-3-cgroup数据结构"><span class="toc-nav-number">2.4.3.</span> <span class="toc-nav-text">4.3 cgroup数据结构</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#5-freeze子系统使用"><span class="toc-nav-number">2.5.</span> <span class="toc-nav-text">5. freeze子系统使用</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#三、cgroup-freezer子系统的实现"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">三、cgroup freezer子系统的实现</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-cgroup冻结整体流程"><span class="toc-nav-number">3.1.</span> <span class="toc-nav-text">1. cgroup冻结整体流程</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#2-设置freezer冻结与解冻"><span class="toc-nav-number">3.2.</span> <span class="toc-nav-text">2. 设置freezer冻结与解冻</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#3-冻结信号处理"><span class="toc-nav-number">3.3.</span> <span class="toc-nav-text">3. 冻结信号处理</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#四、最后"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">四、最后</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#参考："><span class="toc-nav-number">5.</span> <span class="toc-nav-text">参考：</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#freeze_processes" title="freeze_processes">freeze_processes</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

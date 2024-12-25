@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Linux 死锁检测模块 Lockdep 简介 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com//linux-dead-lock-detect-lockdep.html">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="css/widget.css">
+
+
+    
+<link rel="stylesheet" href="css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="css/signature.css">
+
+
+    
+<link rel="stylesheet" href="css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#可靠性" title="可靠性">可靠性</a>
+                            
+                              <a class="tag" href="/tags/#调试" title="调试">调试</a>
+                            
+                        </div>
+                        <h1>Linux 死锁检测模块 Lockdep 简介</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Bai Haowen on
+                            2016-07-25
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="死锁概念"><a href="#死锁概念" class="headerlink" title="死锁概念"></a>死锁概念</h2><p>死锁是指多个进程（线程）因为长久等待已被其他进程占有的的资源而陷入阻塞的一种状态。当等待的资源一直得不到释放，死锁会一直持续下去。死锁一旦发生，程序本身是解决不了的，只能依靠外部力量使得程序恢复运行，例如重启，开门狗复位等。</p>
+<p>Linux 提供了检测死锁的机制，主要分为 D 状态死锁和 R 状态死锁。</p>
+<ul>
+<li><p><strong>D 状态死锁</strong></p>
+<p>进程等待 I&#x2F;O 资源无法得到满足，长时间（系统默认配置 120 秒）处于 TASK_UNINTERRUPTIBLE 睡眠状态，这种状态下进程不响应异步信号（包括 kill -9）。如：进程与外设硬件的交互（如 read），通常使用这种状态来保证进程与设备的交互过程不被打断，否则设备可能处于不可控的状态。对于这种死锁的检测 Linux 提供的是 hung task 机制，MTK 也提供 hang detect 机制来检测 Android 系统 hang 机问题。触发该问题成因比较复杂多样，可能因为 synchronized_irq、mutex lock、内存不足等。D 状态死锁只是局部多进程间互锁，一般来说只是 hang 机、冻屏，机器某些功能没法使用，但不会导致没喂狗，而被狗咬死。</p>
+</li>
+<li><p><strong>R 状态死锁</strong></p>
+<p>进程长时间（系统默认配置 60 秒）处于 TASK_RUNNING 状态垄断 CPU 而不发生切换，一般情况下是进程关抢占或关中断后长时候执行任务、死循环，此时往往会导致多 CPU 间互锁，整个系统无法正常调度，导致喂狗线程无法执行，无法喂狗而最终看门狗复位的重启。该问题多为原子操作，spinlock 等 CPU 间并发操作处理不当造成。本文所介绍的 Lockdep 死锁检测工具检测的死锁类型就是 R 状态死锁。</p>
+</li>
+</ul>
+<p><strong>常见错误</strong></p>
+<ul>
+<li>AA: 重复上锁</li>
+<li>ABBA: 曾经使用 AB 顺序上锁，又使用 BA 上锁</li>
+<li>ABBCCA: 这种类型是 ABBA 的扩展。AB 顺序 , AB 顺序，CA 顺序。这种锁人工很难发现。</li>
+<li>多次 unlock</li>
+</ul>
+<h2 id="AB-BA-死锁的形成"><a href="#AB-BA-死锁的形成" class="headerlink" title="AB-BA 死锁的形成"></a>AB-BA 死锁的形成</h2><p>假设有两处代码（比如不同线程的两个函数 thread_P 和 thread_Q）都要获取两个锁（分别为 lockA 和 lockB），如果 thread_P 持有 lockA 后再去获取 lockB，而此时恰好由 thread_Q 持有 lockB 且它也正在尝试获取 lockA，那么此时就是处于死锁的状态，这是一个最简单的死锁例子，也即所谓的 AB-BA 死锁。</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">thread_P</span>()</span><br><span class="line">&#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="built_in">spin_lock</span>(&amp;lockA);</span><br><span class="line">    <span class="built_in">spin_lock</span>(&amp;lockB);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">spin_unlock</span>(&amp;lockA);</span><br><span class="line">    <span class="built_in">spin_unlock</span>(&amp;lockB);</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">thread_Q</span>()</span><br><span class="line">&#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="built_in">spin_lock</span>(&amp;lockB);</span><br><span class="line">    <span class="built_in">spin_lock</span>(&amp;lockA);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">spin_unlock</span>(&amp;lockB);</span><br><span class="line">    <span class="built_in">spin_unlock</span>(&amp;lockA);</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面接合时间轴来观察死锁发生的时机：</p>
+<p><img src="lockdep-ABBA-1.png" alt="ABBA 死锁示意图 1"></p>
+<p>X 轴表示进程 P 执行的时间轴，Y 轴表示进程 Q 执行的时间轴。</p>
+<p>这幅图依据两个进程并发时间点不同而给出了 6 种执行线路：</p>
+<ol>
+<li>Q 获得 B，然后获得 A；然后释放 B，然后释放 A；此时 P 执行时，它可以获得全部资源</li>
+<li>Q 获得 B，然后获得 A；此时 P 执行并阻塞在对 A 的请求上；Q 释放 B 和 A，当 P 恢复执行时，它可以获得全部资源</li>
+<li>Q 获得 B，然后 P 执行获得 A；此时 Q 阻塞在对 A 的请求上；P 阻塞在对 B 的请求上，大家都在互相等待各自的资源而死锁</li>
+<li>P 获得 A，然后 Q 执行获得 B；此时 P 阻塞在对 B 的请求上；Q 阻塞在对 A 的请求上，大家都在互相等待各自的资源而死锁</li>
+<li>P 获得 A，然后获得 B；此时 Q 执行并阻塞在对 B 的请求上；P 释放 A 和 B，当 Q 恢复执行时，它可以获得全部资源</li>
+<li>P 获得 A，然后获得 B；然后释放 A，然后释放 B；此时 Q 执行时，它可以获得全部资源</li>
+</ol>
+<p>下面这种情况是任何时间点都不会出现死锁的</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Process <span class="selector-tag">P</span>                  Process <span class="selector-tag">Q</span></span><br><span class="line">  •••                        •••</span><br><span class="line"> Get <span class="selector-tag">A</span>                      Get <span class="selector-tag">B</span></span><br><span class="line">  •••                        •••</span><br><span class="line">Release <span class="selector-tag">A</span>                   Get <span class="selector-tag">A</span></span><br><span class="line">  •••                        •••</span><br><span class="line"> Get <span class="selector-tag">B</span>                     Release <span class="selector-tag">B</span></span><br><span class="line">  •••                        •••</span><br><span class="line">Release <span class="selector-tag">B</span>                  Release <span class="selector-tag">A</span></span><br><span class="line">  •••                        •••</span><br></pre></td></tr></table></figure>
+
+<p><img src="lockdep-ABBA-2.png" alt="ABBA 死锁示意图 2"></p>
+<h2 id="lockdep-死锁检测模块"><a href="#lockdep-死锁检测模块" class="headerlink" title="lockdep 死锁检测模块"></a>lockdep 死锁检测模块</h2><p>介绍了最简单的 ABBA 死锁的形成，回到正题，回到 kernel, 里面有千千万万锁，错综复杂，也不可能要求所有开发人员熟悉 spin_lock, spin_lock_irq, spin_lock_irqsave, spin_lock_nested 的区别。所以，在锁死发生前，还是要做好预防胜于治疗，防患于未然的工作，尽量提前发现并且提前在开发阶段发现和解决这其中潜在的死锁风险，而不是等到最后真正出现死锁时给用户带来糟糕的体验。应运而生的就是 lockdep 死锁检测模块，在 2006 年已经引入内核（<a href="https://lwn.net/Articles/185666/%EF%BC%89%E3%80%82">https://lwn.net/Articles/185666/）。</a></p>
+<h3 id="1-相关内核配置选项"><a href="#1-相关内核配置选项" class="headerlink" title="1. 相关内核配置选项"></a>1. 相关内核配置选项</h3><ul>
+<li><p><strong>CONFIG_PROVE_LOCKING</strong></p>
+<p>This feature enables the kernel to report locking related deadlocks before they actually occur. For more details, see Documentation&#x2F;locking&#x2F;lockdep-design.txt.</p>
+</li>
+<li><p><strong>CONFIG_DEBUG_LOCK_ALLOC</strong></p>
+<p>Detect incorrect freeing of live locks.</p>
+</li>
+<li><p><strong>CONFIG_DEBUG_LOCKDEP</strong></p>
+<p>The lock dependency engine will do additional runtime checks to debug itself, at the price of more runtime overhead.</p>
+</li>
+<li><p><strong>CONFIG_LOCK_STAT</strong></p>
+<p>Lock usage statistics. For more details, see Documentation&#x2F;locking&#x2F;lockstat.txt</p>
+</li>
+<li><p><strong>CONFIG_DEBUG_LOCKING_API_SELFTESTS</strong></p>
+<p>The kernel to run a short self-test during bootup in <code>start_kernel()</code>. The self-test checks whether common types of locking bugs are detected by debugging mechanisms or not. For more details, see lib&#x2F;locking-selftest.c</p>
+</li>
+</ul>
+<h3 id="2-基本实现"><a href="#2-基本实现" class="headerlink" title="2. 基本实现"></a>2. 基本实现</h3><p>lockdep 操作的基本单元并非单个的锁实例，而是锁类（lock-class），事实上，也没必要跟踪千千万万的锁，完全可以用同一方式对待同一类锁的行为。比如，struct inode 结构体中的自旋锁 i_lock 字段就代表了这一类锁，而具体每个 inode 节点的锁只是该类锁中的一个实例。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># <span class="keyword">define</span> raw_spin_lock_init(lock)				\</span></span><br><span class="line"><span class="keyword">do</span> &#123;								\</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">struct</span> lock_class_key __key;			\</span><br><span class="line">								\</span><br><span class="line">	__raw_spin_lock_init((<span class="keyword">lock</span>), <span class="meta">#lock, &amp;__key);		\</span></span><br><span class="line">&#125; <span class="keyword">while</span> (<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>对于每个锁的初始化，这段代码创建了一个静态变量 (__key)，并使用它的地址作为识别锁的类型。因此，系统中的每个锁 ( 包括 rwlocks 和 mutexes ) 都被分配一个特定的 key 值，并且都是静态声明的，同一类的锁会对应同一个 key 值。这里用得是哈希表来存储。</p>
+<p>Lockdep 为每个锁类维护了两个链表：</p>
+<ul>
+<li>before 链：锁类 L 前曾经获取的所有锁类，也就是锁类 L 前可能获取的锁类集合。</li>
+<li>after 链：锁类 L 后曾经获取的所有锁类。</li>
+</ul>
+<p>Lockdep 逻辑：</p>
+<p>当获取 L 时，检查 after 链中的锁类是否已经被获取，如果存在则报重复上锁。联合 L 的 after 链，和已经获取的锁的 before 链。递归检查是否某个已经获取的锁中包含 L after 锁。为了加速，lockdep 检查锁类顺序关系，计算出 64bit 的 hash key。当新的 lock 顺序出现则计算 hash key 并放入表中。当获取锁时，则直接扫描表，用于加速。</p>
+<p>也由于上述的设计逻辑，不可避免会存在误报。例如，同一类（对应相同 key 值）的多个锁同时持有时，Lockdep 会误报“重复上锁”的警报。此时，你就需要使用 spin_lock_nested 这类 API 设置不同的子类来区分同类锁，消除警报。</p>
+<p>随便找一个代码例子：</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">dentry_lock_for_move() @fs/dcache.c</span><br><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">		<span class="function"><span class="title">if</span> (d_ancestor(dentry-&gt;</span><span class="function"><span class="title">d_parent</span>, target-&gt;</span>d_parent)) &#123;</span><br><span class="line">			<span class="function"><span class="title">spin_lock</span>(&amp;dentry-&gt;</span><span class="function"><span class="title">d_parent</span>-&gt;</span>d_lock);</span><br><span class="line">			<span class="function"><span class="title">spin_lock_nested</span>(&amp;target-&gt;</span><span class="function"><span class="title">d_parent</span>-&gt;</span>d_lock,</span><br><span class="line">						DENTRY_D_LOCK_NESTED);  <span class="comment">//set sub-class</span></span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="function"><span class="title">spin_lock</span>(&amp;target-&gt;</span><span class="function"><span class="title">d_parent</span>-&gt;</span>d_lock);</span><br><span class="line">			<span class="function"><span class="title">spin_lock_nested</span>(&amp;dentry-&gt;</span><span class="function"><span class="title">d_parent</span>-&gt;</span>d_lock,</span><br><span class="line">						DENTRY_D_LOCK_NESTED); <span class="comment">//set sub-class</span></span><br><span class="line">		&#125;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>1）初始化</p>
+<figure class="highlight isbl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">spin_lock_init</span>()</span></span><br><span class="line">        ↓</span><br><span class="line"><span class="function"><span class="title">raw_spin_lock_init</span>()</span></span><br><span class="line">        ↓</span><br><span class="line"><span class="function"><span class="title">__raw_spin_lock_init</span>()</span></span><br><span class="line">        → <span class="function"><span class="title">debug_check_no_locks_freed</span>()</span></span><br><span class="line">        → <span class="function"><span class="title">lockdep_init_map</span>()</span></span><br><span class="line">        → 初始化 <span class="variable">spin_lock</span> 的值</span><br></pre></td></tr></table></figure>
+
+<p>2）获取锁</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">spin_lock</span>()</span><br><span class="line">    ↓</span><br><span class="line"><span class="built_in">raw_spin_lock</span>()</span><br><span class="line">    ↓</span><br><span class="line"><span class="built_in">_raw_spin_lock</span>() <span class="keyword">@kernel</span>/spinlock.c</span><br><span class="line">    ↓</span><br><span class="line">__raw_spin_lock() <span class="keyword">@include</span>/linux/spinlock_api_smp.h</span><br><span class="line">    → preempt_disable();</span><br><span class="line">    → <span class="built_in">spin_acquire</span>(&amp;lock-&gt;dep_map, <span class="number">0</span>, <span class="number">0</span>, _RET_IP_);</span><br><span class="line">            ↓</span><br><span class="line">        <span class="built_in">lock_acquire</span>() → <span class="built_in">__lock_acquire</span>() → <span class="built_in">__lock_acquire</span>()</span><br><span class="line">        <span class="built_in">__lock_acquire</span>() 是 lockdep 死锁检测的核心，所有原理中描述的死锁错误都是在这里检测的。如果出错，最终会调用 <span class="built_in">print_xxx_bug</span>() 函数。</span><br><span class="line">    → <span class="built_in">LOCK_CONTENDED</span>(lock, do_raw_spin_trylock, do_raw_spin_lock);</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-检查规则"><a href="#3-检查规则" class="headerlink" title="3. 检查规则"></a>3. 检查规则</h3><p><strong>1）概述</strong></p>
+<p>Lockdep 操作的基本单元并非单个的锁实例，而是锁类（lock-class）。比如，struct inode 结构体中的自旋锁 i_lock 字段就代表了这一类锁，而具体每个 inode 节点的锁只是该类锁中的一个实例。</p>
+<p>lockdep 跟踪每个锁类的自身状态，也跟踪各个锁类之间的依赖关系，通过一系列的验证规则，以确保锁类状态和锁类之间的依赖总是正确的。另外，锁类一旦在初次使用时被注册，那么后续就会一直存在，所有它的具体实例都会关联到它。</p>
+<p><strong>2）状态</strong></p>
+<p>锁类有 4n + 1 种不同的使用历史状态：</p>
+<p>其中的 4 是指：</p>
+<ul>
+<li>‘ever held in STATE context’ –&gt; 该锁曾在 STATE 上下文被持有过</li>
+<li>‘ever held as readlock in STATE context’ –&gt; 该锁曾在 STATE 上下文被以读锁形式持有过</li>
+<li>‘ever held with STATE enabled’ –&gt; 该锁曾在启用 STATE 的情况下被持有过</li>
+<li>‘ever held as readlock with STATE enabled’ –&gt; 该锁曾在启用 STATE 的情况下被以读锁形式持有过</li>
+</ul>
+<p>其中的 n 也就是 STATE 状态的个数：</p>
+<ul>
+<li>hardirq –&gt; 硬中断</li>
+<li>softirq –&gt; 软中断</li>
+<li>reclaim_fs –&gt; fs 回收</li>
+</ul>
+<p>其中的 1 是：</p>
+<ul>
+<li>ever used  [ &#x3D;&#x3D; !unused ] –&gt; 不属于上面提到的任何特殊情况，仅仅只是表示该锁曾经被使用过</li>
+</ul>
+<p>当触发 lockdep 检测锁的安全规则时，会在 log 中提示对应的状态位信息</p>
+<p>比如：</p>
+<figure class="highlight fsharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">modprobe<span class="operator">/</span><span class="number">2287</span> is trying <span class="keyword">to</span> acquire <span class="built_in">lock</span><span class="operator">:</span></span><br><span class="line"> (<span class="operator">&amp;</span>sio_locks[i].<span class="built_in">lock</span>)&#123;<span class="operator">-.-...</span>&#125;, at<span class="operator">:</span> <span class="meta">[&lt;c02867fd&gt;]</span> mutex_lock<span class="operator">+</span><span class="number">0x21</span><span class="operator">/</span><span class="number">0x24</span></span><br><span class="line"></span><br><span class="line">but task is already holding <span class="built_in">lock</span><span class="operator">:</span></span><br><span class="line"> (<span class="operator">&amp;</span>sio_locks[i].<span class="built_in">lock</span>)&#123;<span class="operator">-.-...</span>&#125;, at<span class="operator">:</span> <span class="meta">[&lt;c02867fd&gt;]</span> mutex_lock<span class="operator">+</span><span class="number">0x21</span><span class="operator">/</span><span class="number">0x24</span></span><br></pre></td></tr></table></figure>
+
+<p>注意大括号内的符号，一共有 6 个字符，分别对应 STATE 和 STATE-read 这六种（因为目前每个 STATE 有 3 种不同含义）情况，各个字符代表的含义分别如下：</p>
+<ul>
+<li>‘.’  表示在在进程上下文，在 irq 关闭时获得一把锁</li>
+<li>‘-‘  表示在中断上下文，获得一把锁</li>
+<li>‘+’  表示在 irq 打开时获得一把锁</li>
+<li>‘?’  表示在中断上下文，在 irq 打开时获得一把锁</li>
+</ul>
+<p><strong>3）单锁状态规则（Single-lock state rules）</strong></p>
+<ul>
+<li>一个软中断不安全 (softirq-unsafe) 的锁类也是硬中断不安全 (hardirq-unsafe) 的锁类。</li>
+<li>对于任何一个锁类，它不可能同时是 hardirq-safe  和 hardirq-unsafe，也不可能同时是 softirq-safe 和 softirq-unsafe，即这两对对应状态是互斥的。</li>
+</ul>
+<p>上面这两条就是 lockdep 判断单锁是否会发生死锁的检测规则。</p>
+<p>关于四个名称的概念如下 :</p>
+<ul>
+<li>ever held in hard interrupt context (hardirq-safe);</li>
+<li>ever held in soft interrupt context (softirg-safe);</li>
+<li>ever held in hard interrupt with interrupts enabled (hardirq-unsafe);</li>
+<li>ever held with soft interrupts and hard interrupts enabled (softirq-unsafe);</li>
+</ul>
+<p><strong>4）多锁依赖规则（Multi-lock dependency rules）</strong></p>
+<ul>
+<li>同一个锁类不能被获取两次，否则会导致递归死锁（AA）。</li>
+</ul>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CPU0:    <span class="comment">[ L1 ]</span> -&gt; <span class="comment">[ L1 ]</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>不能以不同的顺序获取两个锁类，即：</li>
+</ul>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">CPU0                    CPU1</span><br><span class="line">----                    ----</span><br><span class="line"><span class="string">[ L1 ]</span></span><br><span class="line"><span class="string">                        [ L2 ]</span></span><br><span class="line"><span class="string">                        [ L1 ]</span></span><br><span class="line"><span class="string">[ L2 ]</span></span><br><span class="line">*** DEADLOCK ***</span><br></pre></td></tr></table></figure>
+
+<p>是不行的。因为这会非常容易的导致 AB-BA 死锁。当然，下面这样的情况也不行，即在中间插入了其它正常顺序的锁也能被 lockdep 检测出来：</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CPU0                    CPU1</span><br><span class="line">----                    ----</span><br><span class="line"><span class="string">[ L1 ]</span></span><br><span class="line"><span class="string">[ L3 ]</span></span><br><span class="line"><span class="string">[ L4 ]</span></span><br><span class="line"><span class="string">                        [ L2 ]</span></span><br><span class="line"><span class="string">                        [ L3 ]</span></span><br><span class="line"><span class="string">                        [ L4 ]</span></span><br><span class="line"><span class="string">                        [ L1 ]</span></span><br><span class="line"><span class="string">[ L2 ]</span></span><br><span class="line">*** DEADLOCK ***</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>同一个锁实例在任何两个锁类之间，嵌套获取锁的状态前后需要保持一致，即：</li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[hardirq-<span class="keyword">safe</span>]   -&gt;  [hardirq-<span class="keyword">unsafe</span>]</span><br><span class="line"></span><br><span class="line">[softirq-<span class="keyword">safe</span>]   -&gt;  [softirq-<span class="keyword">unsafe</span>]</span><br></pre></td></tr></table></figure>
+
+<p>这意味着，如果同一个锁实例，在某些地方是 hardirq-safe（即采用 spin_lock_irqsave(…)），而在某些地方又是 hardirq-unsafe（即采用 spin_lock(…)），那么就存在死锁的风险。这应该容易理解，比如在进程上下文中持有锁 A，并且锁 A 是 hardirq-unsafe，如果此时触发硬中断，而硬中断处理函数又要去获取锁 A，那么就导致了死锁。后面会有例子分析。</p>
+<p>在锁类状态发生变化时，进行如下几个规则检测，判断是否存在潜在死锁。比较简单，就是判断 hardirq-safe 和 hardirq-unsafe 以 及 softirq-safe 和 softirq-unsafe 是否发生了碰撞，直接引用英文，如下：</p>
+<ul>
+<li>if a new hardirq-safe lock is discovered, we check whether it took any hardirq-unsafe lock in the past.</li>
+<li>if a new softirq-safe lock is discovered, we check whether it took any softirq-unsafe lock in the past.</li>
+<li>if a new hardirq-unsafe lock is discovered, we check whether any hardirq-safe lock took it in the past.</li>
+<li>if a new softirq-unsafe lock is discovered, we check whether any softirq-safe lock took it in the past.</li>
+</ul>
+<p>所以要注意嵌套获取锁前后的状态需要保持一致，避免死锁风险。</p>
+<p>**5) 出错处理 **</p>
+<p>当检测到死锁风险时，lockdep 会打印下面几种类型的风险提示，更完整的 LOG 会在下面例子中展示。</p>
+<ul>
+<li>[ INFO: possible circular locking dependency detected ] &#x2F;&#x2F; 圆形锁，获取锁的顺序异常（ABBA）</li>
+<li>[ INFO: %s-safe -&gt; %s-unsafe lock order detected ] &#x2F;&#x2F; 获取从 safe 的锁类到 unsafe 的锁类的操作</li>
+<li>[ INFO: possible recursive locking detected ] &#x2F;&#x2F; 重复去获取同类锁（AA）</li>
+<li>[ INFO: inconsistent lock state ]  &#x2F;&#x2F; 锁的状态前后不一致</li>
+<li>[ INFO: possible irq lock inversion dependency detected ]  &#x2F;&#x2F; 嵌套获取锁的状态前后需要保持一致，即 [hardirq-safe]   -&gt;  [hardirq-unsafe]，[softirq-safe]   -&gt;  [softirq-unsafe] 会警报死锁风险</li>
+<li>[ INFO: suspicious RCU usage. ] &#x2F;&#x2F; 可疑的 RCU 用法</li>
+</ul>
+<h3 id="4-使用实例"><a href="#4-使用实例" class="headerlink" title="4. 使用实例"></a>4. 使用实例</h3><p>Lockdep 每次都只检测并 report 第一次出错的地方。</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@lib/debug_locks.c</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line"> * We want <span class="keyword">to</span> turn all lock-debugging facilities <span class="keyword">on</span>/off <span class="keyword">at</span> once,</span><br><span class="line"> * via a <span class="keyword">global</span> flag. The reason <span class="keyword">is</span> <span class="keyword">that</span> once a single bug has been</span><br><span class="line"> * detected <span class="keyword">and</span> reported, there might be cascade <span class="keyword">of</span> followup bugs</span><br><span class="line"> * <span class="keyword">that</span> would just muddy <span class="keyword">the</span> <span class="built_in">log</span>. So we report <span class="keyword">the</span> <span class="keyword">first</span> one <span class="keyword">and</span></span><br><span class="line"> * shut up <span class="keyword">after</span> <span class="keyword">that</span>.</span><br><span class="line"> */</span><br><span class="line">int debug_locks = <span class="number">1</span>;</span><br><span class="line">EXPORT_SYMBOL_GPL(debug_locks);</span><br></pre></td></tr></table></figure>
+
+<p>只报一次死锁风险打印提示就不报了，因为第一个报出来的可能会引发其他的风险提示，就像编译错误一样。并且，这只是一个 warning info, 在实时运行的系统中，LOG 可能一下子就被冲掉了。本着魅族手机对用户体验极致的追求，不允许任何一个死锁风险在开发阶段侥幸存在，我们会把 lockdep warning 转化为 <code>BUG_ON()</code>，使机器在遇到死锁风险就主动重启来引起开发人员的关注，从而不放过每一个可能存在的漏洞。</p>
+<p>下面是实际开发中遇到 lockdep 报的死锁风险 LOG：</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">(0)<span class="comment">[1132:system_server]</span>======================================================</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span><span class="comment">[ INFO: HARDIRQ-safe -&gt; HARDIRQ-unsafe lock order detected ]</span></span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>3.18.22-eng-01315-gea95810-cIb68b198-dirty #2 Tainted: G        W</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>------------------------------------------------------</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>system_server/1132 <span class="comment">[HC0<span class="comment">[0]</span>:SC0<span class="comment">[0]</span>:HE0:SE1]</span> <span class="keyword">is</span> trying to acquire:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>lockdep: <span class="comment">[ffffffc0013a6b18]</span> (resume_reason_lock)&#123;+.+...&#125;</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>lockdep: , at:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span><span class="comment">[&lt;ffffffc00011a2e0&gt;]</span> log_wakeup_reason+0x40/0x17c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span></span><br><span class="line">and this task <span class="keyword">is</span> already holding:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>lockdep: <span class="comment">[ffffffc001401440]</span> (__spm_lock)&#123;-.....&#125;</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>lockdep: , at:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span><span class="comment">[&lt;ffffffc000492164&gt;]</span> spm_go_to_sleep+0x200/0x948</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>which would create a new lock dependency:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span> (__spm_lock)&#123;-.....&#125; -&gt; (resume_reason_lock)&#123;+.+...&#125;</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span></span><br><span class="line">but this new dependency connects a HARDIRQ-irq-safe lock:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span> (__spm_lock)&#123;-.....&#125;</span><br><span class="line">... which became HARDIRQ-irq-safe at:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00010b834&gt;]</span> mark_lock+0x180/0x770</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00010e868&gt;]</span> __lock_acquire+0xaf8/0x243c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000110b08&gt;]</span> lock_acquire+0xe8/0x1a8</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000c73eb4&gt;]</span> _raw_spin_lock_irqsave+0x54/0x84</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00048f880&gt;]</span> spm_irq0_handler+0x2c/0x12c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00011f948&gt;]</span> handle_irq_event_percpu+0xc0/0x338</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00011fc08&gt;]</span> handle_irq_event+0x48/0x78</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000122d68&gt;]</span> handle_fasteoi_irq+0xe0/0x1a4</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00011eee0&gt;]</span> generic_handle_irq+0x30/0x4c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00011effc&gt;]</span> __handle_domain_irq+0x100/0x2a4</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000081568&gt;]</span> gic_handle_irq+0x54/0xe0</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000085290&gt;]</span> el0_irq_naked+0x14/0x24</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span></span><br><span class="line">to a HARDIRQ-irq-unsafe lock:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span> (resume_reason_lock)&#123;+.+...&#125;</span><br><span class="line">... which became HARDIRQ-irq-unsafe at:</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>...  <span class="comment">[&lt;ffffffc00010b834&gt;]</span> mark_lock+0x180/0x770</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00010e65c&gt;]</span> __lock_acquire+0x8ec/0x243c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000110b08&gt;]</span> lock_acquire+0xe8/0x1a8</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000c73e48&gt;]</span> _raw_spin_lock+0x38/0x50</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc00011a258&gt;]</span> wakeup_reason_pm_event+0x54/0x9c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0000c4d88&gt;]</span> notifier_call_chain+0x84/0x2d4</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0000c5400&gt;]</span> __blocking_notifier_call_chain+0x40/0x74</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0000c5444&gt;]</span> blocking_notifier_call_chain+0x10/0x1c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000115ed4&gt;]</span> pm_notifier_call_chain+0x1c/0x48</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000117b68&gt;]</span> pm_suspend+0x36c/0x70c</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000115e40&gt;]</span> state_store+0xb0/0xe0</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0003b1f28&gt;]</span> kobj_attr_store+0x10/0x24</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc000266f88&gt;]</span> sysfs_kf_write+0x50/0x64</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0002662c8&gt;]</span> kernfs_fop_write+0x110/0x180</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0001f6570&gt;]</span> vfs_write+0x98/0x1b8</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0001f678c&gt;]</span> SyS_write+0x4c/0xb0</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  <span class="comment">[&lt;ffffffc0000854ac&gt;]</span> el0_svc_naked+0x20/0x28</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span></span><br><span class="line">other info that might help us debug this:</span><br><span class="line"></span><br><span class="line">(0)<span class="comment">[1132:system_server]</span> Possible interrupt unsafe locking scenario:</span><br><span class="line"></span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>       CPU0                    CPU1</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>       ----                    ----</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  lock(resume_reason_lock);</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>                         local_irq_disable();</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>                         lock(__spm_lock);</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>                         lock(resume_reason_lock);</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  &lt;Interrupt&gt;</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  lock(__spm_lock);</span><br><span class="line">(0)<span class="comment">[1132:system_server]</span>  *** DEADLOCK ***</span><br></pre></td></tr></table></figure>
+
+<p>从上面的 LOG 信息可以知道：system_server 已经合了一个 HARDIRQ-safe 的锁 __spm_lock， 此时再去拿一个 HARDIRQ-unsafe 的锁 resume_reason_lock，违反了嵌套获取锁前后的状态需要保持一致的规则。</p>
+<p>记得上面说过一条规则吗？</p>
+<blockquote>
+<p>if a new hardirq-unsafe lock is discovered, we check whether any hardirq-safe lock took it in the past.（当要获取一个 hardirq-unsafe lock 时，lockdep 就会检查该进程是否在之前已经获取 hardirq-safe lock）</p>
+</blockquote>
+<p>HARDIRQ-safe 是不允许 irq 的锁，如：spin_lock_irqsave(&amp;lock, flags);</p>
+<p>HARDIRQ-unsafe 是允许 irq 的锁，如：spin_lock(&amp;lock);</p>
+<p>在之前已经使用 spin_lock_irqsave 的方式拿了 __spm_lock， 再以 spin_lock 的方式拿 resume_reason_lock。再来看看可能发生死锁的情景：</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">0</span>)<span class="selector-attr">[1132:system_server]</span> Possible interrupt unsafe locking scenario:</span><br><span class="line"></span><br><span class="line">(<span class="number">0</span>)[<span class="number">1132</span>:system_server]       CPU0                    CPU1</span><br><span class="line">(<span class="number">0</span>)[<span class="number">1132</span>:system_server]       ----                    ----</span><br><span class="line">(<span class="number">0</span>)[<span class="number">1132</span>:system_server]  <span class="built_in">lock</span>(resume_reason_lock);</span><br><span class="line">(<span class="number">0</span>)<span class="selector-attr">[1132:system_server]</span>                         <span class="built_in">local_irq_disable</span>();</span><br><span class="line">(<span class="number">0</span>)<span class="selector-attr">[1132:system_server]</span>                         <span class="built_in">lock</span>(__spm_lock);</span><br><span class="line">(<span class="number">0</span>)<span class="selector-attr">[1132:system_server]</span>                         <span class="built_in">lock</span>(resume_reason_lock);</span><br><span class="line">(<span class="number">0</span>)<span class="selector-attr">[1132:system_server]</span>  &lt;Interrupt&gt;</span><br><span class="line">(<span class="number">0</span>)<span class="selector-attr">[1132:system_server]</span>  <span class="built_in">lock</span>(__spm_lock);</span><br><span class="line">(<span class="number">0</span>)<span class="selector-attr">[1132:system_server]</span>  *** DEADLOCK ***</span><br></pre></td></tr></table></figure>
+<p>Lockdep 列出一个可能发生死锁的设想：</p>
+<ul>
+<li>CPU0 先获取了一个 HARDIRQ-unsafe 的锁 lock(resume_reason_lock)，CPU0 本地 irq 是开启的。</li>
+<li>接着 CPU1 再获取了 HARDIRQ-safe 的锁 lock(__spm_lock)，此时 CPU1 本地 irq 是关闭的。</li>
+<li>接着 CPU1 又去获取 lock(resume_reason_lock)，但此时该锁正在被 CPU0 锁持有，CPU1 唯有等待 lock(resume_reason_lock) 释放而无法继续执行。</li>
+<li>假如此时 CPU0 来了一个中断，并且在中断里去获取 lock(__spm_lock)，CPU0 也会因为该锁被 CPU1 持有而未被释放而一直等待无法继续执行。</li>
+<li>CPU0， CPU1 都因为互相等待对方释放锁而不能继续执行，导致 AB-BA 死锁。</li>
+</ul>
+<p>分析到这里，自然知道死锁风险点和正确使用锁的规则了，按照这个规则去修复代码，避免死锁就可以了。解决办法：</p>
+<ol>
+<li>分析 resume_reason_lock 是否在其他地方中断上下文有使用这把锁。</li>
+<li>如果没有，直接把获取这把锁的地方 wakeup_reason_pm_event+0x54&#x2F;0x9c 从 spin_lock 改成 spin_lock_irqsave 就可以了。保持嵌套获取锁前后的状态一致。</li>
+</ol>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ol>
+<li><a href="https://github.com/onestraw/ebook/blob/master/03_operating_system/Operating%20Systems%20-%20Internals%20and%20Design%20Principles%207th.pdf">《Operating systems : internals and design principles &#x2F; William Stallings. — 7th ed.》</a></li>
+<li><a href="https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/locking/lockdep-design.txt"> 内核文档 lockdep-design.txt</a></li>
+<li><a href="http://www.lenky.info/archives/2013/04/2253"> 死锁检测模块 lockdep 简介 </a></li>
+<li><a href="http://www.freepatentsonline.com/8145903.html">Method and system for a kernel lock validator</a></li>
+<li><a href="https://lwn.net/Articles/185666/">The kernel lock validator</a></li>
+</ol>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="//bfs-porting.html" data-toggle="tooltip" data-placement="top" title="BFS 调度器移植体验 ">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="//linux-tick-and-tickless.html" data-toggle="tooltip" data-placement="top" title="Linux Tick 和 Tickless">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#可靠性" title="可靠性">可靠性</a>
+                        
+                          <a class="tag" href="/tags/#调试" title="调试">调试</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&#34;🌱&#34;,&#34;just do it&#34;,&#34;🍀&#34;]' color='[&#34;rgb(121,93,179)&#34; ,&#34;rgb(76,180,231)&#34; ,&#34;rgb(184,90,154)&#34;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+</body>
+
+</html>

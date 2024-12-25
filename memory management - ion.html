@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          内存管理 —— ION - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com//memory management - ion.html">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="css/widget.css">
+
+
+    
+<link rel="stylesheet" href="css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="css/signature.css">
+
+
+    
+<link rel="stylesheet" href="css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                            
+                              <a class="tag" href="/tags/#内存管理" title="内存管理">内存管理</a>
+                            
+                              <a class="tag" href="/tags/#多媒体" title="多媒体">多媒体</a>
+                            
+                              <a class="tag" href="/tags/#ION" title="ION">ION</a>
+                            
+                        </div>
+                        <h1>内存管理 —— ION</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Qu Dao on
+                            2017-11-18
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>ION 是当前 Android 流行的内存分配管理机制，在多媒体部分中使用的最多，例如从 Camera 到 Display，从 Mediaserver 到 Surfaceflinger，都会利用 ION 进行内存分配管理。<br>ION 的前任是 PMEM，关于 PMEM 我在 M030&#x2F;M04X 项目中有接触过，后来由于 PMEM 的一些局限性，Google 推出了 ION 来取代 PMEM，当前 ION 已经融合到 Linux 主线，被广泛使用。<br>对于魅族，从 M65 项目开始，相机的内存分配管理就已经利用 ION 进行了，本文会结合 M65、M76 和 M86 项目开发介绍下我对 ION 内存管理机制的理解和感悟。</p>
+<h2 id="ION-基本概念"><a href="#ION-基本概念" class="headerlink" title="ION 基本概念"></a>ION 基本概念</h2><p>ION，最显著的特点是它可以被用户空间的进程之间或者内核空间的模块之间进行内存共享，而且这种共享可以是零拷贝的。在实际使用中，ION 和 VIDEOBUF2、DMA-BUF、V4L2 等结合的很紧密。本文主要介绍 ION，其它子系统感兴趣的话后续会陆续进行介绍。</p>
+<p>ION 是在各种 heaps 上分配内存，通过 ion_buffer 来描述所分配的内存。</p>
+<p>下图展示了 ION 的基本框架。图中 PID1、PID2、PID3 表示用户空间进程。ION core 表示 ION 核心层，它提供设备创建、注册等服务，同时提供统一的接口给用户使用。ION Driver 利用 ION core 对相应功能进行实现，可以说它是具体平台相关的，例如 SAMSUNG 平台、QUALCOMM 平台和 MTK 平台都会依据自己的特性开发相应的 ION Driver。</p>
+<p><img src="ION_ARCHI.png" alt="ION_ARCHI"></p>
+<p>上图虽然描述的是用户空间进程使用 ION 的情形，但实际上，在内核空间同样可以直接使用 ION 来分配、管理内存。例如 M76、M86 平台的相机驱动，都有直接使用 ION 分配和管理内存。</p>
+<h2 id="主要数据结构"><a href="#主要数据结构" class="headerlink" title="主要数据结构"></a>主要数据结构</h2><p>数据结构是程序设计的基础，代码看的多了，其实可以从数据结构看出其能提供的基本功能和大致用法。<br>为了抓住纲领，本文将抓住 ION 的主要数据结构进行介绍。</p>
+<h3 id="ion-device"><a href="#ion-device" class="headerlink" title="ion_device"></a>ion_device</h3><p>ion_device 是 ION 很重要很基础的数据结构，用 struct ion_device 结构体描述，一般在一个系统中只有一个本实例。例如在 M86 中，就是在 exynos_ion_v2.c 的 exynos_ion_probe() 函数中创建了系统唯一的本实例。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_device</span> &#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">miscdevice</span> dev;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rb_root</span> buffers;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mutex</span> buffer_lock;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rw_semaphore</span> lock;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">plist_head</span> heaps;</span><br><span class="line">	<span class="built_in">long</span> (*custom_ioctl)(<span class="keyword">struct</span> ion_client *client, <span class="type">unsigned</span> <span class="type">int</span> cmd,</span><br><span class="line">			     <span class="type">unsigned</span> <span class="type">long</span> arg);</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rb_root</span> clients;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dentry</span> *debug_root;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dentry</span> *heaps_debug_root;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dentry</span> *clients_debug_root;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">semaphore</span> vm_sem;</span><br><span class="line">	<span class="type">atomic_t</span> page_idx;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">vm_struct</span> *reserved_vm_area;</span><br><span class="line">	<span class="type">pte_t</span> **pte;</span><br><span class="line">	...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>struct ion_device 其实是 ION 的核心结构，不过由于对于使用 ION 的用户而言是屏蔽的，即如果是单纯使用 ION，不需要直接和本结构打交道。但是想完全的理解 ION，需要对其有所了解。<br>struct ion_device 是由 ion_device_create() [ion.c] 分配、初始化。</p>
+<ul>
+<li>dev 成员，是 struct miscdevice 类型，所以可想而知 ION 是作为 MISC 设备注册进系统的。从这点还可以看出来，用户空间使用 ION 时必定需要使用 open 啊，ioctl 啊系统调用。事实也正是如此。</li>
+<li>heaps 成员，在 M86 使用过的 KERNEL LINUX 3.10 中是 struct plist_head 类型，但是在此之前并不是此类型，例如在 M65 使用过的 KERNEL LINUX 3.4 中是 struct rb_root 类型。可见随着 KERNEL 和 ION 的演进，struct ion_device 的实现会有所改变。本字段管理的是属于本 struct ion_device 的所有 struct ion_heap 实例。</li>
+<li>clients 成员，是 struct rb_root 类型，struct rb_root 是红黑树，属于二叉树的一种。本字段管理的是 struct ion_client 实例。</li>
+</ul>
+<h3 id="ion-client"><a href="#ion-client" class="headerlink" title="ion_client"></a>ion_client</h3><p>struct ion_client 是由 ion_client_create() [ion.c] 创建，在创建时必须指定上文提到的 struct ion_device 实例。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_client</span> &#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rb_node</span> node;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_device</span> *dev;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rb_root</span> handles;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">idr</span> idr;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mutex</span> lock;</span><br><span class="line">	<span class="type">const</span> <span class="type">char</span> *name;</span><br><span class="line">	<span class="type">char</span> *display_name;</span><br><span class="line">	<span class="type">int</span> display_serial;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">task_struct</span> *task;</span><br><span class="line">	<span class="type">pid_t</span> pid;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dentry</span> *debug_root;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>node 成员，是 struct rb_node 结构类型，用于将本 struct ion_client 实例加入到 struct ion_device，具体的是 struct ion_device::clients。</li>
+<li>device 成员，是 struct ion_device 指针结构类型，指向所属的 struct ion_device 实例。</li>
+<li>handles 成员，是 struct rb_root 结构类型，管理其所拥有的 handle，即 struct ion_handle 实例。一个 struct ion_handle 实例表示一个 buffer，即 struct ion_buffer 实例。而 struct ion_buffer 就是从 heap，即 struct ion_heap 中分配的内存。</li>
+</ul>
+<h3 id="ion-heap"><a href="#ion-heap" class="headerlink" title="ion_heap"></a>ion_heap</h3><p>struct ion_heap 表示 ION 中的重要概念 heap。系统会通过链表或者红黑树，这取决与你所使用的 KERNEL 版本，来管理所有的 heap，这些 heap 可用 struct ion_device::heaps 字段来寻找。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_heap</span> &#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">plist_node</span> node;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_device</span> *dev;</span><br><span class="line">	<span class="keyword">enum</span> <span class="title class_">ion_heap_type</span> type;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_heap_ops</span> *ops;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> flags;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> id;</span><br><span class="line">	<span class="type">const</span> <span class="type">char</span> *name;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">shrinker</span> shrinker;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span> free_list;</span><br><span class="line">	<span class="type">size_t</span> free_list_size;</span><br><span class="line">	<span class="type">spinlock_t</span> free_lock;</span><br><span class="line">	<span class="type">wait_queue_head_t</span> waitqueue;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">task_struct</span> *task;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">int</span> (*debug_show)(<span class="keyword">struct</span> ion_heap *heap, <span class="keyword">struct</span> seq_file *, <span class="type">void</span> *);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>node 成员，是 struct plist_node 结构，用于将本 heap 实例加入到 struct ion_device 所管理的链表中，详情可以参见 ion_device_add_heap() [ion.c] 函数。</li>
+<li>dev 成员，是 struct ion_device 结构体指针类型，用于指示本 heap 挂在哪一个 struct ion_device 实例下了。</li>
+<li>type 成员，是 enum ion_heap_type 类型，用于表示本 heap 属于哪种类型。用户在使用 ION 分配内存时需要指定 heap 的种类。关于本字段，后续会结合使用方法进行更详细的介绍。</li>
+<li>ops 成员，是 struct ion_heap_ops 类型，它很重要！本字段提供的回调函数是用于从本 heap 中分配内存时所时用的。请参见 ion_buffer_create() [ion.c]，它会调用 struct ion_heap_ops::allocate() 等回调函数。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_heap_ops</span> &#123;</span><br><span class="line">	<span class="built_in">int</span> (*allocate)(<span class="keyword">struct</span> ion_heap *heap,</span><br><span class="line">			<span class="keyword">struct</span> ion_buffer *buffer, <span class="type">unsigned</span> <span class="type">long</span> len,</span><br><span class="line">			<span class="type">unsigned</span> <span class="type">long</span> align, <span class="type">unsigned</span> <span class="type">long</span> flags);</span><br><span class="line">	<span class="built_in">void</span> (*free)(<span class="keyword">struct</span> ion_buffer *buffer);</span><br><span class="line">	<span class="built_in">int</span> (*phys)(<span class="keyword">struct</span> ion_heap *heap, <span class="keyword">struct</span> ion_buffer *buffer,</span><br><span class="line">		    <span class="type">ion_phys_addr_t</span> *addr, <span class="type">size_t</span> *len);</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">sg_table</span> * (*map_dma)(<span class="keyword">struct</span> ion_heap *heap,</span><br><span class="line">				     <span class="keyword">struct</span> ion_buffer *buffer);</span><br><span class="line">	<span class="built_in">void</span> (*unmap_dma)(<span class="keyword">struct</span> ion_heap *heap, <span class="keyword">struct</span> ion_buffer *buffer);</span><br><span class="line">	<span class="type">void</span> * (*map_kernel)(<span class="keyword">struct</span> ion_heap *heap, <span class="keyword">struct</span> ion_buffer *buffer);</span><br><span class="line">	<span class="built_in">void</span> (*unmap_kernel)(<span class="keyword">struct</span> ion_heap *heap, <span class="keyword">struct</span> ion_buffer *buffer);</span><br><span class="line">	<span class="built_in">int</span> (*map_user)(<span class="keyword">struct</span> ion_heap *mapper, <span class="keyword">struct</span> ion_buffer *buffer,</span><br><span class="line">			<span class="keyword">struct</span> vm_area_struct *vma);</span><br><span class="line">	<span class="built_in">int</span> (*shrink)(<span class="keyword">struct</span> ion_heap *heap, <span class="type">gfp_t</span> gfp_mask, <span class="type">int</span> nr_to_scan);</span><br><span class="line">	<span class="built_in">void</span> (*preload) (<span class="keyword">struct</span> ion_heap *heap, <span class="type">unsigned</span> <span class="type">int</span> count,</span><br><span class="line">			 <span class="type">unsigned</span> <span class="type">int</span> flags, <span class="keyword">struct</span> ion_preload_object obj[]);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>id 成员，也很重要，它可表示优先级，在分配内存时选择哪一个 heap 有关，必须唯一。</li>
+</ul>
+<h3 id="ion-handle"><a href="#ion-handle" class="headerlink" title="ion_handle"></a>ion_handle</h3><p>struct ion_handle 其实就是表示 buffer，用户空间常用它来表示 buffer。本结构通过 ion_handle_create() [ion.c] 分配、初始化。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_handle</span> &#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">kref</span> ref;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_client</span> *client;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_buffer</span> *buffer;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rb_node</span> node;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> kmap_cnt;</span><br><span class="line">	<span class="type">int</span> id;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>ref 成员，是 struct kref 结构类型，它在内核中被广泛的用来表示引用计数。ion_handle 的创建和销毁都与其有关，下文会有介绍。</li>
+<li>client 成员，是 struct ion_client 指针类型，指向其所述的 ion_client 实例。</li>
+<li>buffer 成员，是 struct ion_buffer 指针类型，指向真正的 buffer 所在，它可以说是 stuct ion_handle 的核心成员了。</li>
+</ul>
+<p>下面就来介绍 struct ion_buffer 结构。在分配内存时，也是先通过 ion_buffer_create() 创建 ion_buffer 实例，然后交给 ion_handle_create() 创建 ion_handle 实例。</p>
+<h3 id="ion-buffer"><a href="#ion-buffer" class="headerlink" title="ion_buffer"></a>ion_buffer</h3><p>struct ion_buffer 很重要，通过 ION 分配的内存就是通过它表示的。它和上面提到的 ion_handle 的区别主要在于一个是用户空间使用的，一个是内核空间使用的。即虽然常用的接口函数中使用的是 struct ion_handle，但实际上真正表示内存的其实是 struct ion_buffer。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_buffer</span> &#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">kref</span> ref;</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_device</span> *dev;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_heap</span> *heap;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> flags;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> private_flags;</span><br><span class="line">	<span class="type">size_t</span> size;</span><br><span class="line">	<span class="keyword">union</span> &#123;</span><br><span class="line">		<span class="type">void</span> *priv_virt;</span><br><span class="line">		<span class="type">ion_phys_addr_t</span> priv_phys;</span><br><span class="line">	&#125;;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mutex</span> lock;</span><br><span class="line">	<span class="type">int</span> kmap_cnt;</span><br><span class="line">	<span class="type">void</span> *vaddr;</span><br><span class="line">	<span class="type">int</span> dmap_cnt;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">sg_table</span> *sg_table;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">page</span> **pages;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span> vmas;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span> iovas;</span><br><span class="line">	...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>ref 成员，是 struct kref 结构实例，维护了本 ion_buffer 的引用计数。当引用计数为 0 时会释放该 buffer，即 struct ion_heap_ops::free 会被调用。分配用 ION_IOC_ALLOC 型 ioctl 系统调用，相应的释放用 ION_IOC_FREE 型 ioctl 系统调用。</li>
+<li>size 成员，当然是本 buffer 所表示的空间的大小，用字节表示。</li>
+<li>priv_virt 成员，是所分配内存的虚拟地址啦，它常与 struct sg_table，或者封装它的结构，有关。它不是我们在内核中读写时所需的内核虚拟地址啦，内核虚拟地址使用 vaddr 成员来表示的。一般而言，物理内存不连续的，使用本字段；否则使用下面的 priv_phys 字段，如 struct ion_heap_ops contig_heap_ops。</li>
+<li>priv_phys 成员，表示所分配的内存的物理地址。它适用于分配的物理内存是连续的 ion heap。这种连续的物理内存：在将其映射到用户空间时，即获取用户空间虚拟地址，可以使用 remap_pfn_range() [memory.c] 这个方便的接口；在将其映射到内核空间时，即获取内核虚拟地址，可以使用 vmap() [vmalloc.c] 这个方便的接口。例子详见 struct ion_heap_ops contig_heap_ops [exynos_ion.c]。priv_virt 成员和 priv_phys 成员组成了一个联合体，其实都表示地址，只不过不同的场景下具体用的不一样而已。</li>
+<li>kmap_cnt 成员，记录本 buffer 被映射到内核空间的次数。</li>
+<li>vaddr 成员，是本 buffer 对应的内核虚拟地址。当 kmap_cnt 不为 0 时有效。可以通过 ion_map_kernel() [ion.c] 来获取本 buffer 对应的内核虚拟地址。ion_map_kernel() [ion.c] 实际上调用的是相应 struct ion_heap_ops::map_kernel 回调函数获取相应的虚拟地址的。</li>
+<li>dmap_cnt 成员，记录本 buffer 被 mapped for DMA 的次数。</li>
+<li>sg_table 成员，是 struct sg_table 结构体类型的指针。本字段与 DMA 操作有关，而且仅仅在 dmap_cnt 成员变量不为 0 时是有效的。可以通过 ion_buffer_create() [ion.c] 来初始化本成员变量，该函数实际上是调用相应 ion_heap 所属的 struct ion_heap_ops::map_dma 回调函数获取本字段的值的。</li>
+<li>dirty 成员，表示 bitmask。即以位图表示本 buffer 的哪一个 page 是 dirty 的，即不能直接用于 DMA。dirty 表示 DMA 的不一致性，即 CPU 缓存中的内容与内存中的实际内容不一样。</li>
+</ul>
+<p>事实上，ION 涉及到的数据结构还有很多，这里列举的都是一些非常重要的。<br>下图展示了上文介绍到的数据结构的基本关系。</p>
+<p><img src="ION_RELAT.png" alt="ION_RELAT"></p>
+<h2 id="重要函数分析"><a href="#重要函数分析" class="headerlink" title="重要函数分析"></a>重要函数分析</h2><p>函数对数据进行处理，完成特定的任务，体现算法的具体实现。</p>
+<h3 id="ion-device-create"><a href="#ion-device-create" class="headerlink" title="ion_device_create"></a>ion_device_create</h3><p>前面分析 ION 的一些核心数据结构时曾经指出，ION 会注册进 MISC 设备，这样用户空间就可以像使用 MISC 设备一样使用 ION 进行内存分配了。<br>先来看 ION 是如何注册进 MISC 子系统的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_device</span> *<span class="built_in">ion_device_create</span>(<span class="built_in">long</span> (*custom_ioctl)</span><br><span class="line">				     (<span class="keyword">struct</span> ion_client *client,</span><br><span class="line">				      <span class="type">unsigned</span> <span class="type">int</span> cmd,</span><br><span class="line">				      <span class="type">unsigned</span> <span class="type">long</span> arg))</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_device</span> *idev;</span><br><span class="line">	<span class="type">int</span> ret;</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 分配 struct ion_device 实例</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	idev = <span class="built_in">kzalloc</span>(<span class="built_in">sizeof</span>(<span class="keyword">struct</span> ion_device), GFP_KERNEL);</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 如前面所说，dev 成员是 struct miscdevice 结构体类型，</span></span><br><span class="line"><span class="comment">	* 这里初始化其相关字段，名字指定为 ”ion”，所以提供</span></span><br><span class="line"><span class="comment">	* 给用户空间调用的设备节点名为 /dev/ion。</span></span><br><span class="line"><span class="comment">	* 用户空间操作该设备节点时，ION 驱动中响应的函数集位于</span></span><br><span class="line"><span class="comment">	* ion_fops</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	idev-&gt;dev.minor = MISC_DYNAMIC_MINOR;</span><br><span class="line">	idev-&gt;dev.name = <span class="string">&quot;ion&quot;</span>;</span><br><span class="line">	idev-&gt;dev.fops = &amp;ion_fops;</span><br><span class="line">	idev-&gt;dev.parent = <span class="literal">NULL</span>;</span><br><span class="line">	ret = <span class="built_in">misc_register</span>(&amp;idev-&gt;dev);</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 注册调试信息接口</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	idev-&gt;debug_root = <span class="built_in">debugfs_create_dir</span>(<span class="string">&quot;ion&quot;</span>, <span class="literal">NULL</span>);</span><br><span class="line">	...</span><br><span class="line">	idev-&gt;heaps_debug_root = <span class="built_in">debugfs_create_dir</span>(<span class="string">&quot;heaps&quot;</span>, idev-&gt;debug_root);</span><br><span class="line">	...</span><br><span class="line">	idev-&gt;clients_debug_root = <span class="built_in">debugfs_create_dir</span>(<span class="string">&quot;clients&quot;</span>,</span><br><span class="line">						idev-&gt;debug_root);</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">debugfs_done:</span><br><span class="line"></span><br><span class="line">	idev-&gt;custom_ioctl = custom_ioctl;</span><br><span class="line">	idev-&gt;buffers = RB_ROOT;</span><br><span class="line">	<span class="built_in">mutex_init</span>(&amp;idev-&gt;buffer_lock);</span><br><span class="line">	<span class="built_in">init_rwsem</span>(&amp;idev-&gt;lock);</span><br><span class="line">	<span class="built_in">plist_head_init</span>(&amp;idev-&gt;heaps);</span><br><span class="line">	idev-&gt;clients = RB_ROOT;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">/* backup of ion device: assumes there is only one ion device */</span></span><br><span class="line">	g_idev = idev;</span><br><span class="line">	<span class="keyword">return</span> idev;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本函数最重要的是分配并初始化了核心 struct ion_device 实例，并将其和 MISC 设备结合起来，这样用户空间就可以通过 open()、ioctl() 等系统调用使用它了。</p>
+<h3 id="ion-open"><a href="#ion-open" class="headerlink" title="ion_open"></a>ion_open</h3><p>用户空间要想使用 ION 进行内存分配，首先必须对设备节点 &#x2F;dev&#x2F;ion 进行 open() 系统调用。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">ion_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *file)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">miscdevice</span> *miscdev = file-&gt;private_data;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_device</span> *dev = <span class="built_in">container_of</span>(miscdev, <span class="keyword">struct</span> ion_device, dev);</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_client</span> *client;</span><br><span class="line">	<span class="type">char</span> debug_name[<span class="number">64</span>];</span><br><span class="line">	…</span><br><span class="line">	<span class="built_in">snprintf</span>(debug_name, <span class="number">64</span>, <span class="string">&quot;%u&quot;</span>, <span class="built_in">task_pid_nr</span>(current-&gt;group_leader));</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 创建struct ion_client 实例</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	client = <span class="built_in">ion_client_create</span>(dev, debug_name);</span><br><span class="line">	...</span><br><span class="line">	file-&gt;private_data = client;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ion_open() 函数最重要的作用就是创建了 struct ion_client 实例。这样，后续就可以利用 ioctl 系统调用从其中分配内存了。</p>
+<p>ION 系统提供的 ioctl 类型有很多，常用的有 ION_IOC_ALLOC、ION_IOC_FREE、ION_IOC_SHARE 和 ION_IOC_IMPORT 等等。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ION_IOC_ALLOC		_IOWR(ION_IOC_MAGIC, 0, struct ion_allocation_data)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ION_IOC_FREE		_IOWR(ION_IOC_MAGIC, 1, struct ion_handle_data)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ION_IOC_SHARE		_IOWR(ION_IOC_MAGIC, 4, struct ion_fd_data)</span></span><br></pre></td></tr></table></figure>
+
+<p>下面就抽出几个典型的进行分析。</p>
+<h3 id="ion-alloc"><a href="#ion-alloc" class="headerlink" title="ion_alloc"></a>ion_alloc</h3><p>这是当用户空间执行 ION_IOC_ALLOC 型 ioctl() 系统调用时所执行的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">ion_handle</span> *<span class="built_in">ion_alloc</span>(<span class="keyword">struct</span> ion_client *client, <span class="type">size_t</span> len,</span><br><span class="line">			     <span class="type">size_t</span> align, <span class="type">unsigned</span> <span class="type">int</span> heap_id_mask,</span><br><span class="line">			     <span class="type">unsigned</span> <span class="type">int</span> flags)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_handle</span> *handle;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_device</span> *dev = client-&gt;dev;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_buffer</span> *buffer = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">ion_heap</span> *heap;</span><br><span class="line">	<span class="type">int</span> ret;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* len 是用户空间想分配的内存大小，驱动中会将其进行页对齐</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	len = <span class="built_in">PAGE_ALIGN</span>(len);</span><br><span class="line">	...</span><br><span class="line">	<span class="built_in">down_read</span>(&amp;dev-&gt;lock);</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 用户空间会指定其想从哪种 heap 分配内存，ION 驱动</span></span><br><span class="line"><span class="comment">	* 会对其进行检查并找到最合适的。</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	heap_id_mask = <span class="built_in">ion_parse_heap_id</span>(heap_id_mask, flags);</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 从系统所有的 heap 中找到最合适的 heap 并分配内存，</span></span><br><span class="line"><span class="comment">	* 创建 struct ion_buffer 实例。</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	<span class="built_in">plist_for_each_entry</span>(heap, &amp;dev-&gt;heaps, node) &#123;</span><br><span class="line">		<span class="comment">/* if the caller didn&#x27;t specify this heap id */</span></span><br><span class="line">		<span class="keyword">if</span> (!((<span class="number">1</span> &lt;&lt; heap-&gt;id) &amp; heap_id_mask))</span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">		buffer = <span class="built_in">ion_buffer_create</span>(heap, dev, len, align, flags);</span><br><span class="line">		<span class="keyword">if</span> (!<span class="built_in">IS_ERR</span>(buffer))</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">up_read</span>(&amp;dev-&gt;lock);</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 在对创建的 ion_buffer 实例进行了一系列的 sanity 检查后</span></span><br><span class="line"><span class="comment">	* 利用其创建 struct ion_handle 实例。</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	handle = <span class="built_in">ion_handle_create</span>(client, buffer);</span><br><span class="line">	...</span><br><span class="line">	<span class="built_in">mutex_lock</span>(&amp;client-&gt;lock);</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 将 struct ion_handle 实例加入到其所属的 struct ion_client</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	ret = <span class="built_in">ion_handle_add</span>(client, handle);</span><br><span class="line">	<span class="built_in">mutex_unlock</span>(&amp;client-&gt;lock);</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> handle;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="ion-free"><a href="#ion-free" class="headerlink" title="ion_free"></a>ion_free</h3><p>这是当用户空间执行 ION_IOC_FREE 型 ioctl() 系统调用时所执行的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">ion_free</span><span class="params">(<span class="keyword">struct</span> ion_client *client, <span class="keyword">struct</span> ion_handle *handle)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">bool</span> valid_handle;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">BUG_ON</span>(client != handle-&gt;client);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">mutex_lock</span>(&amp;client-&gt;lock);</span><br><span class="line">	valid_handle = <span class="built_in">ion_handle_validate</span>(client, handle);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!valid_handle) &#123;</span><br><span class="line">		<span class="built_in">WARN</span>(<span class="number">1</span>, <span class="string">&quot;%s: invalid handle passed to free.\n&quot;</span>, __func__);</span><br><span class="line">		<span class="built_in">mutex_unlock</span>(&amp;client-&gt;lock);</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">mutex_unlock</span>(&amp;client-&gt;lock);</span><br><span class="line">	<span class="built_in">ion_handle_put</span>(client, handle);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此函数比较简单，重点就是通过 ion_handle_put() 来对上文提到的 struct ion_handle::ref 这个 reference count 减一，当 ref 减到 0 时，就会调用 ion_handle_destroy() 来销毁 ion_handle 实例。</p>
+<p>从前文的分析可知，用户空间在利用 ION 分配内存时，需要指定具体的 heap mask，即告知 ION 想从哪种 heap 分配内存。<br>下面就来介绍下。</p>
+<h2 id="HEAP-种类"><a href="#HEAP-种类" class="headerlink" title="HEAP 种类"></a>HEAP 种类</h2><p>以下是通过 ION 分配内存时，可能会使用到的 heap mask。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ION_HEAP_SYSTEM_MASK            (1 &lt;&lt; 0)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ION_HEAP_SYSTEM_CONTIG_MASK     (1 &lt;&lt; 1)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ION_HEAP_EXYNOS_CONTIG_MASK     (1 &lt;&lt; 4)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ION_HEAP_EXYNOS_MASK            (1 &lt;&lt; 5)</span></span><br></pre></td></tr></table></figure>
+
+<p>以 M65 项目为例，系统定义了 4 种 heap，见 dev-ion.c。</p>
+<h3 id="ION-HEAP-TYPE-SYSTEM"><a href="#ION-HEAP-TYPE-SYSTEM" class="headerlink" title="ION_HEAP_TYPE_SYSTEM"></a>ION_HEAP_TYPE_SYSTEM</h3><p>本 heap 的名字为：”ion_noncontig_heap”。相应的 heap mask 为 1，即 ION_HEAP_SYSTEM_MASK。<br>在本 struct ion_heap 上分配内存的操作集是：<br>struct ion_heap_ops system_heap_ops [ion_system_heap.c]<br>其内存可以从 HIGHMEM 中分配，所以其物理内存可能不连续。<br>在调试 M65 CAMERA 的 HDR 功能时，一开始发现其写入速度很慢很慢，经过调查，后来在通过 ION 分配内存时指定 ION_FLAG_CACHED | ION_FLAG_CACHED_NEEDS_SYNC | ION_FLAG_PRESERVE_KMAP 标志后速度得到明显提高。</p>
+<h3 id="ION-HEAP-TYPE-SYSTEM-CONTIG"><a href="#ION-HEAP-TYPE-SYSTEM-CONTIG" class="headerlink" title="ION_HEAP_TYPE_SYSTEM_CONTIG"></a>ION_HEAP_TYPE_SYSTEM_CONTIG</h3><p>本 heap 的名字为：”ion_contig_heap”，相应的 heap mask 为 2，即 ION_HEAP_SYSTEM_CONTIG_MASK。<br>在本 struct ion_heap 上分配内存的操作集是：<br>struct ion_heap_ops kmalloc_ops [ion_system_heap.c]<br>其内存分配 allocate 回调函数为：ion_system_contig_heap_allocate() [ion_system_heap.c]，该函数很简单，就是利用 kzalloc() 分配内存。</p>
+<h3 id="ION-HEAP-TYPE-EXYNOS"><a href="#ION-HEAP-TYPE-EXYNOS" class="headerlink" title="ION_HEAP_TYPE_EXYNOS"></a>ION_HEAP_TYPE_EXYNOS</h3><p>本 heap 的名字为：”exynos_noncontig_heap”，相应的 heap mask 为 32，即 ION_HEAP_EXYNOS_MASK。<br>在本 struct ion_heap 上分配内存的操作集是：<br>struct ion_heap_ops vmheap_ops [exynos_ion.c]<br>其内存可以从 HIGHMEM 中分配，所以其物理内存不一定连续。详情可以见其 allocate 回调函数 ion_exynos_heap_allocate() [exynos_ion.c]。</p>
+<h3 id="ION-HEAP-TYPE-EXYNOS-CONTIG"><a href="#ION-HEAP-TYPE-EXYNOS-CONTIG" class="headerlink" title="ION_HEAP_TYPE_EXYNOS_CONTIG"></a>ION_HEAP_TYPE_EXYNOS_CONTIG</h3><p>本 heap 的名字为：”exynos_contig_heap”。相应的 heap mask 为 16，即 ION_HEAP_EXYNOS_CONTIG_MASK。<br>在本 struct ion_heap 上分配内存的操作集是：<br>struct ion_heap_ops contig_heap_ops [exynos_ion.c]<br>内存由 CMA 分配，所以可以保证其物理地址是连续的。详情可以参见其 allocate 回调函数 ion_exynos_contig_heap_allocate() [exynos_ion.c]。<br>因为本函数是利用 CMA 分配内存，所以可以推测肯定有地方预留了 CMA 所需的物理内存。分析代码后可以发现，这个地方就位于 mach-m65.c 文件。<br>M65 的相机驱动使用了本 ION_HEAP_TYPE_EXYNOS_CONTIG 类型的 heap 来分配内存。<br>按道理，当用户空间获取了 struct ion_handle 实例后，就已经完成了 ION 内存的分配任务。但实际上，为了在不同的进程间，甚至在用户空间和内核空间共享这段内存使用，用户空间还通常需要调用 ION_IOC_SHARE 型ioctl()，获取 ion buffer 相关的 fd，这就和 dma_buf 子系统联系起来了。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">ion_share_dma_buf_fd</span><span class="params">(<span class="keyword">struct</span> ion_client *client, <span class="keyword">struct</span> ion_handle *handle)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dma_buf</span> *dmabuf;</span><br><span class="line">	<span class="type">int</span> fd;</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 前面已经说过 struct ion_handle 其实就是对 struct ion_buffer</span></span><br><span class="line"><span class="comment">	* 的封装，这里利用 struct ion_client 实例和 struct ion_handle 实例</span></span><br><span class="line"><span class="comment">	* 创建了一个 dma_buf。</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	dmabuf = <span class="built_in">ion_share_dma_buf</span>(client, handle);</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	* 重要，这样就将 struct ion_buffer 对应的内存转化</span></span><br><span class="line"><span class="comment">	* 为文件描述符了。将文件描述符传递给其它进程或者</span></span><br><span class="line"><span class="comment">	* 传给内核空间，其它进程或者内核空间就可以使用其内存了</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	fd = <span class="built_in">dma_buf_fd</span>(dmabuf, O_CLOEXEC);</span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">return</span> fd;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>到这里，ION 使用过程中涉及到的重要函数都已经介绍完全。当然要完全理解这些函数的细节，需要用户对 dma_buffer 有一定的了解。对 dma_buffer 的介绍不属于本文的范围，有兴趣的话可以参见我写的其它相关文档。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>关于 Android ION 内存管理机制的介绍就到这里。本文先介绍了什么是 ION，为什么要用 ION。ION 是为了解决内存碎片管理而引入的通用内存管理器，用于取代 PMEM 机制。然后介绍了下 ION 中的重要数据结构，对 struct ion_device、struct ion_client、struct ion_heap、struct ion_handle 和 struct ion_buffer 进行了详细的介绍，并对它们之间的关系进行了阐述。接着，从使用 ION 的场景出发，介绍了一些重要的函数，例如 ion_alloc()，并以实际的相机开发为例介绍了系统中各个 ion_heap 的种类和各自的内存特性。本文还对进程之间、内核空间和用户空间之间的内存共享进行了介绍。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://lwn.net/Articles/480055/">The Android ION memory allocator</a></li>
+<li><a href="https://lwn.net/Articles/565469/">Integrating the ION memory allocator</a></li>
+</ul>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="//tee.html" data-toggle="tooltip" data-placement="top" title="TEE 软件交互流程概述">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/11/06/11-52-11-mtp/" data-toggle="tooltip" data-placement="top" title="Android MTP 分析">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Android" title="Android">Android</a>
+                        
+                          <a class="tag" href="/tags/#内存管理" title="内存管理">内存管理</a>
+                        
+                          <a class="tag" href="/tags/#多媒体" title="多媒体">多媒体</a>
+                        
+                          <a class="tag" href="/tags/#ION" title="ION">ION</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&#34;🌱&#34;,&#34;just do it&#34;,&#34;🍀&#34;]' color='[&#34;rgb(121,93,179)&#34; ,&#34;rgb(76,180,231)&#34; ,&#34;rgb(184,90,154)&#34;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+</body>
+
+</html>

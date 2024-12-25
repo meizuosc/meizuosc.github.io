@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          zram 简介 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com//zram-introduction.html">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="css/widget.css">
+
+
+    
+<link rel="stylesheet" href="css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="css/signature.css">
+
+
+    
+<link rel="stylesheet" href="css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#zram" title="zram">zram</a>
+                            
+                              <a class="tag" href="/tags/#compcache" title="compcache">compcache</a>
+                            
+                              <a class="tag" href="/tags/#swap" title="swap">swap</a>
+                            
+                        </div>
+                        <h1>zram 简介</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Wu Youqian on
+                            2016-05-21
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="zram-技术的由来"><a href="#zram-技术的由来" class="headerlink" title="zram 技术的由来"></a>zram 技术的由来</h2><p>zram[^zram_tech]（也称为 zRAM，先前称为 compcache）是 Linux 内核的一项功能，可提供虚拟内存压缩。zram 通过在 RAM 内的压缩块设备上分页，直到必须使用硬盘上的交换空间，以避免在磁盘上进行分页，从而提高性能。由于 zram 可以用内存替代硬盘为系统提供交换空间的功能，zram 可以在需要交换 &#x2F; 分页时让 Linux 更好利用 RAM ，在物理内存较少的旧电脑上尤其如此。</p>
+<p>即使 RAM 的价格相对较低，zram 仍有利于嵌入式设备、上网本和其它相似的低端硬件设备。这些设备通常使用固态存储，它们由于其固有性质而寿命有限，因而避免以其提供交换空间可防止其迅速磨损。此外，使用 zRAM 还可显著降低 Linux 系统用于交换的 I&#x2F;O 。</p>
+<p>zram 在 2009 年的时候就进了 kernel 的 staging 目录，并于 2014 年 3 月 30 日发布的 3.14 版本正式合并入 Linux 内核主线。在 2014 年 6 月 8 日发布的 3.15 版本的 Linux 内核中，zram 已可支持 LZ4 压缩算法，而 LZO 仍然作为默认的压缩后端。内核 3.15 中的修改还改进了性能，以及经由 sysfs 切换压缩算法的能力。</p>
+<p>Lubuntu 于 13.10 开始使用 zram 。截至 2012 年 12 月，Ubuntu 考虑为小内存的计算机默认启用 zram 。 Google 在 Chrome OS 中使用 zram，它也成为了 Android 4.4 及以后版本设备的一个选项。</p>
+<p>本文主要介绍在 Android 设备上使用的 zram swap，它可以让小内存的设备在多任务的情况下切换自如，提高用户体验。</p>
+<p>zram swap 主要原理就是从内存分配一块区域出来用作 swap 分区，每次如果内存空间不够了，不是把应用程序杀掉，而是把应用程序所占用的内存数据复制到 swap 分区，等切换回来的时候就可以直接把这部分数据恢复到内存当中，节省重新开启所需的时间。而被放到 swap 分区的应用程序，所占用的内存都是被压缩过的，比如，微信在普通内存中占用 50 MB 的空间，如果压缩率为 0.4，则放到 swap 分区里面的数据只需要 20 MB 的空间，这样 swap 分区里面就可以存放更多后台临时不用的应用程序，变相扩展了内存的大小。</p>
+<h2 id="zram-配置步骤"><a href="#zram-配置步骤" class="headerlink" title="zram 配置步骤"></a>zram 配置步骤</h2><h3 id="1-内核配置-zram-doc"><a href="#1-内核配置-zram-doc" class="headerlink" title="1. 内核配置[^zram_doc]"></a>1. 内核配置[^zram_doc]</h3><ul>
+<li><p>3.15 之前版本的 kernel</p>
+<p>Device Drivers -&gt; Staging drivers (STAGING [&#x3D;y])</p>
+</li>
+<li><p>3.15 及之后版本的 kernel</p>
+<p>Device Drivers -&gt; [*] Block devices -&gt; <M> Compressed RAM block device support</p>
+</li>
+<li><p>具体的配置项如下：</p>
+</li>
+</ul>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">CONFIG_RESOURCE_COUNTERS</span>=y</span><br><span class="line"><span class="attr">CONFIG_MEMCG</span>=y</span><br><span class="line"><span class="attr">CONFIG_MEMCG_SWAP</span>=y</span><br><span class="line"><span class="attr">CONFIG_MEMCG_SWAP_ENABLED</span>=y</span><br><span class="line"><span class="attr">CONFIG_MEMCG_KMEM</span>=y</span><br><span class="line"><span class="attr">CONFIG_ZRAM</span>=y</span><br><span class="line"><span class="attr">CONFIG_TOI_ZRAM_SUPPORT</span>=y</span><br><span class="line"><span class="attr">CONFIG_ZRAM_DEBUG</span>=y</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-zram-块设备个数设定"><a href="#2-zram-块设备个数设定" class="headerlink" title="2. zram 块设备个数设定:"></a>2. zram 块设备个数设定:</h3><ul>
+<li>如果是将 zram 编译成模块，则可以使用下面命令动态加载，这个命令会创建 4 个设备 &#x2F;dev&#x2F;zram{0,1,2,3}</li>
+</ul>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">modprobe zram <span class="attribute">num_devices</span>=4</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>如果是直接将 zram 编译到内核，那只能在代码里面直接修改 num_devices，3.15 之前的版本代码路径是 drivers&#x2F;staging&#x2F;zram&#x2F;zram_drv.c，3.15 及之后的版本代码路径是  .&#x2F;drivers&#x2F;block&#x2F;zram&#x2F;zram_drv.c ，默认 zram 设备个数是一个。</li>
+</ul>
+<h3 id="3-压缩流的最大个数设定"><a href="#3-压缩流的最大个数设定" class="headerlink" title="3. 压缩流的最大个数设定"></a>3. 压缩流的最大个数设定</h3><p>这个是 3.15 版本及以后的 kernel 新加入的功能，3.15 版本之前的 zram 压缩都是使用一个压缩流（缓存 buffer 和算法私有部分）实现，每个写（压缩）操作都会独享压缩流，但是单压缩流如果出现数据奔溃或者卡住的现象，所有的写（压缩）操作将一直处于等待状态，这样效率非常低；而多压缩流的架构会让写（压缩）操作可以并行去执行，大大提高了压缩的效率和稳定性。</p>
+<ul>
+<li>查看压缩流的最大个数，默认是 1</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /sys/block/zram0/max_comp_streams</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>设定压缩流的最大个数</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> 3 &gt; /sys/block/zram0/max_comp_streams</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-压缩算法选择"><a href="#4-压缩算法选择" class="headerlink" title="4. 压缩算法选择"></a>4. 压缩算法选择</h3><ul>
+<li>查看目前支持的压缩算法</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /sys/block/zram0/comp_algorithm</span><br><span class="line">lzo [lz4]</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>修改压缩算法</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> lzo &gt; /sys/block/zram0/comp_algorithm</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-zram-内存大小设定"><a href="#5-zram-内存大小设定" class="headerlink" title="5. zram 内存大小设定"></a>5. zram 内存大小设定</h3><p>分配部分内存作为 zram ，大小建议为总内存的 10%-25% 。</p>
+<ul>
+<li>可以使用数值直接设置内存大小，单位是 bytes</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> $((<span class="number">512</span>*<span class="number">1024</span>*<span class="number">1024</span>)) &gt; /sys/block/zram0/disksize</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>也可以使用带内存单位作为后缀的方式设置内存大小</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> 256K &gt; /sys/block/zram0/disksize</span><br><span class="line"><span class="built_in">echo</span> 512M &gt; /sys/block/zram0/disksize</span><br><span class="line"><span class="built_in">echo</span> 1G &gt; /sys/block/zram0/disksize</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-启用-zram-设备为-swap"><a href="#6-启用-zram-设备为-swap" class="headerlink" title="6. 启用 zram 设备为 swap"></a>6. 启用 zram 设备为 swap</h3><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkswap <span class="regexp">/dev/</span>zram0</span><br><span class="line">swapon <span class="regexp">/dev/</span>zram0</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-具体的-zram-相关对外接口说明"><a href="#7-具体的-zram-相关对外接口说明" class="headerlink" title="7. 具体的 zram 相关对外接口说明"></a>7. 具体的 zram 相关对外接口说明</h3><table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="center">Access</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">disksize</td>
+<td align="center">RW</td>
+<td align="left">显示和设置该块设备的内存大小</td>
+</tr>
+<tr>
+<td align="left">initstate</td>
+<td align="center">RO</td>
+<td align="left">显示设备的初始化状态</td>
+</tr>
+<tr>
+<td align="left">reset</td>
+<td align="center">WO</td>
+<td align="left">重置设备</td>
+</tr>
+<tr>
+<td align="left">num_reads</td>
+<td align="center">RO</td>
+<td align="left">读数据的个数</td>
+</tr>
+<tr>
+<td align="left">failed_reads</td>
+<td align="center">RO</td>
+<td align="left">读数据失败的个数</td>
+</tr>
+<tr>
+<td align="left">num_write</td>
+<td align="center">RO</td>
+<td align="left">写数据的个数</td>
+</tr>
+<tr>
+<td align="left">failed_writes</td>
+<td align="center">RO</td>
+<td align="left">写数据失败的个数</td>
+</tr>
+<tr>
+<td align="left">invalid_io</td>
+<td align="center">RO</td>
+<td align="left">非页面大小对齐的I&#x2F;O请求的个数</td>
+</tr>
+<tr>
+<td align="left">max_comp_streams</td>
+<td align="center">RW</td>
+<td align="left">最大可能同时执行压缩操作的个数</td>
+</tr>
+<tr>
+<td align="left">comp_algorithm</td>
+<td align="center">RW</td>
+<td align="left">显示和设置压缩算法</td>
+</tr>
+<tr>
+<td align="left">notify_free</td>
+<td align="center">RO</td>
+<td align="left">空闲内存的通知个数</td>
+</tr>
+<tr>
+<td align="left">zero_pages</td>
+<td align="center">RO</td>
+<td align="left">写入该块设备的全为的页面的个数</td>
+</tr>
+<tr>
+<td align="left">orig_data_size</td>
+<td align="center">RO</td>
+<td align="left">保存在该块设备中没有被压缩的数据的大小</td>
+</tr>
+<tr>
+<td align="left">compr_data_size</td>
+<td align="center">RO</td>
+<td align="left">保存在该块设备中已被压缩的数据的大小</td>
+</tr>
+<tr>
+<td align="left">mem_used_total</td>
+<td align="center">RO</td>
+<td align="left">分配给该块设备的总内存大小</td>
+</tr>
+<tr>
+<td align="left">mem_used_max</td>
+<td align="center">RW</td>
+<td align="left">该块设备已用的内存大小，可以写 1 重置这个计数参数到当前真实的统计值</td>
+</tr>
+<tr>
+<td align="left">mem_limit</td>
+<td align="center">RW</td>
+<td align="left">zram 可以用来保存压缩数据的最大内存</td>
+</tr>
+<tr>
+<td align="left">pages_compacted</td>
+<td align="center">RO</td>
+<td align="left">在压缩过程中可用的空闲页面的个数</td>
+</tr>
+<tr>
+<td align="left">compact</td>
+<td align="center">WO</td>
+<td align="left">触发内存压缩</td>
+</tr>
+</tbody></table>
+<h3 id="8-系统运行之后的内存统计情况"><a href="#8-系统运行之后的内存统计情况" class="headerlink" title="8. 系统运行之后的内存统计情况"></a>8. 系统运行之后的内存统计情况</h3><figure class="highlight tcl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">cat /<span class="keyword">proc</span>/meminfo</span><br><span class="line">1<span class="title">  MemTotal:</span>        1958596<span class="title"> kB</span></span><br><span class="line">2<span class="title">  MemFree:</span>           40364<span class="title"> kB</span></span><br><span class="line">3<span class="title">  Buffers:</span>            3472<span class="title"> kB</span></span><br><span class="line">4<span class="title">  Cached:</span>           328080<span class="title"> kB</span></span><br><span class="line">5<span class="title">  SwapCached:</span>         1908<span class="title"> kB</span></span><br><span class="line">6<span class="title">  Active:</span>           906752<span class="title"> kB</span></span><br><span class="line">7<span class="title">  Inactive:</span>         426648<span class="title"> kB</span></span><br><span class="line">8<span class="title">  Active(anon):</span>     752824<span class="title"> kB</span></span><br><span class="line">9<span class="title">  Inactive(anon):</span>   252756<span class="title"> kB</span></span><br><span class="line">10<span class="title"> Active(file):</span>     153928<span class="title"> kB</span></span><br><span class="line">11<span class="title"> Inactive(file):</span>   173892<span class="title"> kB</span></span><br><span class="line">12<span class="title"> Unevictable:</span>        2516<span class="title"> kB</span></span><br><span class="line">13<span class="title"> Mlocked:</span>               0<span class="title"> kB</span></span><br><span class="line">14<span class="title"> SwapTotal:</span>        524284<span class="title"> kB</span></span><br><span class="line">15<span class="title"> SwapFree:</span>         378320<span class="title"> kB</span></span><br><span class="line">16<span class="title"> Dirty:</span>               480<span class="title"> kB</span></span><br><span class="line">17<span class="title"> Writeback:</span>             0<span class="title"> kB</span></span><br><span class="line">18<span class="title"> AnonPages:</span>       1003452<span class="title"> kB</span></span><br><span class="line">19<span class="title"> Mapped:</span>           167052<span class="title"> kB</span></span><br><span class="line">20<span class="title"> Shmem:</span>              1184<span class="title"> kB</span></span><br><span class="line">21<span class="title"> Slab:</span>              83104<span class="title"> kB</span></span><br><span class="line">22<span class="title"> SReclaimable:</span>      24368<span class="title"> kB</span></span><br><span class="line">23<span class="title"> SUnreclaim:</span>        58736<span class="title"> kB</span></span><br><span class="line">24<span class="title"> KernelStack:</span>       48736<span class="title"> kB</span></span><br><span class="line">25<span class="title"> PageTables:</span>        41908<span class="title"> kB</span></span><br><span class="line">26<span class="title"> NFS_Unstable:</span>          0<span class="title"> kB</span></span><br><span class="line">27<span class="title"> Bounce:</span>                0<span class="title"> kB</span></span><br><span class="line">28<span class="title"> WritebackTmp:</span>          0<span class="title"> kB</span></span><br><span class="line">29<span class="title"> CommitLimit:</span>     1503580<span class="title"> kB</span></span><br><span class="line">30<span class="title"> Committed_AS:</span>   94718220<span class="title"> kB</span></span><br><span class="line">31<span class="title"> VmallocTotal:</span>  251658176<span class="title"> kB</span></span><br><span class="line">32<span class="title"> VmallocUsed:</span>      181352<span class="title"> kB</span></span><br><span class="line">33<span class="title"> VmallocChunk:</span>  251373156<span class="title"> kB</span></span><br></pre></td></tr></table></figure>
+
+<p>从 Line 14,15 可以看到 swap 相关的统计信息，SwapTotal 的大小就是 zram 设备的大小，当系统开启了一段时间之后，就会将后台的一些优先级低的应用数据（匿名页面）压缩存放到 swap 区，然后再重新打开这些应用的时候，再从 swap 区将它们的数据解压出来。在 Android KitKat 版本之前，Android 设备因为没有 zram，所以查看 &#x2F;proc&#x2F;meinfo 看到的 swap 分区的大小和统计数据都会是零。</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">1 </span>Total RAM: <span class="number">1958596</span> kB (status normal)</span><br><span class="line"><span class="symbol">2 </span> Free RAM: <span class="number">724527</span> kB (<span class="number">504283</span> cached pss + <span class="number">183244</span> cached kernel + <span class="number">37000</span> free)</span><br><span class="line"><span class="symbol">3 </span> Used RAM: <span class="number">1014008</span> kB (<span class="number">656204</span> used pss + <span class="number">357804</span> kernel)</span><br><span class="line"><span class="symbol">4 </span> Lost RAM: <span class="number">220061</span> kB</span><br><span class="line"><span class="symbol">5 </span>     ZRAM: <span class="number">27296</span> kB physical used <span class="keyword">for</span> <span class="number">145952</span> kB in <span class="keyword">swap</span> (<span class="number">524284</span> kB total <span class="keyword">swap</span>)</span><br><span class="line"><span class="symbol">6 </span>   Tuning: <span class="number">256</span> (large <span class="number">512</span>), oom <span class="number">286720</span> kB, <span class="keyword">restore</span> limit <span class="number">95573</span> kB (high-<span class="keyword">end</span>-gfx)</span><br></pre></td></tr></table></figure>
+
+<p>Line 5 也可以看到 swap 相关的统计信息，如果需要查看具体某个进程使用了多少 swap 空间，可以通过 <code>dumpsys meminfo pid</code>（该进程的 id 号）查看。</p>
+<h2 id="zram-具体原理分析"><a href="#zram-具体原理分析" class="headerlink" title="zram 具体原理分析"></a>zram 具体原理分析</h2><p>zram 本质是就是一个块设备，所以下面先简单介绍一下块设备的一些基础知识。</p>
+<h3 id="1-块设备基础概念"><a href="#1-块设备基础概念" class="headerlink" title="1. 块设备基础概念"></a>1. 块设备基础概念</h3><ul>
+<li><p>块设备（block device）</p>
+<p>块设备是一种具有一定结构的随机存取设备，对这种设备的读写是按块进行的，使用缓冲区来存放暂时的数据，待条件成熟后，从缓存一次性写入设备或者从设备一次性读到缓冲区。</p>
+</li>
+<li><p>扇区 (Sectors)</p>
+<p>块设备中最小的可寻址单元，大小一般都是 2 的整数倍，最常见的是 512 字节。</p>
+</li>
+<li><p>块 (Blocks)</p>
+<p>块是文件系统的一种抽象，只能基于块来访问文件系统，块必须是扇区大小的 2 的整数倍，并且要小于页面的大小，所以通常块的大小是 512 字节、1 KB 或 4 KB 。</p>
+</li>
+<li><p>段 (Segments)</p>
+<p>由若干个相邻的块组成，是 Linux 内存管理机制中一个内存页或者内存页的一部分。</p>
+</li>
+<li><p>页面 (Page)</p>
+<p>物理页是 Linux 内存管理的基本单位，一般一个页面是 4KB 或者 64 KB。</p>
+<p><img src="Sectors_block_segment.gif" alt="Sectors Block Segment"></p>
+</li>
+</ul>
+<h3 id="2-块设备驱动整体框架-block-device"><a href="#2-块设备驱动整体框架-block-device" class="headerlink" title="2. 块设备驱动整体框架[^block_device]"></a>2. 块设备驱动整体框架[^block_device]</h3><p>  <img src="block_device_arch.gif" alt="Block Device ARCH"></p>
+<h3 id="3-相关数据结构"><a href="#3-相关数据结构" class="headerlink" title="3. 相关数据结构"></a>3. 相关数据结构</h3><ul>
+<li><p>block_device</p>
+<p>描述一个分区或整个磁盘对内核的一个块设备实例。</p>
+</li>
+<li><p>gendisk</p>
+<p>描述一个通用硬盘（generic hard disk）对象。</p>
+</li>
+<li><p>hd_struct</p>
+<p>描述分区应有的分区信息。</p>
+</li>
+<li><p>bio</p>
+<p>描述块数据传送时怎样完成填充或读取块给 driver，既描述了磁盘的位置，又描述了内存的位置。</p>
+</li>
+<li><p>bio_vec</p>
+<p>描述 bio 中的每个段。</p>
+</li>
+<li><p>request</p>
+<p>描述向内核请求一个列表准备做队列处理。</p>
+</li>
+<li><p>request_queue</p>
+<p>描述内核申请 request 资源建立请求链表并填写 bio 形成队列。</p>
+</li>
+</ul>
+<h3 id="4-zram-架构"><a href="#4-zram-架构" class="headerlink" title="4. zram 架构"></a>4. zram 架构</h3><p>zram 从架构上可以分为三部分：</p>
+<ul>
+<li><p>驱动部分</p>
+<p>该部分创建了一个块设备，然后提供了处理 IO 请求的接口；</p>
+</li>
+<li><p>数据流操作部分</p>
+<p>该部分主要提供串行或者并行的压缩和解压操作；</p>
+</li>
+<li><p>解压缩算法部分</p>
+<p>该部分主要是一个个压缩和解压算法，每个算法都提供统一的压缩和解压接口给数据流操作部分调用。</p>
+</li>
+</ul>
+<h3 id="5-zram-驱动部分代码分析"><a href="#5-zram-驱动部分代码分析" class="headerlink" title="5. zram 驱动部分代码分析"></a>5. zram 驱动部分代码分析</h3><ul>
+<li><p>zram_init</p>
+<p>首先调用 register_blkdev 注册块设备驱动到内核中，然后再根据 num_devices 调用 create_device 来创建相应个数的块设备，<br>这里默认是创建一个块设备。</p>
+</li>
+<li><p>create_device</p>
+<p>对于 flash、 RAM 等完全随机访问的非机械设备，并不需要进行复杂的 I&#x2F;O 调度，所以这里直接调用 blk_alloc_queue 分配一个 “请求队列”，然后使用 blk_queue_make_request 函数绑定分配好的 “请求队列” 和 “请求处理”函数 zram_make_request。接着初始化块设备的操作函数集 zram_devops 及设备容量、名字、队列等其他属性，最后调用 add_disk 将该块设备真正添加到内核中。</p>
+</li>
+<li><p>disksize_store</p>
+<p>zram 使用了 Zsmalloc 分配器来管理它的内存空间，Zsmalloc 分配器尝试将多个相同大小的对象存放在组合页（称为 zspage）中，这个组合页不要求物理连续，从而提高内存的使用率。</p>
+<p>首先会根据 zram 的内存中页面的个数，创建相应个数的 zram table，每个 zram table 都对应一个页面；然后会调用 zs_create_pool 创建一个 zsmalloc 的内存池，以后所有的页面申请和释放都是通过 zs_malloc 和 zs_free 来分配和释放相对应的对象。</p>
+</li>
+<li><p>zram_make_request</p>
+<p>在整个块设备的 I&#x2F;O 操作中，贯穿于始终的就是“请求”，块设备的 I&#x2F;O 操作会排队和整合。块设备驱动的任务就是处理请求，对请求的排队和整合则是由 I&#x2F;O 调度算法解决，因此，zram 块设备驱动的核心这个请求处理函数，所有的 zram I&#x2F;O 请求都是通过这个请求处理函数来处理的。</p>
+<p>首先它判断这个 I&#x2F;O 请求是否是有效的，即检测请求是否在 zram 逻辑块的范围以内，且是否对齐。然后调用 __zram_make_request 遍历 bio 中的每个段 bio_vec，根据 bio 的传输方向选择执行写 (zram_bvec_write) 或者读 (zram_bvec_read) 操作。</p>
+</li>
+<li><p>zram_bvec_write</p>
+<p>在写数据之前，首先使用 GFP_NOIO 标志创建一个不允许任何 I&#x2F;O 初始化的页面，然后将 zram_data 对应的数据先解压出来放到该创建的页面中。接着去调用 zcomp_strm_find 找到一个压缩操作流，如果是单压缩流，则实际调用的是 zcomp_strm_single_find，如果是多压缩流，则实际调用的是 zcomp_strm_multi_find。</p>
+<p>然后，将段 bio_vec 中的页面临时映射到高端地址，并将高端地址空间页面的内容复制到已保存好 zram_data 压缩后的数据的页面。调用 zs_malloc 申请一个 zram table，使 zcomp_compress 压缩内容并将压缩后的内容存放到新申请的 zram table。最后调用 zram_free_page 删除旧内容所占用的 zram table。</p>
+<p>zcomp_decompress 会根据 struct zcomp_backend 初始化时设定的压缩算法来调用相应的解压接口，lzo 压缩算法的解压接口是 lzo_compress ，而 lz4 压缩算法的解压接口是 zcomp_lz4_compress ，该接口还调用了压缩操作流，以此执行串行或者并行写操作。</p>
+</li>
+<li><p>zram_bvec_read</p>
+<p>读操作首先将段 bio_vec 中的页面临时映射到高端地址，然后再调用 zram_decompress_page 将 zram_meta 所对应的数据解压到这块映射的高端内存空间，解压的接口是 zcomp_decompress，它会根据 struct zcomp_backend 初始化时设定的压缩算法来调用相应的解压接口，lzo 压缩算法的解压接口是 lzo_decompress ，而 lz4 压缩算法的解压接口是 zcomp_lz4_decompress 。</p>
+</li>
+</ul>
+<h3 id="6-数据流操作部分代码分析"><a href="#6-数据流操作部分代码分析" class="headerlink" title="6. 数据流操作部分代码分析"></a>6. 数据流操作部分代码分析</h3><ul>
+<li><p>zcomp_create</p>
+<p>若最大可能同时执行压缩操作的个数来调用为一，则调用 zcomp_strm_single_create 来创建一个压缩流，而若最大可能同时执行压缩操作的个数来调用大于一，则调用 zcomp_strm_multi_create 先创建一个压缩流，然后创建一个压缩流链表，并将创建好的压缩流加到压缩流链表中，后面再根据需求来动态创建更多的压缩流。</p>
+</li>
+<li><p>zcomp_strm_multi_find</p>
+<p>单压缩流非常简单，如果前一个压缩操作已经持有 strm_lock 锁，那么下一个压缩操作必须等待前一个压缩操作调用 zcomp_strm_single_release 释放该锁才可以接着执行。</p>
+</li>
+<li><p>zcomp_strm_multi_find</p>
+<p>多压缩流就相对复杂一点，只要压缩流的个数没有达到最大的个数，那么压缩操作都可以分配到一个压缩流，并会加到压缩流链表中，当压缩流的个数达到最大限制之后，那么下一个压缩操作只能睡眠等待链表中有空闲的压缩流出现。</p>
+</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>[^zram_tech]: <a href="https://lwn.net/Articles/545244/">In-kernel memory compression</a><br>[^zram_doc]: <a href="https://www.kernel.org/doc/Documentation/blockdev/zram.txt">内核zram说明文档</a><br>[^block_device]: <a href="http://blog.csdn.net/jianchi88/article/details/7212370">inux设备驱动–块设备（一）之概念和框架</a></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="//cpuidle.html" data-toggle="tooltip" data-placement="top" title="CPUIDLE 之低功耗定时器">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="//android-sensor-framework.html" data-toggle="tooltip" data-placement="top" title="Android Sensor Framework 概览">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#zram" title="zram">zram</a>
+                        
+                          <a class="tag" href="/tags/#compcache" title="compcache">compcache</a>
+                        
+                          <a class="tag" href="/tags/#swap" title="swap">swap</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&#34;🌱&#34;,&#34;just do it&#34;,&#34;🍀&#34;]' color='[&#34;rgb(121,93,179)&#34; ,&#34;rgb(76,180,231)&#34; ,&#34;rgb(184,90,154)&#34;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+</body>
+
+</html>

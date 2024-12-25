@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          人脸解锁带来的安卓系统崩溃之谜！ - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2023/07/07/Face-recognition-block-analysis/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Security" title="Security">Security</a>
+                            
+                              <a class="tag" href="/tags/#Stability" title="Stability">Stability</a>
+                            
+                              <a class="tag" href="/tags/#Trustzone" title="Trustzone">Trustzone</a>
+                            
+                        </div>
+                        <h1>人脸解锁带来的安卓系统崩溃之谜！</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Huang xixin on
+                            2023-07-07
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a><strong>问题背景</strong></h2><p>用户反馈开启人脸解锁后，偶现密码解锁、指纹解锁、人脸解锁均无法使用，系统卡死随后出现安卓重启。</p>
+<h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a><strong>问题分析</strong></h2><h3 id="SWT之初步释疑"><a href="#SWT之初步释疑" class="headerlink" title="SWT之初步释疑"></a><strong>SWT之初步释疑</strong></h3><p>查看android SWT(Software Watchdog Timeout)日志，发现android.ui线程卡死。<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Subject: Blocked in <span class="keyword">handler</span> <span class="keyword">on</span> ui <span class="keyword">thread</span> (android.ui)</span><br></pre></td></tr></table></figure></p>
+<p>查看android.ui堆栈，可以看到该线程一直在等锁，锁id为0x05158af1。<br><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"android.ui"</span> prio=<span class="number">5</span> tid=<span class="number">12</span> Blocked</span><br><span class="line">  | group=<span class="string">"main"</span> sCount=<span class="number">1</span> ucsCount=<span class="number">0</span> flags=<span class="number">1</span> obj=<span class="number">0</span>x17f405e8 self=<span class="number">0</span>xb400007df01a8800</span><br><span class="line">  | sysTid=<span class="number">2904</span> nice=-<span class="number">2</span> cgrp=top-app sched=<span class="number">0</span>/<span class="number">0</span> handle=<span class="number">0</span>x7de7bbbcb0</span><br><span class="line">  | state=S schedstat=( <span class="number">8623914505397</span> <span class="number">6889640642861</span> <span class="number">50368108</span> ) utm=<span class="number">519874</span> stm=<span class="number">342516</span> core=<span class="number">5</span> HZ=<span class="number">100</span></span><br><span class="line">  | stack=<span class="number">0</span>x7de7ab8000-<span class="number">0</span>x7de7aba000 stackSize=<span class="number">1039</span>KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  at <span class="keyword">com</span>.android.server.locksettings.LockSettingsService.getCredentialTypeInternal(LockSettingsService.jav<span class="variable">a:1341</span>)</span><br><span class="line">  - waiting <span class="keyword">to</span> lock <span class="symbol">&lt;0x05158af1&gt;</span> (<span class="keyword">a</span> <span class="keyword">com</span>.android.server.locksettings.SyntheticPasswordManager) held by thread <span class="number">178</span></span><br><span class="line">  at <span class="keyword">com</span>.android.server.locksettings.LockSettingsService.getCredentialType(LockSettingsService.jav<span class="variable">a:1328</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.internal.widget.LockPatternUtils$<span class="number">1</span>.apply(LockPatternUtils.jav<span class="variable">a:946</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.internal.widget.LockPatternUtils$<span class="number">1</span>.apply(LockPatternUtils.jav<span class="variable">a:942</span>)</span><br><span class="line">  at android.app.PropertyInvalidatedCache.recompute(PropertyInvalidatedCache.jav<span class="variable">a:754</span>)</span><br><span class="line">  at android.app.PropertyInvalidatedCache.query(PropertyInvalidatedCache.jav<span class="variable">a:971</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.internal.widget.LockPatternUtils.getCredentialTypeForUser(LockPatternUtils.jav<span class="variable">a:985</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.internal.widget.LockPatternUtils.getKeyguardStoredPasswordQuality(LockPatternUtils.jav<span class="variable">a:819</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.<span class="keyword">view</span>.FlymeConfirmPasswordView.getPasswordType(FlymeConfirmPasswordView.jav<span class="variable">a:238</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.<span class="keyword">view</span>.FlymeConfirmPasswordView.refreshViews(FlymeConfirmPasswordView.jav<span class="variable">a:118</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.<span class="keyword">view</span>.FlymeConfirmPasswordView.initViews(FlymeConfirmPasswordView.jav<span class="variable">a:114</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.<span class="keyword">view</span>.FlymeConfirmPasswordView.<span class="symbol">&lt;init&gt;</span>(FlymeConfirmPasswordView.jav<span class="variable">a:81</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.<span class="keyword">view</span>.FlymeConfirmPasswordView.<span class="symbol">&lt;init&gt;</span>(FlymeConfirmPasswordView.jav<span class="variable">a:75</span>)</span><br><span class="line">  at java.lang.reflect.Constructor.newInstance0(Native method)</span><br><span class="line">  at java.lang.reflect.Constructor.newInstance(Constructor.jav<span class="variable">a:343</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.createView(LayoutInflater.jav<span class="variable">a:858</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.createViewFromTag(LayoutInflater.jav<span class="variable">a:1010</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.createViewFromTag(LayoutInflater.jav<span class="variable">a:965</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.rInflate(LayoutInflater.jav<span class="variable">a:1127</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.rInflateChildren(LayoutInflater.jav<span class="variable">a:1088</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.rInflate(LayoutInflater.jav<span class="variable">a:1130</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.rInflateChildren(LayoutInflater.jav<span class="variable">a:1088</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.inflate(LayoutInflater.jav<span class="variable">a:686</span>)</span><br><span class="line">  - locked <span class="symbol">&lt;0x0f6a962a&gt;</span> (<span class="keyword">a</span> java.lang.Object[])</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.inflate(LayoutInflater.jav<span class="variable">a:538</span>)</span><br><span class="line">  at android.<span class="keyword">view</span>.LayoutInflater.inflate(LayoutInflater.jav<span class="variable">a:485</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.internal.policy.PhoneWindow.setContentView(PhoneWindow.jav<span class="variable">a:474</span>)</span><br><span class="line">  at android.app.Dialog.setContentView(Dialog.jav<span class="variable">a:597</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.MzGlobalActions$MzGlobalActionsDialog.onCreate(MzGlobalActions.jav<span class="variable">a:326</span>)</span><br><span class="line">  at android.app.Dialog.dispatchOnCreate(Dialog.jav<span class="variable">a:436</span>)</span><br><span class="line">  at android.app.Dialog.show(Dialog.jav<span class="variable">a:325</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.MzGlobalActions$MzGlobalActionsDialog.show(MzGlobalActions.jav<span class="variable">a:824</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.MzGlobalActions.showGlobalActionsDialog(MzGlobalActions.jav<span class="variable">a:177</span>)</span><br><span class="line">  at <span class="keyword">com</span>.flyme.server.policy.MzGlobalActions.showGlobalActionsDialog(MzGlobalActions.jav<span class="variable">a:134</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.server.policy.PhoneWindowManager.mzShowGlobalActionsInternal(PhoneWindowManager.jav<span class="variable">a:6358</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.server.policy.PhoneWindowManager.showGlobalActionsInternal(PhoneWindowManager.jav<span class="variable">a:1641</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.server.policy.PhoneWindowManager$PolicyHandler.handleMessage(PhoneWindowManager.jav<span class="variable">a:676</span>)</span><br><span class="line">  at android.os.Handler.dispatchMessage(Handler.jav<span class="variable">a:106</span>)</span><br><span class="line">  at android.os.Looper.loopOnce(Looper.jav<span class="variable">a:201</span>)</span><br><span class="line">  at android.os.Looper.loop(Looper.jav<span class="variable">a:288</span>)</span><br><span class="line">  at android.os.HandlerThread.run(HandlerThread.jav<span class="variable">a:67</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.server.ServiceThread.run(ServiceThread.jav<span class="variable">a:44</span>)</span><br><span class="line">  at <span class="keyword">com</span>.android.server.UiThread.run(UiThread.jav<span class="variable">a:45</span>)</span><br></pre></td></tr></table></figure></p>
+<p>在SWT日志中查找上述锁id，可以找到如下线程持锁未释放。<br>从堆栈上来看，locksettings在进行verifyChallenge调用时，binder对端没有返回。<br>locksettings的对端是gatekeeperd。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"binder:2869_1C"</span> prio=<span class="number">5</span> tid=<span class="number">178</span> Native</span><br><span class="line">  | group=<span class="string">"main"</span> sCount=<span class="number">1</span> ucsCount=<span class="number">0</span> flags=<span class="number">1</span> obj=<span class="number">0x1821f850</span> self=<span class="number">0xb400007dc0652800</span></span><br><span class="line">  | sysTid=<span class="number">18660</span> nice=<span class="number">0</span> cgrp=foreground sched=<span class="number">0</span>/<span class="number">0</span> handle=<span class="number">0x7dc0fdbcb0</span></span><br><span class="line">  | state=S schedstat=( <span class="number">2488346381691</span> <span class="number">2190821996172</span> <span class="number">10125980</span> ) utm=<span class="number">144692</span> stm=<span class="number">104142</span> core=<span class="number">5</span> HZ=<span class="number">100</span></span><br><span class="line">  | stack=<span class="number">0x7dc0ee4000</span><span class="number">-0x7dc0ee6000</span> stackSize=<span class="number">991</span>KB</span><br><span class="line">  | held mutexes=</span><br><span class="line">  native: #<span class="number">00</span> pc <span class="number">00000000000e06f</span>c  /apex/com.android.runtime/lib64/bionic/libc.so (__ioctl+<span class="number">12</span>) (BuildId: c7a69636ad70437896f8f6cfecde9001)</span><br><span class="line">  native: #<span class="number">01</span> pc <span class="number">000000000009757</span>c  /apex/com.android.runtime/lib64/bionic/libc.so (ioctl+<span class="number">160</span>) (BuildId: c7a69636ad70437896f8f6cfecde9001)</span><br><span class="line">  native: #<span class="number">02</span> pc <span class="number">000000000005</span>c2a0  /system/lib64/libbinder.so (android::IPCThreadState::talkWithDriver(<span class="built_in">bool</span>)+<span class="number">284</span>) (BuildId: b5f24c77eb4cb8038980e4e1f81dcfc0)</span><br><span class="line">  native: #<span class="number">03</span> pc <span class="number">000000000005</span>d4fc  /system/lib64/libbinder.so (android::IPCThreadState::waitForResponse(android::Parcel*, <span class="built_in">int</span>*)+<span class="number">76</span>) (BuildId: b5f24c77eb4cb8038980e4e1f81dcfc0)</span><br><span class="line">  native: #<span class="number">04</span> pc <span class="number">000000000005</span>d238  /system/lib64/libbinder.so (android::IPCThreadState::transact(<span class="built_in">int</span>, unsigned <span class="built_in">int</span>, android::Parcel <span class="keyword">const</span>&amp;, android::Parcel*, unsigned <span class="built_in">int</span>)+<span class="number">224</span>) (BuildId: b5f24c77eb4cb8038980e4e1f81dcfc0)</span><br><span class="line">  native: #<span class="number">05</span> pc <span class="number">0000000000054</span>a44  /system/lib64/libbinder.so (android::BpBinder::transact(unsigned <span class="built_in">int</span>, android::Parcel <span class="keyword">const</span>&amp;, android::Parcel*, unsigned <span class="built_in">int</span>)+<span class="number">192</span>) (BuildId: b5f24c77eb4cb8038980e4e1f81dcfc0)</span><br><span class="line">  native: #<span class="number">06</span> pc <span class="number">0000000000176</span>bf8  /system/lib64/libandroid_runtime.so (android_os_BinderProxy_transact(_JNIEnv*, _jobject*, <span class="built_in">int</span>, _jobject*, _jobject*, <span class="built_in">int</span>)+<span class="number">156</span>) (BuildId: da5ff736bfee156debca012f9a4e67da)</span><br><span class="line">  at android.os.BinderProxy.transactNative(Native method)</span><br><span class="line">  at android.os.BinderProxy.transact(BinderProxy.java:<span class="number">584</span>)</span><br><span class="line">  at android.service.gatekeeper.IGateKeeperService$Stub$Proxy.verifyChallenge(IGateKeeperService.java:<span class="number">349</span>)</span><br><span class="line">  at com.android.server.locksettings.SyntheticPasswordManager.unwrapPasswordBasedSyntheticPassword(SyntheticPasswordManager.java:<span class="number">1091</span>)</span><br><span class="line">  at com.android.server.locksettings.LockSettingsService.spBasedDoVerifyCredential(LockSettingsService.java:<span class="number">2999</span>)</span><br><span class="line">  - locked &lt;<span class="number">0x05158af1</span>&gt; (a com.android.server.locksettings.SyntheticPasswordManager)</span><br><span class="line">  at com.android.server.locksettings.LockSettingsService.doVerifyCredential(LockSettingsService.java:<span class="number">2355</span>)</span><br><span class="line">  at com.android.server.locksettings.LockSettingsService.checkCredential(LockSettingsService.java:<span class="number">2269</span>)</span><br><span class="line">  at com.android.<span class="built_in">int</span>ernal.widget.ILockSettings$Stub.onTransact(ILockSettings.java:<span class="number">649</span>)</span><br><span class="line">  at android.os.Binder.execTransactInternal(Binder.java:<span class="number">1285</span>)</span><br><span class="line">  at android.os.Binder.execTransact(Binder.java:<span class="number">1244</span>)</span><br></pre></td></tr></table></figure></p>
+<p>上述线程所在的进程pid为2869，线程tid为18660。<br>在binderinfo中查找2869:18660，可以看到outgoing事务已经送出，gatekeeperd的pid为2448，tid为2448。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">thread <span class="number">18660</span>: l <span class="number">11</span> need_return <span class="number">0</span> tr <span class="number">0</span></span><br><span class="line">  outgoing transaction <span class="number">1265277307</span>: <span class="number">0000000000000000</span> <span class="keyword">from</span> <span class="number">2869</span>:<span class="number">18660</span> to <span class="number">2448</span>:<span class="number">2448</span> code <span class="number">3</span> flags <span class="number">30</span> pri <span class="number">0</span>:<span class="number">120</span> r1</span><br></pre></td></tr></table></figure></p>
+<p>在binderinfo中找到gatekeeperd的binder信息，可以看到gatekeeperd已经收到incoming事务。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">proc <span class="number">2448</span></span><br><span class="line">context binder</span><br><span class="line">  thread <span class="number">2448</span>: l <span class="number">02</span> need_return <span class="number">0</span> tr <span class="number">0</span></span><br><span class="line">    incoming transaction <span class="number">1265277307</span>: <span class="number">0000000000000000</span> <span class="keyword">from</span> <span class="number">2869</span>:<span class="number">18660</span> to <span class="number">2448</span>:<span class="number">2448</span> code <span class="number">3</span> flags <span class="number">30</span> pri <span class="number">0</span>:<span class="number">120</span> r1 node <span class="number">2469</span> size <span class="number">252</span>:<span class="number">0</span> data <span class="number">0000000000000000</span></span><br><span class="line">  node <span class="number">2469</span>: ub40000758600c1a0 cb400007586009188 pri <span class="number">0</span>:<span class="number">139</span> hs <span class="number">1</span> hw <span class="number">1</span> ls <span class="number">1</span> lw <span class="number">0</span> <span class="keyword">is</span> <span class="number">2</span> iw <span class="number">2</span> tr <span class="number">1</span> proc <span class="number">2869</span> <span class="number">1121</span></span><br><span class="line">  <span class="built_in">ref</span> <span class="number">2436</span>: desc <span class="number">0</span> node <span class="number">1</span> s <span class="number">1</span> w <span class="number">1</span> d <span class="number">0000000000000000</span></span><br><span class="line">  <span class="built_in">ref</span> <span class="number">100653</span>: desc <span class="number">1</span> node <span class="number">15289</span> s <span class="number">1</span> w <span class="number">1</span> d <span class="number">0000000000000000</span></span><br><span class="line">  buffer <span class="number">57317755</span>: <span class="number">0000000000000000</span> size <span class="number">252</span>:<span class="number">0</span>:<span class="number">0</span> active</span><br></pre></td></tr></table></figure></p>
+<p>gatekeeper需要通过gatekeeper HAL(android.hardware.gatekeeper-service-qti)来实现功能。<br>gatekeeper只有一个线程，主线程既负责处理binder请求，也负责发起hwbinder请求，因此gatekeeperd binder请求无返回，说明gatekeeper HAL hwbinder请求无返回。<br>查看gatekeeperd的hwbinder上下文，可以看到outgoing事务已经送出，对端pid为1336，tid为1336。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">proc <span class="number">2448</span></span><br><span class="line">context hwbinder</span><br><span class="line">  thread <span class="number">2448</span>: l <span class="number">10</span> need_return <span class="number">0</span> tr <span class="number">0</span></span><br><span class="line">    outgoing transaction <span class="number">1265277317</span>: <span class="number">0000000000000000</span> <span class="keyword">from</span> <span class="number">2448</span>:<span class="number">2448</span> to <span class="number">1336</span>:<span class="number">1336</span> code <span class="number">2</span> flags <span class="number">30</span> pri <span class="number">0</span>:<span class="number">120</span> r1</span><br><span class="line">    transaction complete</span><br><span class="line">  thread <span class="number">6226</span>: l <span class="number">12</span> need_return <span class="number">0</span> tr <span class="number">0</span></span><br><span class="line">  <span class="built_in">ref</span> <span class="number">2437</span>: desc <span class="number">0</span> node <span class="number">3</span> s <span class="number">1</span> w <span class="number">1</span> d <span class="number">0000000000000000</span></span><br><span class="line">  <span class="built_in">ref</span> <span class="number">2447</span>: desc <span class="number">1</span> node <span class="number">210</span> s <span class="number">1</span> w <span class="number">1</span> d <span class="number">0000000000000000</span></span><br><span class="line">  <span class="built_in">ref</span> <span class="number">100646</span>: desc <span class="number">2</span> node <span class="number">1233</span> s <span class="number">1</span> w <span class="number">1</span> d <span class="number">0000000000000000</span></span><br></pre></td></tr></table></figure></p>
+<p>继续查看gatekeeper HAL的binder信息，可以看到gatekeeper HAL已经收到incoming事务。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">proc <span class="number">1336</span></span><br><span class="line">context hwbinder</span><br><span class="line">  thread <span class="number">1336</span>: l <span class="number">02</span> need_return <span class="number">0</span> tr <span class="number">0</span></span><br><span class="line">    incoming transaction <span class="number">1265277317</span>: <span class="number">0000000000000000</span> <span class="keyword">from</span> <span class="number">2448</span>:<span class="number">2448</span> to <span class="number">1336</span>:<span class="number">1336</span> code <span class="number">2</span> flags <span class="number">30</span> pri <span class="number">0</span>:<span class="number">120</span> r1 node <span class="number">210</span> size <span class="number">220</span>:<span class="number">32</span> data <span class="number">0000000000000000</span></span><br><span class="line">  node <span class="number">210</span>: ub4000072b120c340 cb4000072b12220a0 pri <span class="number">0</span>:<span class="number">120</span> hs <span class="number">1</span> hw <span class="number">1</span> ls <span class="number">1</span> lw <span class="number">0</span> <span class="keyword">is</span> <span class="number">2</span> iw <span class="number">2</span> tr <span class="number">1</span> proc <span class="number">2448</span> <span class="number">1122</span></span><br><span class="line">  <span class="built_in">ref</span> <span class="number">178</span>: desc <span class="number">0</span> node <span class="number">3</span> s <span class="number">1</span> w <span class="number">1</span> d <span class="number">0000000000000000</span></span><br><span class="line">  buffer <span class="number">57317765</span>: <span class="number">0000000000000000</span> size <span class="number">220</span>:<span class="number">32</span>:<span class="number">160</span> active</span><br></pre></td></tr></table></figure></p>
+<p>gatekeeper HAL是基于TEE相关的接口来实现功能的，因此需要查看该进程在用户空间的堆栈，分析hwbinder无返回原因。<br>比较遗憾的是，SWT日志中并没有关于gatekeeper HAL在用户空间的堆栈，但从psinfo日志也可以看到，gatekeeper HAL处理hwbinder的线程处于D状态。<br>Linux进程D状态(TASK_UNINTERRUPTIBLE)，不可中断的睡眠状态。<br>线程在某个时刻处于D状态并不能说明该线程就是异常的，但如果长时间处于D状态，那么很可能就是有问题的。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">system        <span class="number">1336</span>  <span class="number">1336</span>     <span class="number">1</span> <span class="number">2243616</span>   <span class="number">3572</span> process_invoke_req  <span class="number">0</span> D <span class="symbol">gatekeeper@</span><span class="number">1.0</span>-</span><br><span class="line">system        <span class="number">1336</span>  <span class="number">1349</span>     <span class="number">1</span> <span class="number">2243616</span>   <span class="number">3572</span> process_accept_req  <span class="number">0</span> S <span class="symbol">gatekeeper@</span><span class="number">1.0</span>-</span><br><span class="line">system        <span class="number">1336</span>  <span class="number">1350</span>     <span class="number">1</span> <span class="number">2243616</span>   <span class="number">3572</span> process_accept_req  <span class="number">0</span> S <span class="symbol">gatekeeper@</span><span class="number">1.0</span>-</span><br><span class="line">system        <span class="number">1336</span>  <span class="number">1351</span>     <span class="number">1</span> <span class="number">2243616</span>   <span class="number">3572</span> process_accept_req  <span class="number">0</span> S <span class="symbol">gatekeeper@</span><span class="number">1.0</span>-</span><br><span class="line">system        <span class="number">1336</span>  <span class="number">1352</span>     <span class="number">1</span> <span class="number">2243616</span>   <span class="number">3572</span> process_accept_req  <span class="number">0</span> S <span class="symbol">gatekeeper@</span><span class="number">1.0</span>-</span><br></pre></td></tr></table></figure></p>
+<p>从sysrq打印所有D状态进程堆栈来看，该线程连续2秒都处于D状态，在gatekeeper HAL的业务上不可能有这么长时间，因此判定此线程异常。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] task:<span class="symbol">gatekeeper@</span><span class="number">1.0</span>- state:D stack:<span class="number">11152</span> pid: <span class="number">1336</span> ppid:     <span class="number">1</span> flags:<span class="number">0x04000008</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">25</span> <span class="number">2023</span>] task:<span class="symbol">gatekeeper@</span><span class="number">1.0</span>- state:D stack:<span class="number">11152</span> pid: <span class="number">1336</span> ppid:     <span class="number">1</span> flags:<span class="number">0x04000008</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">26</span> <span class="number">2023</span>] task:<span class="symbol">gatekeeper@</span><span class="number">1.0</span>- state:D stack:<span class="number">11152</span> pid: <span class="number">1336</span> ppid:     <span class="number">1</span> flags:<span class="number">0x04000008</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="内核态之真凶查找"><a href="#内核态之真凶查找" class="headerlink" title="内核态之真凶查找"></a><strong>内核态之真凶查找</strong></h3><p>通过前面的分析，已知系统发生SWT是由于gatekeeper HAL处理hwbinder的线程陷入内核态且长时间处于D状态。<br>结合sysrq打印所有D状态进程堆栈信息，可以看到该线程在内核中等锁。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] task:<span class="symbol">gatekeeper@</span><span class="number">1.0</span>- state:D stack:<span class="number">11152</span> pid: <span class="number">1336</span> ppid:     <span class="number">1</span> flags:<span class="number">0x04000008</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] Call trace:</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __switch_to+<span class="number">0x240</span>/<span class="number">0x490</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __schedule+<span class="number">0x638</span>/<span class="number">0xacc</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] schedule+<span class="number">0x110</span>/<span class="number">0x204</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] schedule_preempt_disabled+<span class="number">0x2c</span>/<span class="number">0x4c</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __mutex_lock+<span class="number">0x328</span>/<span class="number">0x824</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __mutex_lock_slowpath+<span class="number">0x18</span>/<span class="number">0x28</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] mutex_lock+<span class="number">0x48</span>/<span class="number">0x118</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] process_invoke_req+<span class="number">0x1f0</span>/<span class="number">0x80c</span> [smcinvoke_dlkm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] smcinvoke_ioctl+<span class="number">0x80</span>/<span class="number">0x404</span> [smcinvoke_dlkm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __arm64_sys_ioctl+<span class="number">0x184</span>/<span class="number">0x210</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] invoke_syscall+<span class="number">0x60</span>/<span class="number">0x150</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0_svc_common+<span class="number">0xb8</span>/<span class="number">0xf8</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] do_el0_svc+<span class="number">0x28</span>/<span class="number">0xa0</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0_svc+<span class="number">0x24</span>/<span class="number">0x84</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0t_64_sync_handler+<span class="number">0x88</span>/<span class="number">0xec</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0t_64_sync+<span class="number">0x1b4</span>/<span class="number">0x1b8</span></span><br></pre></td></tr></table></figure></p>
+<p>process_invoke_req函数的地址为0x000000000000818c。<br><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">nm</span> <span class="string">smcinvoke_dlkm.ko | grep -w process_invoke_req</span></span><br><span class="line"><span class="attr">000000000000818c</span> <span class="string">t process_invoke_req</span></span><br></pre></td></tr></table></figure></p>
+<p>因此process_invoke_req+0x1f0的地址为0x000000000000837c，对应的代码位置如下。<br><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">aarch64-linux-gnu-addr2line -e smcinvoke_dlkm.ko <span class="number">0x000000000000837c</span></span><br><span class="line">vendor<span class="regexp">/qcom/</span>opensource<span class="regexp">/securemsm-kernel/</span>smcinvoke/smcinvoke.<span class="string">c:</span><span class="number">2320</span></span><br></pre></td></tr></table></figure></p>
+<p>查看代码，发现是smcinvoke驱动中的全局锁g_smcinvoke_lock被持有未释放。<br><figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mutex_lock(<span class="name">&amp;g_smcinvoke_lock</span>)<span class="comment">;</span></span><br></pre></td></tr></table></figure></p>
+<p>查看sysrq打印所有CPU堆栈信息，在CPU7上确实有线程持锁未释放。<br>但由于日志缺少足够的信息，因此并无法知道此时运行在CPU7上的进程。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] sysrq: CPU7:</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] Call trace:</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] dump_backtrace.cfi_jt+<span class="number">0x0</span>/<span class="number">0x8</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] showacpu+<span class="number">0xf8</span>/<span class="number">0x1b4</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] flush_smp_call_function_queue+<span class="number">0x1f0</span>/<span class="number">0x3a8</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] do_handle_IPI+<span class="number">0xe0</span>/<span class="number">0x344</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] ipi_handler+<span class="number">0x20</span>/<span class="number">0x34</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] handle_percpu_devid_irq+<span class="number">0xc0</span>/<span class="number">0x374</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] handle_domain_irq+<span class="number">0xd0</span>/<span class="number">0x154</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] gic_handle_irq<span class="number">.33729</span>+<span class="number">0x54</span>/<span class="number">0x2bc</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] call_on_irq_stack+<span class="number">0x40</span>/<span class="number">0x70</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] do_interrupt_handler+<span class="number">0x44</span>/<span class="number">0xa0</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el1_interrupt+<span class="number">0x34</span>/<span class="number">0x64</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el1h_64_irq_handler+<span class="number">0x1c</span>/<span class="number">0x2c</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el1h_64_irq+<span class="number">0x7c</span>/<span class="number">0x80</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __arm_smccc_smc+<span class="number">0x14</span>/<span class="number">0x40</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __scm_smc_call+<span class="number">0x1b8</span>/<span class="number">0x56c</span> [qcom_scm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] qcom_scm_invoke_callback_response+<span class="number">0xa8</span>/<span class="number">0x12c</span> [qcom_scm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] invoke_cmd_handler+<span class="number">0x120</span>/<span class="number">0x254</span> [smcinvoke_dlkm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] prepare_send_scm_msg+<span class="number">0x15c</span>/<span class="number">0x450</span> [smcinvoke_dlkm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] process_invoke_req+<span class="number">0x294</span>/<span class="number">0x80c</span> [smcinvoke_dlkm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] smcinvoke_ioctl+<span class="number">0x80</span>/<span class="number">0x404</span> [smcinvoke_dlkm]</span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] __arm64_sys_ioctl+<span class="number">0x184</span>/<span class="number">0x210</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] invoke_syscall+<span class="number">0x60</span>/<span class="number">0x150</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0_svc_common+<span class="number">0xb8</span>/<span class="number">0xf8</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] do_el0_svc+<span class="number">0x28</span>/<span class="number">0xa0</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0_svc+<span class="number">0x24</span>/<span class="number">0x84</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0t_64_sync_handler+<span class="number">0x88</span>/<span class="number">0xec</span></span><br><span class="line">[Tue May  <span class="number">9</span> <span class="number">14</span>:<span class="number">58</span>:<span class="number">24</span> <span class="number">2023</span>] el0t_64_sync+<span class="number">0x1b4</span>/<span class="number">0x1b8</span></span><br></pre></td></tr></table></figure></p>
+<p>考虑到此问题发生的场景与人脸识别有关，且日志也显示人脸识别线程一直处于99%的CPU占用率状态，因此有理由怀疑运行在CPU7上的线程就是人脸识别的线程。<br>FaceAysncQueue线程刚好负责人脸识别TEE的接口调用，因此它的嫌疑最大。<br><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">06</span><span class="number">-11</span> <span class="number">11</span>:<span class="number">34</span>:<span class="number">26.491</span>  <span class="number">2869</span> <span class="number">29516</span> E ActivityManager:   <span class="number">99</span>% <span class="number">2589</span>/vendor.xingji.hardware.biometrics.<span class="symbol">face@</span><span class="number">1.0</span>-service: <span class="number">0</span>% user + <span class="number">99</span>% kernel</span><br><span class="line"><span class="number">06</span><span class="number">-11</span> <span class="number">11</span>:<span class="number">34</span>:<span class="number">26.491</span>  <span class="number">2869</span> <span class="number">29516</span> E ActivityManager:     <span class="number">99</span>% <span class="number">2639</span>/FaceAysncQueue: <span class="number">0</span>% user + <span class="number">99</span>% kernel</span><br></pre></td></tr></table></figure></p>
+<p>结合TEE人脸识别的日志，可以看到问题发生时，HAL调用人脸识别TA，人脸识别TA一直没有返回。<br>因此，人脸识别就是罪魁祸首。</p>
+<h3 id="kdump之根因定位"><a href="#kdump之根因定位" class="headerlink" title="kdump之根因定位"></a><strong>kdump之根因定位</strong></h3><p>日志的信息比较有限，只能分析到上述的结论，万幸的是，在其他复现问题的机器上抓到了kdump。<br>虽然问题发生在TEE中，但只要有kdump和symbols，那么原理上就可以解析出对应的堆栈，最终解析堆栈如下。<br><figure class="highlight isbl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">-<span class="number">000</span>|<span class="function"><span class="title">Laplacian</span>(<span class="variable">asm</span>)</span></span><br><span class="line">-<span class="number">001</span>|<span class="function"><span class="title">oem_tee_image_quality_sharpness</span>(<span class="variable">asm</span>)</span></span><br><span class="line">-<span class="number">002</span>|<span class="function"><span class="title">oem_tee_quality</span>(<span class="variable">asm</span>)</span></span><br><span class="line">-<span class="number">003</span>|<span class="function"><span class="title">getFeature</span>()</span></span><br><span class="line">-<span class="number">004</span>|<span class="function"><span class="title">handle_cmd_get_feature</span>()</span></span><br><span class="line">-<span class="number">005</span>|<span class="function"><span class="title">tz_app_cmd_handler</span>()</span></span><br></pre></td></tr></table></figure></p>
+<p>考虑到问题本身不容易复现，算法由供应商提供，添加日志定位问题周期长，因此需要更进一步的手段来定位问题。<br>通过trace32进一步解析，获取通用寄存器，TA加载地址等信息如下。<br><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">Register:</span></span><br><span class="line"><span class="string">X0</span> <span class="string">=</span> <span class="number">0x75CF2AC0</span><span class="string">,</span> <span class="string">X1</span> <span class="string">=</span> <span class="number">0x75CF2980</span><span class="string">,</span> <span class="string">X2</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span> <span class="string">X3</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span></span><br><span class="line"><span class="string">X4</span> <span class="string">=</span> <span class="number">0x00015888</span><span class="string">,</span> <span class="string">X5</span> <span class="string">=</span> <span class="number">0x00010910</span><span class="string">,</span> <span class="string">X6</span> <span class="string">=</span> <span class="number">0x00010911</span><span class="string">,</span> <span class="string">X7</span> <span class="string">=</span> <span class="number">0x0000001F</span><span class="string">,</span></span><br><span class="line"><span class="string">X8</span> <span class="string">=</span> <span class="number">0xFFFFFFFE</span><span class="string">,</span> <span class="string">X9</span> <span class="string">=</span> <span class="number">0x00000FED</span><span class="string">,</span> <span class="string">X10</span> <span class="string">=</span> <span class="number">0x75CF2000</span><span class="string">,</span> <span class="string">X11</span> <span class="string">=</span> <span class="number">0x7FFFFFFF</span><span class="string">,</span></span><br><span class="line"><span class="string">X12</span> <span class="string">=</span> <span class="number">0x00001FFF</span><span class="string">,</span> <span class="string">X13</span> <span class="string">=</span> <span class="number">0xFFFFFFFE</span><span class="string">,</span> <span class="string">X14</span> <span class="string">=</span> <span class="number">0x0000000F</span><span class="string">,</span> <span class="string">X15</span> <span class="string">=</span> <span class="number">0x00000010</span><span class="string">,</span></span><br><span class="line"><span class="string">X16</span> <span class="string">=</span> <span class="number">0x00000001</span><span class="string">,</span> <span class="string">X17</span> <span class="string">=</span> <span class="number">0x73656E73</span><span class="string">,</span> <span class="string">X18</span> <span class="string">=</span> <span class="number">0x0000FFFF</span><span class="string">,</span> <span class="string">X19</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span></span><br><span class="line"><span class="string">X20</span> <span class="string">=</span> <span class="number">0x75CF2980</span><span class="string">,</span> <span class="string">X21</span> <span class="string">=</span> <span class="number">0x75CF2980</span><span class="string">,</span> <span class="string">X22</span> <span class="string">=</span> <span class="number">0x75CF2AC0</span><span class="string">,</span> <span class="string">X23</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span></span><br><span class="line"><span class="string">X24</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span> <span class="string">X25</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span> <span class="string">X26</span> <span class="string">=</span> <span class="number">0x75CF2AC0</span><span class="string">,</span> <span class="string">X27</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span></span><br><span class="line"><span class="string">X28</span> <span class="string">=</span> <span class="number">0x00000000</span><span class="string">,</span> <span class="string">X29</span> <span class="string">=</span> <span class="number">0x1F65ED90</span><span class="string">,</span> <span class="string">X30</span> <span class="string">=</span> <span class="number">0x38586CA8</span><span class="string">,</span> <span class="string">ELR</span> <span class="string">=</span> <span class="number">0x385863A8</span><span class="string">,</span></span><br><span class="line"><span class="string">PC</span> <span class="string">=</span> <span class="number">0x385863A8</span></span><br><span class="line"></span><br><span class="line"><span class="attr">VA of stapp loading start:</span> <span class="number">0x38479000</span></span><br><span class="line"><span class="string">Entry</span> <span class="string">of</span> <span class="string">Laplacian</span> <span class="string">:0x38586358</span></span><br></pre></td></tr></table></figure></p>
+<p>问题点虚拟地址为0x385863A8，Laplacian函数虚拟地址为0x38586358。<br>因此，问题点在Laplacian偏移offset=0x385863A8-0x38586358=0x50位置。<br>Laplacian函数链接地址0x107a78，所以问题点的链接地址为0x107a78+0x50=0x107AC8。<br>反汇编显示，0x107AC8地址附近刚好是个循环。</p>
+<p><img src="反汇编.jpg" alt="反汇编"></p>
+<p>循环部分的汇编代码如下。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">CMP W11, #0</span><br><span class="line">CSEL W13, WZR, W8 LT</span><br><span class="line">SUB W11, W13, W11</span><br><span class="line">CMP W11, W25</span><br><span class="line">B.CS loc_107AC8</span><br></pre></td></tr></table></figure></p>
+<p>CMP W11, #0，和立即数0做比较。CMP指令的实现SUB指令基本同等，区别是SUB指令需要将结果保存到寄存器，CMP指令丢弃计算结果。CMP指令和SUB指令执行后都会更新CPSR寄存器的NZCV标志位。W11的值是0X7FFFFFFF，也就是0X7FFFFFFF-0x0=0X7FFFFFFF-0x0。结果大于0且没有借位和溢出，所以结果是N=0，Z=0，C=1，V=0。</p>
+<p>CSEL W13, WZR, W8 LT，如果前一条比较指令是LT(小于)情况下(即N!=V)，则W13=WZR，否则W13=W8。前面的CMP指令执行后N==V，W8=0xFFFFFFFE，所以结果是W13=0xFFFFFFFE。</p>
+<p>SUB W11, W13, W11，W11=W13-W11，W11=0x7FFFFFFF，所以结果是W11=0xFFFFFFFE-0x7FFFFFFF=0x7FFFFFFF。</p>
+<p>CMP W11, W25，和W25的值做比较。W11=0x7FFFFFFF，W25=0x00000000，所以结果是N=0，Z=0，C=1，V=0。</p>
+<p>B.CS loc_107AC8，如果CPSR寄存器的C标志位置位，则跳转到地址0x107AC8，继续循环。上面的结果是C标志位置位的，所以循环继续，形成死循环。</p>
+<p>上面这段汇编代码是一个循环，跳出循环的条件是W11小于W25。W11只有两个值，要么是1，要么是W8-1。W8的值为W25*2-2。当W25为0或1的时候，循环就会无法跳出。当W25的值大于1时，第一轮循环就会跳出不再继续。而W25是函数传入的第三个参数，这个值刚好等于0。</p>
+<p>从函数的命名来看，这应该是一个拉普拉斯变换的实现，函数有四个参数。猜测第一个参数是变换前的数据，第二个参数是变换后的数据，第三个和第四个参数是宽度和高度。</p>
+<p><img src="laplace_transfromation.jpg" alt="laplace_transfromation"></p>
+<p>从供应商获取函数签名，确实如上面的猜测一样。<br><img src="Laplacian.png" alt="Laplacian"></p>
+<p>也就是说，这里面存在两个问题。一是没有进行边界检查，导致代码存在死循环的可能。二是如果逻辑走到这个函数，这里的宽度是不能为0的。在宽度为0的时候，oem_tee_image_quality_sharpness不应该调用Laplacian函数。</p>
+<p>从日志来看，出现问题时应该是在没有检测到人脸或者从没有检测到人脸过渡到检测到人脸(即出现问题时算法刚好判断出有人脸)的环境下。</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">face: tz_app_cmd_handler(<span class="number">674</span>):enter handler <span class="number">0x65373170</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">702</span>):req size:<span class="number">40</span>, rsp size:<span class="number">48</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">711</span>):TZ App cmd handler, cmd_id = <span class="number">3</span> </span><br><span class="line">face: getFeature(<span class="number">1222</span>):[ TIME-COUNTER ] oem_tee_image_create , use time <span class="number">0</span> ms </span><br><span class="line">face: getFeature(<span class="number">1224</span>):***** image detect start ***** </span><br><span class="line">face: getFeature(<span class="number">1227</span>):begine oem_tee_detect </span><br><span class="line">face: oem_tee_detect(<span class="number">1848</span>):detect no face.</span><br><span class="line">face: getFeature(<span class="number">1233</span>):oem_tee_detect failed: <span class="number">1</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">1140</span>):<span class="keyword">get</span> image feature failed </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">1193</span>):exec cmd <span class="number">3.</span> <span class="number">11</span>ms </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">674</span>):enter handler <span class="number">0x65373170</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">702</span>):req size:<span class="number">40</span>, rsp size:<span class="number">48</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">711</span>):TZ App cmd handler, cmd_id = <span class="number">3</span> </span><br><span class="line">face: getFeature(<span class="number">1222</span>):[ TIME-COUNTER ] oem_tee_image_create , use time <span class="number">1</span> ms </span><br><span class="line">face: getFeature(<span class="number">1224</span>):***** image detect start ***** </span><br><span class="line">face: getFeature(<span class="number">1227</span>):begine oem_tee_detect </span><br><span class="line">face: oem_tee_detect(<span class="number">1848</span>):detect no face.</span><br><span class="line">face: getFeature(<span class="number">1233</span>):oem_tee_detect failed: <span class="number">1</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">1140</span>):<span class="keyword">get</span> image feature failed </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">1193</span>):exec cmd <span class="number">3.</span> <span class="number">11</span>ms </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">674</span>):enter handler <span class="number">0x65373170</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">702</span>):req size:<span class="number">40</span>, rsp size:<span class="number">48</span> </span><br><span class="line">face: tz_app_cmd_handler(<span class="number">711</span>):TZ App cmd handler, cmd_id = <span class="number">3</span> </span><br><span class="line">face: getFeature(<span class="number">1222</span>):[ TIME-COUNTER ] oem_tee_image_create , use time <span class="number">0</span> md</span><br></pre></td></tr></table></figure>
+<p>代码的逻辑是oem_tee_image_create-&gt;oem_tee_detect-&gt;oem_tee_quality。<br>结合问题堆栈来看，oem_tee_detect返回的结果是检测到人脸。<br>因此，压测手法可以为抬手进行人脸识别，模拟人脸从无到有的过程。</p>
+<p>以上仅仅只是分析，需要有办法对这个问题进行复现和修复验证，上述压测手法不一定能很快复现到问题。<br>可以考虑使用问题出现时的人脸数据进行重现，看问题能否稳定复现。由于人脸识别没有做数据保存，因此只能在kdump中查找数据。</p>
+<p>人脸识别REE与TEE通信时，会从dmabuf申请一片内存作为共享内存。因此使用crash工具加载kdump，通过vm命令找到人脸识别HAL进程打开的dmabuf地址，最后通过rd命令导出数据。<br>根据代码知道，人脸录入时这片buffer大小为0x55000，人脸识别时这片buffer大小为0x71000。</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">crash&gt; ps | grep <span class="symbol">face@</span><span class="number">1.0</span></span><br><span class="line">     <span class="number">2606</span>       <span class="number">1</span>   <span class="number">2</span>  ffffff88795d6940  IN   <span class="number">0.3</span>  <span class="number">2474768</span>   <span class="number">107460</span>  <span class="symbol">face@</span><span class="number">1.0</span>-servic</span><br><span class="line">     <span class="number">2688</span>       <span class="number">1</span>   <span class="number">7</span>  ffffff88823c0040  IN   <span class="number">0.3</span>  <span class="number">2474768</span>   <span class="number">107460</span>  <span class="symbol">face@</span><span class="number">1.0</span>-servic</span><br><span class="line">     <span class="number">2690</span>       <span class="number">1</span>   <span class="number">0</span>  ffffff88823c2a40  IN   <span class="number">0.3</span>  <span class="number">2474768</span>   <span class="number">107460</span>  <span class="symbol">face@</span><span class="number">1.0</span>-servic</span><br><span class="line">     <span class="number">2693</span>       <span class="number">1</span>   <span class="number">5</span>  ffffff88823c6940  IN   <span class="number">0.3</span>  <span class="number">2474768</span>   <span class="number">107460</span>  <span class="symbol">face@</span><span class="number">1.0</span>-servic</span><br><span class="line">     <span class="number">2695</span>       <span class="number">1</span>   <span class="number">2</span>  ffffff887b385440  IN   <span class="number">0.3</span>  <span class="number">2474768</span>   <span class="number">107460</span>  <span class="symbol">face@</span><span class="number">1.0</span>-servic</span><br><span class="line">crash&gt; <span class="keyword">set</span> <span class="number">2606</span></span><br><span class="line">    PID: <span class="number">2606</span></span><br><span class="line">COMMAND: <span class="string">"face@1.0-servic"</span></span><br><span class="line">   TASK: ffffff88795d6940  [THREAD_INFO: ffffff88795d6940]</span><br><span class="line">    CPU: <span class="number">2</span></span><br><span class="line">  STATE: TASK_INTERRUPTIBLE </span><br><span class="line">crash&gt; vm | grep -w dmabuf</span><br><span class="line">ffffff804466ac68 <span class="number">74</span>dce73000 <span class="number">74</span>dcee4000 <span class="number">40444f</span>b dmabuf</span><br><span class="line">ffffff8884b38f90 <span class="number">7563736000</span> <span class="number">7563737000</span> <span class="number">40444f</span>b dmabuf</span><br><span class="line">crash&gt; rd -r dmabuf.bin ffffff804466ac68 <span class="number">0x71000</span></span><br><span class="line"><span class="number">462848</span> bytes copied <span class="keyword">from</span> <span class="number">0xffffff804466ac68</span> to dmabuf.bin</span><br></pre></td></tr></table></figure>
+<p>导出的数据为nv21 rawdata格式，需要将数据转为jpeg。从实际dump出来的数据来看，并不符合预期。<br>通过做实验，为这片共享内存传入指定数据，再dump出来，发现正常情况下，传入的数据与dump出来的数据也不一致。<br>因此目前并无法通过dump dmabuf来拿到数据，具体原因有待调查。</p>
+<p><img src="dump_dmabuf_data.jpeg" alt="dump_dmabuf_data"></p>
+<p>既然无法从dmabuf dump出正确的数据，那就尝试传入特定数据，直接从kdump的二进制文件特定偏移位置找到数据。<br>实验发现，在A项目上可以在DDRCS0_0.BIN的0x65300000位置(使用binwalk进行二进制查找上述特定数据)dump出正确的人脸数据，但是在出现问题的B项目上，得到的数据不符合预期。<br>而B项目由于某些原因，没法做实验找到偏移的位置，因此只能采取其他办法。</p>
+<p>人脸识别使用的图片数据为nv21，实验中发现，nv21格式具有比较明显的数据特征。</p>
+<p><img src="dump_dmabuf_nv21.png" alt="dump_dmabuf_nv21"></p>
+<p><img src="dump_dmabuf_nv21_1.png" alt="dump_dmabuf_nv21_1"></p>
+<p><img src="dump_dmabuf_nv21_2.png" alt="dump_dmabuf_nv21_2"></p>
+<p>因此尝试使用如下命令进行特征查找。</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">xxd</span> <span class="selector-tag">DDRCS0_0</span><span class="selector-class">.BIN</span> &gt; <span class="selector-tag">tee</span> <span class="selector-tag">xxd</span><span class="selector-class">.log</span></span><br><span class="line"><span class="selector-tag">grep</span> <span class="selector-tag">-nr</span> "\<span class="selector-class">.w</span>\<span class="selector-class">.w</span>\<span class="selector-class">.w</span>\<span class="selector-class">.w</span>\<span class="selector-class">.w</span>\<span class="selector-class">.w</span>\<span class="selector-class">.w</span>\<span class="selector-class">.w</span>" <span class="selector-tag">xxd</span><span class="selector-class">.log</span></span><br></pre></td></tr></table></figure>
+<p>查找出来的特征不算太多。</p>
+<p><img src="dump_dmabuf_nv21_3.png" alt="dump_dmabuf_nv21_3"></p>
+<p>使用ghex打开DDRCS0_0.BIN，在上述可能的特征前后进行查看，定位到一处比较可疑的内存地址，偏移为0x78400000，物理地址为0x78400000+0x80000000。将数据dump出来后导入手机进行复现，确认问题是可以稳定复现的。</p>
+<p><img src="dump_dmabuf_nv21_4.png" alt="dump_dmabuf_nv21_4"></p>
+<p>查看导出的数据，可以看到图片中并没有人脸，但算法误判存在人脸特征，导致逻辑走到oem_tee_quality。</p>
+<p><img src="face_picture.jpeg" alt="face_picture"></p>
+<p>Laplacian陷入死循环的原因是因为width参数为0，但根据供应商的描述，width参数的值是通过oem_tee_quality传递进去的。从再次复现打日志打印来看，oem_tee_quality传递的宽度为640，因此只能怀疑在oem_tee_quality或者oem_tee_image_quality_sharpness函数内部，有异常逻辑会导致传入Laplacian的width为0。</p>
+<p>最后的解决方案是供应商在更新算法库的同时，为Laplacian加入边界检查逻辑，提升代码健壮性。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>NZCV，<a href="https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/NZCV--Condition-Flags" target="_blank" rel="noopener">https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/NZCV--Condition-Flags</a></li>
+<li>Conditional，<a href="https://developer.arm.com/documentation/dui0068/b/ARM-Instruction-Reference/Conditional-execution" target="_blank" rel="noopener">https://developer.arm.com/documentation/dui0068/b/ARM-Instruction-Reference/Conditional-execution</a></li>
+<li>CMP，<a href="https://developer.arm.com/documentation/ddi0596/2020-12/Base-Instructions/CMP--immediate---Compare--immediate---an-alias-of-SUBS--immediate--" target="_blank" rel="noopener">https://developer.arm.com/documentation/ddi0596/2020-12/Base-Instructions/CMP--immediate---Compare--immediate---an-alias-of-SUBS--immediate--</a></li>
+<li>CSEL，<a href="https://developer.arm.com/documentation/ddi0596/2020-12/Base-Instructions/CSEL--Conditional-Select-" target="_blank" rel="noopener">https://developer.arm.com/documentation/ddi0596/2020-12/Base-Instructions/CSEL--Conditional-Select-</a></li>
+<li>B.cond，<a href="https://developer.arm.com/documentation/ddi0596/2020-12/Base-Instructions/B-cond--Branch-conditionally-" target="_blank" rel="noopener">https://developer.arm.com/documentation/ddi0596/2020-12/Base-Instructions/B-cond--Branch-conditionally-</a></li>
+</ul>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2023/10/27/Android-inputTuning-and-Optimizing/" data-toggle="tooltip" data-placement="top" title="Android Input 调试与优化">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2023/07/04/Android-R-AVB2-0/" data-toggle="tooltip" data-placement="top" title="Android Verified Boot 2.0">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#问题背景"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">问题背景</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#问题分析"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">问题分析</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#SWT之初步释疑"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">SWT之初步释疑</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#内核态之真凶查找"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">内核态之真凶查找</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#kdump之根因定位"><span class="toc-nav-number">2.3.</span> <span class="toc-nav-text">kdump之根因定位</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#参考资料"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">参考资料</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Security" title="Security">Security</a>
+                        
+                          <a class="tag" href="/tags/#Stability" title="Stability">Stability</a>
+                        
+                          <a class="tag" href="/tags/#Trustzone" title="Trustzone">Trustzone</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

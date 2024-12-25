@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          CPUIDLE 之低功耗定时器 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com//cpuidle.html">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="css/widget.css">
+
+
+    
+<link rel="stylesheet" href="css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="css/signature.css">
+
+
+    
+<link rel="stylesheet" href="css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                            
+                              <a class="tag" href="/tags/#cpuidle" title="cpuidle">cpuidle</a>
+                            
+                              <a class="tag" href="/tags/#hrtimer" title="hrtimer">hrtimer</a>
+                            
+                              <a class="tag" href="/tags/#tickless" title="tickless">tickless</a>
+                            
+                        </div>
+                        <h1>CPUIDLE 之低功耗定时器</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Zhong Bin on
+                            2016-05-28
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>在 Linux 操作系统中，Idle 进程（又叫 Swapper 进程）的 pid 号是 0，是所有进程的祖先，它是在 Linux 初始化阶段从无到有创建的一个内核线程。<code>stark_kernel()</code> 函数初始化内核需要的所有数据结构，激活中断，创建另一个叫进程 1 的内核线程（init 进程）。新创建内核线程的 PID 为 1，并与进程 0 共享进程所有的内核数据结构。创建 init 进程后，进程 0 执行无限循环， <code>cpu_idle_loop()</code> 函数，只有当没有其它进程处于 TASK_RUNNING 状态时，调度器才会选择进程 0，也就是执行 Idle 线程，让 CPU 进入 Idle 模式。</p>
+<p>当 CPU 进入比较深层次的 Idle 模式时，为了达到最大程度的节省功耗，CPU 会把系统时钟给关闭掉。那么怎么保证 CPU 从 Idle 模式重新进入工作模式，从而保证系统正常运行呢？本文主要探讨低功耗定时器在该情况下扮演什么样的角色。</p>
+<h2 id="Idle的执行流程"><a href="#Idle的执行流程" class="headerlink" title="Idle的执行流程"></a>Idle的执行流程</h2><p>这里先大概的列出 Idle 进程的执行流程，怎么执行到让 CPU 进入各级 Idle 模式。详细的分析会在以后的文章中补上。</p>
+<h3 id="Idle-进程创建"><a href="#Idle-进程创建" class="headerlink" title="Idle 进程创建"></a>Idle 进程创建</h3><p>Linux Kernel 会在系统启动完成后，在 Idle 进程中，处理 CPUIdle 相关的事情。在多核系统中，CPU 启动的过程是，先启动主 CPU，启动过程和传统的单核系统类似。其函数调用关系如下：</p>
+<p>stext –&gt; start_kernel –&gt; rest_init –&gt; cpu_startup_entry</p>
+<p>而启动其它 CPU，可以有多种方式，例如 CPU hotplug 等，启动过程：</p>
+<p>secondary_startup –&gt; __secondary_switched –&gt; secondary_start_kernel –&gt; cpu_startup_entry</p>
+<p>无论是上述的哪种启动，最终都会运行至 cpu_startup_entry 函数，在这个函数中，最终程序会掉进无限循环里 cpu_idle_loop。到此，Idle 进程创建完成，以下是 Idle 进程的代码实现（参考的是 linux-3.18 版本）：</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">static void <span class="built_in">cpu_idle_loop</span>(void)</span><br><span class="line">&#123;</span><br><span class="line">	while (<span class="number">1</span>) &#123;</span><br><span class="line">		<span class="built_in">__current_set_polling</span>();</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* 关闭周期 tick，CONFIG_NO_HZ_IDLE 必须打开 */</span></span><br><span class="line">		<span class="built_in">tick_nohz_idle_enter</span>();</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* 如果系统当前不需要调度，执行后续的动作 */</span></span><br><span class="line">		while (!need_resched()) &#123;</span><br><span class="line">			<span class="built_in">check_pgt_cache</span>();</span><br><span class="line">			<span class="built_in">rmb</span>();</span><br><span class="line"></span><br><span class="line">			if (cpu_is_offline(smp_processor_id())) &#123;</span><br><span class="line">				<span class="built_in">tick_set_cpu_plugoff_flag</span>(<span class="number">1</span>);</span><br><span class="line">				<span class="built_in">arch_cpu_idle_dead</span>();</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="comment">/* 关闭 irq 中断 */</span></span><br><span class="line">			<span class="built_in">local_irq_disable</span>();</span><br><span class="line"></span><br><span class="line">			<span class="comment">/* arch 相关的 cpuidle enter, 主要执行注册到 idle 的 notify callback */</span></span><br><span class="line">			<span class="built_in">arch_cpu_idle_enter</span>();</span><br><span class="line"></span><br><span class="line">			if (cpu_idle_force_poll || tick_check_broadcast_expired())</span><br><span class="line"></span><br><span class="line">				<span class="comment">/* idle poll，这时先不分析 */</span></span><br><span class="line">				<span class="built_in">cpu_idle_poll</span>();</span><br><span class="line">			else</span><br><span class="line"></span><br><span class="line">				<span class="comment">/* 进入 CPU 的 Idle 模式，进行省电 */</span></span><br><span class="line">				<span class="built_in">cpuidle_idle_call</span>();</span><br><span class="line"></span><br><span class="line">			<span class="comment">/* Idle 退出, 主要执行注册到 idle 的 notify callback */</span></span><br><span class="line">			<span class="built_in">arch_cpu_idle_exit</span>();</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* 如果系统当前需要调度，则退出 Idle 进程 */</span></span><br><span class="line">		<span class="built_in">preempt_set_need_resched</span>();</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* 打开周期 tick */</span></span><br><span class="line">		<span class="built_in">tick_nohz_idle_exit</span>();</span><br><span class="line">		<span class="built_in">__current_clr_polling</span>();</span><br><span class="line"></span><br><span class="line">		<span class="built_in">smp_mb__after_atomic</span>();</span><br><span class="line"></span><br><span class="line">		<span class="built_in">sched_ttwu_pending</span>();</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* 让出 cpu，使调度器调度其它优化级更高的进程 */</span></span><br><span class="line">		<span class="built_in">schedule_preempt_disabled</span>();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Tickless-和-CPUIdle-的关系"><a href="#Tickless-和-CPUIdle-的关系" class="headerlink" title="Tickless 和 CPUIdle 的关系"></a>Tickless 和 CPUIdle 的关系</h2><p>Tickless 是指动态时钟，即系统的周期 Tick 可动态地关闭和打开。这个功能可通过内核配置项 CONFIG_NO_HZ 打开，而 Idle 正是使用了这项技术，使系统尽量长时间处于空闲状态，从而尽可能地节省功耗.</p>
+<p>打开内核配置项 CONFIG_NO_HZ_IDLE，即可让系统在 Idle 前关闭周期 Tick，退出 Idle 时重新打开周期 Tick。</p>
+<p>那么在关闭了周期 Tick 之后，系统何时被唤醒呢？</p>
+<p>在关闭周期 Tick 时，同时会根据时钟子系统计算下一个时钟中断到来的时间，以这个时间为基准来设置一个 hrtimer 用于唤醒系统（高精度时钟框架），而这个时间的计算方法也很简单，即在所有注册到时钟框架的定时器中找到离此时最近的那一个的时间点作为这个时间。当然，用什么定时器来唤醒系统还要根据 CPU Idle 的深度来决定，后面会介绍。</p>
+<h2 id="不同层级的-CPU-Idle-对唤醒时钟源的处理"><a href="#不同层级的-CPU-Idle-对唤醒时钟源的处理" class="headerlink" title="不同层级的 CPU Idle 对唤醒时钟源的处理"></a>不同层级的 CPU Idle 对唤醒时钟源的处理</h2><p>前面提到了，系统关闭周期 Tick 的同时，会计算出下一个时钟中断到来的时间，以这个时间为基准来设置一个 hrtimer 用于唤醒系统。那么，如果有些 CPU 进入的层级比较深，关闭了 CPU 中的 hrtimer，系统将无法再次被唤醒。针对这种情况，则需要低功耗 Timer 去唤醒系统，这里先以 MTK 平台为例，在 CPU 进入 dpidle 和 soidle （两种 Idle 模式）时都会关闭 hrtimer ，另外起用一个 GPT Timer，而这个 GPT Timer 的超时时间直接从被关闭的 hrtimer 中的寄存器获取。这样就保证时间的延续性。因为 GPT Timer 是以 32K 晶振作为时钟源，所以在 CPU 进入 dpidle 时可以把 26M 的主时钟源给关闭，从而达到最大程度的省电。</p>
+<p>以下我们通过源码探讨一下 MTK 的 CPU Idle 的实现，到底哪里设置 GPT Timer。其实很多平台为了实现 CPU 达到最省电的效果，都是使用这种做法。</p>
+<p>MTK 的 CPU 一般有以下几种 Idle 模式</p>
+<ul>
+<li>rgidle，浅度 Idle 模式，即 WFI</li>
+<li>soidle，亮屏 Idle 模式</li>
+<li>dpidle，灭屏 Idle 模式</li>
+</ul>
+<p>先以 dpidle 模式为例子分析 CPU 如何在关闭所有系统时钟的情况下保证 Idle 和系统正常运行。</p>
+<p>CPU 进入 dpidle 的实现接口如下：</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> dpidle_enter(<span class="keyword">int</span> cpu)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">int</span> ret = IDLE_TYPE_DP;</span><br><span class="line"></span><br><span class="line">	<span class="regexp">/* 记录 dpidle 的开始时间 */</span></span><br><span class="line">	idle_ratio_calc_start(IDLE_TYPE_DP, cpu);</span><br><span class="line"></span><br><span class="line">	<span class="regexp">/* 关闭一些与平台相关的定时器，hps，thermal */</span></span><br><span class="line">	dpidle_pre_handler();</span><br><span class="line"></span><br><span class="line">	<span class="regexp">/* 进入 dpidle */</span></span><br><span class="line">	spm_go_to_dpidle(slp_spm_deepidle_flags, (u32)cpu, dpidle_dump_log);</span><br><span class="line"></span><br><span class="line">	<span class="regexp">/* 打开一些与平台相关的定时器，hps，thermal */</span></span><br><span class="line">	dpidle_post_handler();</span><br><span class="line"></span><br><span class="line">	<span class="regexp">/* 记录 dpidle 的退出时间，从而计算出 CPU 进入 dpidle 的总时间 */</span></span><br><span class="line">	idle_ratio_calc_stop(IDLE_TYPE_DP, cpu);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	idle_warn_log(<span class="string">&quot;DP:timer_left=<span class="variable">%d</span>, timer_left2=<span class="variable">%d</span>, delta=<span class="variable">%d</span>\n&quot;</span>,</span><br><span class="line">			dpidle_timer_left, dpidle_timer_left2, dpidle_timer_left-dpidle_timer_left2);</span><br><span class="line"></span><br><span class="line">	<span class="regexp">/* For test */</span></span><br><span class="line">	<span class="keyword">if</span> (dpidle_run_once)</span><br><span class="line">		idle_switch[IDLE_TYPE_DP] = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>真正进入 dpidle 的实现在 spm_go_to_dpidle 函数</p>
+<figure class="highlight sas"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">wake_reason_t spm_go_to_dpidle(u32 spm_flags, u32 spm_data, u32 dump_log)</span><br><span class="line">&#123;</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 更新 spm 的标志 */</span></span><br><span class="line">	update_pwrctrl_pcm_flags(<span class="variable">&amp;spm_flags</span>);</span><br><span class="line">	<span class="comment">/* 设置 spm 标志位 */</span></span><br><span class="line">	set_pwrctrl_pcm_flags(pwrctrl, spm_flags);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 设置 GPT4 定时器，超时时间为下一个 Timer 的唤醒时间，并开启 GPT4 定时器 */</span></span><br><span class="line">	spm_dpidle_before_wfi(cpu);</span><br><span class="line"></span><br><span class="line">	lockdep_off();</span><br><span class="line">	spin_lock_irqsave(<span class="variable">&amp;__spm_lock</span>, flags);</span><br><span class="line">	<span class="comment">/* 屏蔽 GIC 控制器中的所有中断 */</span></span><br><span class="line">	mt_irq_mask_all(<span class="variable">&amp;mask</span>);</span><br><span class="line">	<span class="comment">/* 打开 GIC 中 SPM_IRQ0_ID 号中断，用于唤醒 */</span></span><br><span class="line">	mt_irq_unmask_for_sleep(SPM_IRQ0_ID);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (request_uart_to_sleep()) &#123;</span><br><span class="line">		wr = WR_UART_BUSY;</span><br><span class="line">		<span class="keyword">goto</span> RESTORE_IRQ;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 关闭系统时钟 */</span></span><br><span class="line">	spm_dpidle_pre_process();</span><br><span class="line">	<span class="comment">/* 进入 Idle */</span></span><br><span class="line">	spm_trigger_wfi_for_dpidle(pwrctrl);</span><br><span class="line"></span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line">RESTORE_IRQ:</span><br><span class="line">	mt_irq_mask_restore(<span class="variable">&amp;mask</span>);</span><br><span class="line">	spin_unlock_irqrestore(<span class="variable">&amp;__spm_lock</span>, flags);</span><br><span class="line">	lockdep_o<span class="meta">n</span>();</span><br><span class="line">	spm_dpidle_after_wfi(cpu, wakesta.debug_flag);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> wr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 spm_dpidle_before_wfi 函数中会去设置 GPT Timer 的定时时间，并且开启这个 Timer，设置完毕后关闭 GIC 的所有中断，只打开 GPT Timer IRQ，保证 CPU 在定时时间到期时被 GPT Timer 唤醒。最后调用 spm_dpidle_pre_process 和 spm_trigger_wfi_for_dpidle 函数关闭系统时钟并进入 dpidle。</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">void spm_dpidle_before_wfi(<span class="keyword">int</span> cpu)</span><br><span class="line">&#123;</span><br><span class="line">	bus_dcm_enable();</span><br><span class="line">	faudintbus_pll2s<span class="string">q()</span>;</span><br><span class="line"></span><br><span class="line">	<span class="regexp">/* 从 localtimer 中获取定时器计数 */</span></span><br><span class="line">	dpidle_timer_left2 = localtimer_get_counter();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> ((<span class="keyword">int</span>)dpidle_timer_left2 &lt;= <span class="number">0</span>)</span><br><span class="line">		/* Trigger GPT4 Timeout imediately *<span class="regexp">/</span></span><br><span class="line"><span class="regexp">		gpt_set_cmp(idle_gpt, 1);</span></span><br><span class="line"><span class="regexp">	else</span></span><br><span class="line"><span class="regexp">		/</span>* 把从 localtimer 中获取到的定时器计数设置到 GPT Timer 中 *<span class="regexp">/</span></span><br><span class="line"><span class="regexp">		gpt_set_cmp(idle_gpt, dpidle_timer_left2);</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">	/</span>* 启动 GPT Timer */</span><br><span class="line">	start_gpt(idle_gpt);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>localtimer_get_counter 函数中其实就是读取 hrtimer 的定时器里的剩下计数 count，然后把 count 设置到 GPT Timer 中，这种做法非常简便和巧妙。这样就能保障系统的正常运行又能达到最省电的效果了。</p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="//camera-isp-intro.html" data-toggle="tooltip" data-placement="top" title="相机系统综述 —— ISP">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="//zram-introduction.html" data-toggle="tooltip" data-placement="top" title="zram 简介">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                          <a class="tag" href="/tags/#cpuidle" title="cpuidle">cpuidle</a>
+                        
+                          <a class="tag" href="/tags/#hrtimer" title="hrtimer">hrtimer</a>
+                        
+                          <a class="tag" href="/tags/#tickless" title="tickless">tickless</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&#34;🌱&#34;,&#34;just do it&#34;,&#34;🍀&#34;]' color='[&#34;rgb(121,93,179)&#34; ,&#34;rgb(76,180,231)&#34; ,&#34;rgb(184,90,154)&#34;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+</body>
+
+</html>

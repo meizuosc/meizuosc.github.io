@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          eBPF初体验：Android设备网络优化实践 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#调试" title="调试">调试</a>
+                            
+                              <a class="tag" href="/tags/#eBPF" title="eBPF">eBPF</a>
+                            
+                        </div>
+                        <h1>eBPF初体验：Android设备网络优化实践</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Lang Duan on
+                            2023-11-06
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h1><h2 id="1-1-eBPF是什么"><a href="#1-1-eBPF是什么" class="headerlink" title="1.1 eBPF是什么"></a>1.1 eBPF是什么</h2><p>先看看官方原文释惑</p>
+<blockquote>
+<p>eBPF is a revolutionary technology with origins in the Linux kernel that can run sandboxed programs in a privileged context such as the operating system kernel. It is used to safely and efficiently extend the capabilities of the kernel without requiring to change kernel source code or load kernel modules.</p>
+<p>Historically, the operating system has always been an ideal place to implement observability, security, and networking functionality due to the kernel’s privileged ability to oversee and control the entire system. At the same time, an operating system kernel is hard to evolve due to its central role and high requirement towards stability and security. The rate of innovation at the operating system level has thus traditionally been lower compared to functionality implemented outside of the operating system.</p>
+<p>eBPF changes this formula fundamentally. By allowing to run sandboxed programs within the operating system, application developers can run eBPF programs to add additional capabilities to the operating system at runtime. The operating system then guarantees safety and execution efficiency as if natively compiled with the aid of a Just-In-Time (JIT) compiler and verification engine. This has led to a wave of eBPF-based projects covering a wide array of use cases, including next-generation networking, observability, and security functionality.</p>
+<p>Today, eBPF is used extensively to drive a wide variety of use cases: Providing high-performance networking and load-balancing in modern data centers and cloud native environments, extracting fine-grained security observability data at low overhead, helping application developers trace applications, providing insights for performance troubleshooting, preventive application and container runtime security enforcement, and much more. The possibilities are endless, and the innovation that eBPF is unlocking has only just begun.</p>
+</blockquote>
+<p>  摘自<a href="https://ebpf.io/what-is-ebpf/" target="_blank" rel="noopener">What is eBPF? An Introduction and Deep Dive into the eBPF Technology</a>。</p>
+<p>eBPF是extended BPF的缩写，它的前身是BPF（Berkeley Packet Filter）技术。</p>
+<p>而BPF是一个有着较长年头的技术，抓包软件Wireshark就是基于BPF实现的，经过若干年发展，eBPF脱胎换骨，成为Linux内核可观测技术事实上的标准。</p>
+<p>Linux内核的主要目的是抽象硬件或虚拟硬件，并提供API（系统调用）供应用调用和共享资源。为了实现这一点，需要维护一些子系统和模块来完成这些职责。每个模块通常维护了几种通用的配置，以满足用户的不同需求。而当现有配置无法满足用户需求时，只能通过修改内核来达到目的，根据历史经验有两个途径：</p>
+<ol>
+<li><p>直接修改内核源码，同时将相关修改提交，为保证一致性可能还需要将源码提交到kernel社区，在等待漫长的时间后可能会被合入新的linux版本中，或者干脆自己持续维护该修改，在每次的版本更新后移植适配。</p>
+</li>
+<li><p>写一个ko模块，在每次的kernel新版本中移植适配，可能还会遇到某些兼容性或安全性问题需要调整。</p>
+</li>
+</ol>
+<p>而eBPF提供了一个新的选择途径，它通过在内核中实现一个轻量级虚拟机，将类C代码编译成字节码，挂在到内核的钩子上，当钩子被触发时，kernel在虚拟机的”沙盒”中运行字节码，这样就可以在无需修改内核源码或者挂载内核模块的情况下，轻松的拓展内核功能。</p>
+<h3 id="1-1-1-简介"><a href="#1-1-1-简介" class="headerlink" title="1.1.1   简介"></a>1.1.1   简介</h3><p>eBPF是一个转发层的驱动模型，通过下图可了解第一印象。</p>
+<p><img src="eBPF_driver.png" alt=""></p>
+<p>它包含用户层和内核层：</p>
+<p>用户层：主要是负责业务逻辑处理和响应，同时也兼顾着内核中的 epbf 的逻辑 bytescode 生成，并将 bytescode 注入到内核中。</p>
+<p>内核层：主要是接收 bytescode，然后在内核层内完成对 bytescode 执行。</p>
+<h2 id="1-2-eBPF的工作流程"><a href="#1-2-eBPF的工作流程" class="headerlink" title="1.2 eBPF的工作流程"></a>1.2 eBPF的工作流程</h2><p>  可先大致了解下eBPF工作的全流程</p>
+<p><img src="eBPF_workflow.png" alt=""></p>
+<p>  接下来对几个核心概念以及工作过程做个简单介绍</p>
+<h3 id="1-2-1-Hook"><a href="#1-2-1-Hook" class="headerlink" title="1.2.1 Hook"></a>1.2.1 Hook</h3><p>在 eBPF的世界里看 Linux 内核所有核心调用都可以 Hook，可以理解成为万物皆可挂钩子做 Callback。它是事件驱动，在内核或应用程序通过某个hook点时会被触发运行。</p>
+<p>预设的hook点包括系统调用、函数进入/退出、内核tracepoint、网络事件等等。</p>
+<p>如果有特定需求不在上述已有的hook点中时，可通过内核探测（kprobe）或用户探测（uprobe）来在期望的地方挂载eBPF程序。</p>
+<h3 id="1-2-2-Map"><a href="#1-2-2-Map" class="headerlink" title="1.2.2 Map"></a>1.2.2 Map</h3><p>BPF Map用于在内核和用户空间之间共享数据，它不同类型的通用存储，</p>
+<p>有几种可用的存储类型：</p>
+<ul>
+<li>Hash tables, Arrays</li>
+<li>LRU (Least Recently Used)</li>
+<li>Ring Buffer</li>
+<li>Stack Trace</li>
+<li>LPM (Longest Prefix match)</li>
+<li>…</li>
+</ul>
+<p>通过bpf-syscall在用户空间被访问，bpf-syscall提供创建映射、查找元素、更新元素和删除元素等命令。涉及到Map的场景有以下几种：</p>
+<ul>
+<li>eBPF-prog和用户态程序的交互：prog运行完，得到的结果存储到map，供用户态通过文件描述符访问。</li>
+<li>eBPF-prog和内核态程序的交互：和 prog以外的内核程序交互，也可以使用map作为中介。</li>
+<li>eBPF-prog间交互：如果prog内部需要用全局变量来交互，但是由于安全原因prog不允许访问全局变量，可以使用 map 来充当全局变量。</li>
+<li>Tail call：Tail call 是从prog-A跳转到prog-B，prog-A通过BPF_MAP_TYPE_PROG_ARRAY类型的map来知道prog-B的指针，然后调用tail_call()的helper function来执行Tail call。</li>
+</ul>
+<p>共享map的eBPF-prog不要求是相同的程序类型，例如tracing程序可以和网络程序共享map，单个eBPF-prog目前最多可直接访问64个不同 map。</p>
+<h3 id="1-2-3-JIT-Compailation"><a href="#1-2-3-JIT-Compailation" class="headerlink" title="1.2.3 JIT Compailation"></a>1.2.3 JIT Compailation</h3><p>JIT (Just-in-Time)编译将程序的通用字节码转换为汇编代码，来优化执行速度。</p>
+<p>这使得eBPF程序像本地编译的内核代码或作为内核模块加载的代码一样有效地运行。</p>
+<h3 id="1-2-4-eBPF-Safety"><a href="#1-2-4-eBPF-Safety" class="headerlink" title="1.2.4 eBPF Safety"></a>1.2.4 eBPF Safety</h3><p>每一个 eBPF 程序加载到内核都要经过“检查”，用来保证 eBPF 程序的安全性，主要包括：</p>
+<h4 id="i、Verifier"><a href="#i、Verifier" class="headerlink" title="i、Verifier"></a>i、Verifier</h4><ul>
+<li>要保证prog必须满足系统要求的大小，过大的 eBPF 程序不允许被加载进内核，<br>堆栈大小被限制在MAX_BPF_STACK（512字节）内，<br>编译的字节码大小被限制在BPF_COMPLEXITY_LIMIT_INSNS（1M）；  <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* BPF program can access up to 512 bytes of stack space. */</span> </span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MAX_BPF_STACK        512</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BPF_COMPLEXITY_LIMIT_INSNS      1000000 <span class="comment">/* yes. 1M insns */</span></span></span><br></pre></td></tr></table></figure></li>
+<li>要保证程序的复杂度有限，Verifier 会评估 eBPF 程序所有可能的执行路径，必须能在有限时间内完成；</li>
+<li>要保证程序不会崩溃或者使得系统出故障；  </li>
+</ul>
+<h4 id="ii、Privileges"><a href="#ii、Privileges" class="headerlink" title="ii、Privileges"></a>ii、Privileges</h4><p>除非启用了非特权eBPF，否则所有打算将eBPF程序加载到Linux内核中的进程必须以特权模式(root)运行，或者需要CAP_BPF功能。这意味着不受信任的程序不能加载eBPF程序。</p>
+<ol>
+<li><p>内核提供了一个配置项 /proc/sys/kernel/unprivileged_bpf_disabled 来禁止非 特权用户使用 bpf(2) 系统调用，可以通过 sysctl 命令修改</p>
+</li>
+<li><p>比较特殊的一点是，这个配置项特意设计为一次性开关（one-time kill switch）， 这 意味着一旦将它设为 1，就没有办法再改为 0 了，除非重启内核</p>
+</li>
+<li><p>一旦设置为 1 之后，只有初始命名空间中有 CAP_SYS_ADMIN 特权的进程才可以调用 bpf(2) 系统调用 。Cilium 启动后也会将这个配置项设为 1 # echo 1 &gt; /proc/sys/kernel/unprivileged_bpf_disabled</p>
+</li>
+</ol>
+<p>如果启用非特权eBPF，非特权进程可以加载某些eBPF程序，这些程序的功能集减少，并且对内核的访问受限。</p>
+<h4 id="iii、Hardening"><a href="#iii、Hardening" class="headerlink" title="iii、Hardening"></a>iii、Hardening</h4><p>当程序成功校验后，会依据特权进程或非特权进程来加载，来决定eBPF的加固处理，包含以下：</p>
+<ol>
+<li><p>程序执行保护：eBPF程序所在的kernel内存空间会变更为只读。所以无论是kernel异常或其他误操作，当尝试修改eBPF程序时都会触发崩溃，而不是允许该操作继续下去。</p>
+</li>
+<li><p>抵御Spectre攻击：eBPF程序会屏蔽内存访问，将瞬时指令下的访问定位重定向到受控区域</p>
+</li>
+<li><p>常量屏蔽：程序中所有的常量都将被屏蔽，以防发生注入攻击。</p>
+</li>
+</ol>
+<h4 id="iv、Abstracted-Runtime-Context"><a href="#iv、Abstracted-Runtime-Context" class="headerlink" title="iv、Abstracted Runtime Context"></a>iv、Abstracted Runtime Context</h4><p>eBPF程序不能直接访问任意内核内存，程序上下文之外的数据和数据结构必须通过eBPF-helper访问。</p>
+<p>这样使得访问数据的接口统一化，且均受到eBPF程序的限制。比如只有与程序相关的数据才允许读写或修改，确保加载时永远都不会发生越界；或者当eBPF程序在运行中尝试修改数据的行为只有在确保安全的前提下才会被允许执行。eBPF程序不能随意修改内核中的数据结构。</p>
+<h3 id="1-2-5-Tail-Calls"><a href="#1-2-5-Tail-Calls" class="headerlink" title="1.2.5 Tail Calls"></a>1.2.5 Tail Calls</h3><p>bpf允许在prog中调用另一个prog，并且执行完后不需要返回之前的prog</p>
+<p><img src="eBPF_Tail_Calls.png" alt=""></p>
+<h2 id="1-3-eBPF能做什么"><a href="#1-3-eBPF能做什么" class="headerlink" title="1.3 eBPF能做什么"></a>1.3 eBPF能做什么</h2><p><img src="eBPF_cando.png" alt=""></p>
+<p>鉴于它的起源，eBPF特别适合编写网络程序，将该网络程序附加到网络socket，进行流量过滤，流量分类以及执行网络分类器的动作，甚至可以修改一个已建链的网络socket的配置。</p>
+<p>它还可以通过各种钩子，能在用户空间得到系统各种性能指标。大到监控整机状态，小到系统函数的运行时间。比如有开源项目BCC，基于eBPF实现的系统监视工具</p>
+<p><img src="bcc_BPF_tracing_tools.png" alt=""></p>
+<p>  它能监控到</p>
+<p>  1、应用及虚拟机的各种指标<br>  2、系统库性能监控<br>  3、kernel系统调用性能<br>  4、文件系统性能<br>  5、网络调用性能<br>  6、CPU调度器性能<br>  7、内存管理性能<br>  8、中断性能</p>
+<p>在了解到以上概念后，我们再来基于android平台深入了解下eBPF的工作过程</p>
+<h1 id="2-eBPF的加载bpfloader"><a href="#2-eBPF的加载bpfloader" class="headerlink" title="2. eBPF的加载bpfloader"></a>2. eBPF的加载bpfloader</h1><p>在系统启动阶段，会把位于 /system/etc/bpf/ 下的eBPF目标文件通过bpfloader服务加载到内核<br>system/bpf/bpfloader/bpfloader.rc</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">on load_bpf_programs</span><br><span class="line">    # Linux <span class="number">5.16</span>-rc1 has changed the <span class="keyword">default</span> to <span class="number">2</span> (disabled but changeable),</span><br><span class="line">    <span class="meta"># but we need 0</span></span><br><span class="line">	<span class="built_in">write</span> /proc/sys/kernel/unprivileged_bpf_disabled <span class="number">0</span></span><br><span class="line">	# Enable the eBPF JIT -- but <span class="keyword">do</span> note that on <span class="number">64</span>-<span class="built_in">bit</span> kernels it is likely</span><br><span class="line">	<span class="meta"># already force enabled by the kernel config option BPF_JIT_ALWAYS_ON</span></span><br><span class="line">	<span class="built_in">write</span> /proc/sys/net/core/bpf_jit_enable <span class="number">1</span></span><br><span class="line">	# Enable JIT kallsyms <span class="keyword">export</span> <span class="keyword">for</span> privileged users only</span><br><span class="line">	<span class="built_in">write</span> /proc/sys/net/core/bpf_jit_kallsyms <span class="number">1</span></span><br><span class="line">	exec_start bpfloader</span><br><span class="line">	</span><br><span class="line">service bpfloader /system/bin/bpfloader</span><br><span class="line">	capabilities CHOWN SYS_ADMIN NET_ADMIN</span><br><span class="line">	#</span><br><span class="line">	# Set RLIMIT_MEMLOCK to <span class="number">1</span>GiB <span class="keyword">for</span> bpfloader</span><br><span class="line">	#</span><br><span class="line">	# Actually only <span class="number">8</span>MiB would be needed <span class="keyword">if</span> bpfloader ran as its own uid.</span><br><span class="line">	#</span><br><span class="line">	# As such we simply use <span class="number">1</span>GiB as a reasonable approximation of infinity.</span><br><span class="line">	#</span><br><span class="line">	rlimit memlock <span class="number">1073741824</span> <span class="number">1073741824</span></span><br><span class="line">	oneshot</span><br><span class="line">	reboot_on_failure reboot,bpfloader-failed</span><br><span class="line">	updatable</span><br></pre></td></tr></table></figure>
+<p>  在bpfloader.te中有限制bpf执行的sepolicy，指定bpfloader是唯一可以加载bpfprog的的程序<br>  /system/sepolicy/private/bpfloader.te</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">neverallow &#123; domain -bpfloader &#125; *:bpf &#123; map_create prog_load &#125;;</span><br></pre></td></tr></table></figure>
+<p>  而bpfloader只在启动时执行一次，确保其他模块无法额外加载系统之外的bpfprog。</p>
+<p>  进入 /system/bpf/bpfloader/BpfLoader.cpp 看下它的加载过程</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span>** argv)</span> </span>&#123;</span><br><span class="line">	(<span class="keyword">void</span>)argc;</span><br><span class="line">	android::base::InitLogging(argv, &amp;android::base::KernelLogger);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Create all the pin subdirectories</span></span><br><span class="line">	<span class="comment">// (this must be done first to allow selinux_context and pin_subdir functionality,</span></span><br><span class="line">	<span class="comment">//  which could otherwise fail with ENOENT during object pinning or renaming,</span></span><br><span class="line">	<span class="comment">//  due to ordering issues)</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; location : locations) &#123;</span><br><span class="line">		createSysFsBpfSubDir(location.prefix);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Load all ELF objects, create programs and maps, and pin them</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; location : locations) &#123;</span><br><span class="line">		<span class="keyword">if</span> (loadAllElfObjects(location) != <span class="number">0</span>) &#123;</span><br><span class="line">			ALOGE(<span class="string">"=== CRITICAL FAILURE LOADING BPF PROGRAMS FROM %s ==="</span>, location.dir);</span><br><span class="line">			ALOGE(<span class="string">"If this triggers reliably, you're probably missing kernel options or patches."</span>);</span><br><span class="line">			ALOGE(<span class="string">"If this triggers randomly, you might be hitting some memory allocation "</span></span><br><span class="line">				  <span class="string">"problems or startup script race."</span>);</span><br><span class="line">			ALOGE(<span class="string">"--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---"</span>);</span><br><span class="line">			sleep(<span class="number">20</span>);</span><br><span class="line">			<span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (android::base::SetProperty(<span class="string">"bpf.progs_loaded"</span>, <span class="string">"1"</span>) == <span class="literal">false</span>) &#123;</span><br><span class="line">		ALOGE(<span class="string">"Failed to set bpf.progs_loaded property"</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  实际是调用 <em>loadAllElfObjects</em> 加载各个ELF文件</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">loadAllElfObjects</span><span class="params">(<span class="keyword">const</span> Location&amp; location)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> retVal = <span class="number">0</span>;</span><br><span class="line">	DIR* dir;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">dirent</span>* <span class="title">ent</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> ((dir = opendir(location.dir)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">		<span class="keyword">while</span> ((ent = readdir(dir)) != <span class="literal">NULL</span>) &#123;</span><br><span class="line">			<span class="built_in">string</span> s = ent-&gt;d_name;</span><br><span class="line">			<span class="keyword">if</span> (!EndsWith(s, <span class="string">".o"</span>)) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">			<span class="function"><span class="built_in">string</span> <span class="title">progPath</span><span class="params">(location.dir)</span></span>;</span><br><span class="line">			progPath += s;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">bool</span> critical;</span><br><span class="line">			<span class="keyword">int</span> ret = android::bpf::loadProg(progPath.c_str(), &amp;critical,</span><br><span class="line">											 location.prefix,</span><br><span class="line">											 location.allowedDomainBitmask,</span><br><span class="line">											 location.allowedProgTypes,</span><br><span class="line">											 location.allowedProgTypesLength);</span><br><span class="line">			...</span><br><span class="line">		&#125;</span><br><span class="line">		closedir(dir);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> retVal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  读取几个指定路径下面所有.o结束的文件</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Location locations[] = &#123;</span><br><span class="line">		 </span><br><span class="line">		 ...</span><br><span class="line">		 </span><br><span class="line">		 <span class="comment">// Core operating system</span></span><br><span class="line">		 &#123;</span><br><span class="line">				 .dir = <span class="string">"/system/etc/bpf/"</span>,</span><br><span class="line">				 .prefix = <span class="string">""</span>,</span><br><span class="line">				 .allowedDomainBitmask = domainToBitmask(domain::platform),</span><br><span class="line">		 &#125;,</span><br><span class="line">		 <span class="comment">// Vendor operating system</span></span><br><span class="line">		 &#123;</span><br><span class="line">				 .dir = <span class="string">"/vendor/etc/bpf/"</span>,</span><br><span class="line">				 .prefix = <span class="string">"vendor/"</span>,</span><br><span class="line">				 .allowedDomainBitmask = domainToBitmask(domain::vendor),</span><br><span class="line">				 .allowedProgTypes = kVendorAllowedProgTypes,</span><br><span class="line">				 .allowedProgTypesLength = arraysize(kVendorAllowedProgTypes),</span><br><span class="line">		 &#125;,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>  函数 <em>loadProg</em> 根据eBPF目标文件中的段创建容器类型，并加载代码到内核：</p>
+<ul>
+<li><p>首先检查是否存在证书的段（SECTION）</p>
+</li>
+<li><p>readCodeSections: 读取ELF文件中段信息, 生成代码段codeSection的列表</p>
+</li>
+<li><p>createMaps: 根据ELF文件中的maps段信息创建对应的map对象供内核空间与用户空间通讯</p>
+</li>
+<li><p>loadCodeSections: 加载目标文件到内核, 并将加载后的fd固定到特定的路径</p>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">loadProg</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* elfPath, <span class="keyword">bool</span>* isCritical, <span class="keyword">const</span> <span class="keyword">char</span>* prefix,</span></span></span><br><span class="line"><span class="function"><span class="params">			  <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span> allowedDomainBitmask, <span class="keyword">const</span> bpf_prog_type* allowed,</span></span></span><br><span class="line"><span class="function"><span class="params">			  <span class="keyword">size_t</span> numAllowed)</span> </span>&#123;</span><br><span class="line">	 <span class="built_in">vector</span>&lt;<span class="keyword">char</span>&gt; license;</span><br><span class="line">	 <span class="built_in">vector</span>&lt;<span class="keyword">char</span>&gt; critical;</span><br><span class="line">	 <span class="built_in">vector</span>&lt;codeSection&gt; cs;</span><br><span class="line">	 <span class="built_in">vector</span>&lt;unique_fd&gt; mapFds;</span><br><span class="line">	 <span class="keyword">int</span> ret;</span><br><span class="line"> </span><br><span class="line">	 <span class="keyword">if</span> (!isCritical) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	 *isCritical = <span class="literal">false</span>;</span><br><span class="line"> </span><br><span class="line">	 <span class="function">ifstream <span class="title">elfFile</span><span class="params">(elfPath, ios::in | ios::binary)</span></span>;</span><br><span class="line">	 <span class="keyword">if</span> (!elfFile.is_open()) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"> </span><br><span class="line">	 <span class="comment">//检查证书</span></span><br><span class="line">	 ret = readSectionByName(<span class="string">"critical"</span>, elfFile, critical);</span><br><span class="line">	 *isCritical = !ret;</span><br><span class="line"> </span><br><span class="line">	 ret = readSectionByName(<span class="string">"license"</span>, elfFile, license);</span><br><span class="line">	 </span><br><span class="line">	 . . .</span><br><span class="line"> </span><br><span class="line">	 <span class="comment">//检查bpf版本</span></span><br><span class="line">	 <span class="comment">// the following default values are for bpfloader V0.0 format which does not include them</span></span><br><span class="line">	 <span class="keyword">unsigned</span> <span class="keyword">int</span> bpfLoaderMinVer =</span><br><span class="line">			 readSectionUint(<span class="string">"bpfloader_min_ver"</span>, elfFile, DEFAULT_BPFLOADER_MIN_VER);</span><br><span class="line">	 <span class="keyword">unsigned</span> <span class="keyword">int</span> bpfLoaderMaxVer =</span><br><span class="line">			 readSectionUint(<span class="string">"bpfloader_max_ver"</span>, elfFile, DEFAULT_BPFLOADER_MAX_VER);</span><br><span class="line">	 <span class="keyword">size_t</span> sizeOfBpfMapDef =</span><br><span class="line">			 readSectionUint(<span class="string">"size_of_bpf_map_def"</span>, elfFile, DEFAULT_SIZEOF_BPF_MAP_DEF);</span><br><span class="line">	 <span class="keyword">size_t</span> sizeOfBpfProgDef =</span><br><span class="line">			 readSectionUint(<span class="string">"size_of_bpf_prog_def"</span>, elfFile, DEFAULT_SIZEOF_BPF_PROG_DEF);</span><br><span class="line"> </span><br><span class="line">	 <span class="comment">// inclusive lower bound check</span></span><br><span class="line">	 <span class="keyword">if</span> (BPFLOADER_VERSION &lt; bpfLoaderMinVer) &#123;</span><br><span class="line">		 ALOGI(<span class="string">"BpfLoader version 0x%05x ignoring ELF object %s with min ver 0x%05x"</span>,</span><br><span class="line">			   BPFLOADER_VERSION, elfPath, bpfLoaderMinVer);</span><br><span class="line">		 <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	 &#125;</span><br><span class="line"> </span><br><span class="line">	 <span class="comment">// exclusive upper bound check</span></span><br><span class="line">	 <span class="keyword">if</span> (BPFLOADER_VERSION &gt;= bpfLoaderMaxVer) &#123;</span><br><span class="line">		 ALOGI(<span class="string">"BpfLoader version 0x%05x ignoring ELF object %s with max ver 0x%05x"</span>,</span><br><span class="line">			   BPFLOADER_VERSION, elfPath, bpfLoaderMaxVer);</span><br><span class="line">		 <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	 &#125;</span><br><span class="line"> </span><br><span class="line">	 ALOGI(<span class="string">"BpfLoader version 0x%05x processing ELF object %s with ver [0x%05x,0x%05x)"</span>,</span><br><span class="line">		   BPFLOADER_VERSION, elfPath, bpfLoaderMinVer, bpfLoaderMaxVer);</span><br><span class="line"> </span><br><span class="line">	 <span class="keyword">if</span> (sizeOfBpfMapDef &lt; DEFAULT_SIZEOF_BPF_MAP_DEF) &#123;</span><br><span class="line">		 ALOGE(<span class="string">"sizeof(bpf_map_def) of %zu is too small (&lt; %d)"</span>, sizeOfBpfMapDef,</span><br><span class="line">			   DEFAULT_SIZEOF_BPF_MAP_DEF);</span><br><span class="line">		 <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	 &#125;</span><br><span class="line"> </span><br><span class="line">	 <span class="comment">//检查bpfprog堆栈大小</span></span><br><span class="line">	 <span class="keyword">if</span> (sizeOfBpfProgDef &lt; DEFAULT_SIZEOF_BPF_PROG_DEF) &#123;</span><br><span class="line">		 ALOGE(<span class="string">"sizeof(bpf_prog_def) of %zu is too small (&lt; %d)"</span>, sizeOfBpfProgDef,</span><br><span class="line">			   DEFAULT_SIZEOF_BPF_PROG_DEF);</span><br><span class="line">		 <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	 &#125;</span><br><span class="line"> </span><br><span class="line">	 ret = readCodeSections(elfFile, cs, sizeOfBpfProgDef, allowed, numAllowed);</span><br><span class="line">	 <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">		 ALOGE(<span class="string">"Couldn't read all code sections in %s"</span>, elfPath);</span><br><span class="line">		 <span class="keyword">return</span> ret;</span><br><span class="line">	 &#125;</span><br><span class="line"> </span><br><span class="line">	 <span class="comment">/* Just for future debugging */</span></span><br><span class="line">	 <span class="keyword">if</span> (<span class="number">0</span>) dumpAllCs(cs);</span><br><span class="line"> </span><br><span class="line">	 ret = createMaps(elfPath, elfFile, mapFds, prefix, allowedDomainBitmask, sizeOfBpfMapDef);</span><br><span class="line">	 <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">		 ALOGE(<span class="string">"Failed to create maps: (ret=%d) in %s"</span>, ret, elfPath);</span><br><span class="line">		 <span class="keyword">return</span> ret;</span><br><span class="line">	 &#125;</span><br><span class="line"> </span><br><span class="line">	 <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; (<span class="keyword">int</span>)mapFds.<span class="built_in">size</span>(); i++)</span><br><span class="line">		 ALOGD(<span class="string">"map_fd found at %d is %d in %s"</span>, i, mapFds[i].<span class="built_in">get</span>(), elfPath);</span><br><span class="line"> </span><br><span class="line">	 applyMapRelo(elfFile, mapFds, cs);</span><br><span class="line"> </span><br><span class="line">	 ret = loadCodeSections(elfPath, cs, <span class="built_in">string</span>(license.data()), prefix, allowedDomainBitmask);</span><br><span class="line">	 <span class="keyword">if</span> (ret) ALOGE(<span class="string">"Failed to load programs, loadCodeSections ret=%d"</span>, ret);</span><br><span class="line"> </span><br><span class="line">	 <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  通过几步安全检查后，接下来执行重要的三个步骤</p>
+<h2 id="2-1-生成代码段"><a href="#2-1-生成代码段" class="headerlink" title="2.1 生成代码段"></a>2.1 生成代码段</h2><p>  读取ELF目标文件中的段头信息，获取到每个BPF段的代码类型，常见有BPF_PROG_TYPE_KPROBE、BPF_PROG_TYPE_TRACEPOINT等，接着查看该段位是否需要重定位</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Read a section by its index - for ex to get sec hdr strtab blob */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">readCodeSections</span><span class="params">(ifstream&amp; elfFile, <span class="built_in">vector</span>&lt;codeSection&gt;&amp; cs, <span class="keyword">size_t</span> sizeOfBpfProgDef,</span></span></span><br><span class="line"><span class="function"><span class="params">							<span class="keyword">const</span> bpf_prog_type* allowed, <span class="keyword">size_t</span> numAllowed)</span> </span>&#123;</span><br><span class="line">	<span class="built_in">vector</span>&lt;Elf64_Shdr&gt; shTable;</span><br><span class="line">	<span class="keyword">int</span> entries, ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	ret = readSectionHeadersAll(elfFile, shTable);</span><br><span class="line">	<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line">	entries = shTable.<span class="built_in">size</span>();</span><br><span class="line"></span><br><span class="line">	<span class="built_in">vector</span>&lt;struct bpf_prog_def&gt; pd;</span><br><span class="line">	ret = readProgDefs(elfFile, pd, sizeOfBpfProgDef);</span><br><span class="line">	<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line">	<span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt; progDefNames;</span><br><span class="line">	ret = getSectionSymNames(elfFile, <span class="string">"progs"</span>, progDefNames);</span><br><span class="line">	<span class="keyword">if</span> (!pd.empty() &amp;&amp; ret) <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; entries; i++) &#123;</span><br><span class="line">		<span class="built_in">string</span> name;</span><br><span class="line">		codeSection cs_temp;</span><br><span class="line">		cs_temp.type = BPF_PROG_TYPE_UNSPEC;</span><br><span class="line"></span><br><span class="line">		ret = getSymName(elfFile, shTable[i].sh_name, name);</span><br><span class="line">		<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">enum</span> bpf_prog_type ptype = getSectionType(name);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (ptype == BPF_PROG_TYPE_UNSPEC) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!IsAllowed(ptype, allowed, numAllowed)) &#123;</span><br><span class="line">			ALOGE(<span class="string">"Program type %s not permitted here"</span>, getSectionName(ptype).c_str());</span><br><span class="line">			<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// This must be done before '/' is replaced with '_'.</span></span><br><span class="line">		cs_temp.expected_attach_type = getExpectedAttachType(name);</span><br><span class="line"></span><br><span class="line">		<span class="built_in">string</span> oldName = name;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// convert all slashes to underscores</span></span><br><span class="line">		<span class="built_in">std</span>::replace(name.<span class="built_in">begin</span>(), name.<span class="built_in">end</span>(), <span class="string">'/'</span>, <span class="string">'_'</span>);</span><br><span class="line"></span><br><span class="line">		cs_temp.type = ptype;</span><br><span class="line">		cs_temp.name = name;</span><br><span class="line"></span><br><span class="line">		ret = readSectionByIdx(elfFile, i, cs_temp.data);</span><br><span class="line">		<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line">		ALOGD(<span class="string">"Loaded code section %d (%s)"</span>, i, name.c_str());</span><br><span class="line"></span><br><span class="line">		<span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt; csSymNames;</span><br><span class="line">		ret = getSectionSymNames(elfFile, oldName, csSymNames, STT_FUNC);</span><br><span class="line">		<span class="keyword">if</span> (ret || !csSymNames.<span class="built_in">size</span>()) <span class="keyword">return</span> ret;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; progDefNames.<span class="built_in">size</span>(); ++i) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!progDefNames[i].compare(csSymNames[<span class="number">0</span>] + <span class="string">"_def"</span>)) &#123;</span><br><span class="line">				cs_temp.prog_def = pd[i];</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* Check for rel section */</span></span><br><span class="line">		<span class="keyword">if</span> (cs_temp.data.<span class="built_in">size</span>() &gt; <span class="number">0</span> &amp;&amp; i &lt; entries) &#123;</span><br><span class="line">			ret = getSymName(elfFile, shTable[i + <span class="number">1</span>].sh_name, name);</span><br><span class="line">			<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (name == (<span class="string">".rel"</span> + oldName)) &#123;</span><br><span class="line">				ret = readSectionByIdx(elfFile, i + <span class="number">1</span>, cs_temp.rel_data);</span><br><span class="line">				<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line">				ALOGD(<span class="string">"Loaded relo section %d (%s)"</span>, i, name.c_str());</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (cs_temp.data.<span class="built_in">size</span>() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">			cs.push_back(<span class="built_in">std</span>::<span class="built_in">move</span>(cs_temp));</span><br><span class="line">			ALOGD(<span class="string">"Adding section %d to cs list"</span>, i);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  常见的类型有</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Map section name prefixes to program types, the section name will be:</span></span><br><span class="line"><span class="comment"> *   SECTION(&lt;prefix&gt;/&lt;name-of-program&gt;)</span></span><br><span class="line"><span class="comment"> * For example:</span></span><br><span class="line"><span class="comment"> *   SECTION("tracepoint/sched_switch_func") where sched_switch_funcs</span></span><br><span class="line"><span class="comment"> * is the name of the program, and tracepoint is the type.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * However, be aware that you should not be directly using the SECTION() macro.</span></span><br><span class="line"><span class="comment"> * Instead use the DEFINE_(BPF|XDP)_(PROG|MAP)... &amp; LICENSE/CRITICAL macros.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">sectionType sectionNameTypes[] = &#123;</span><br><span class="line">		&#123;<span class="string">"bind4/"</span>, BPF_PROG_TYPE_CGROUP_SOCK_ADDR, BPF_CGROUP_INET4_BIND&#125;,</span><br><span class="line">		&#123;<span class="string">"bind6/"</span>, BPF_PROG_TYPE_CGROUP_SOCK_ADDR, BPF_CGROUP_INET6_BIND&#125;,</span><br><span class="line">		&#123;<span class="string">"cgroupskb/"</span>, BPF_PROG_TYPE_CGROUP_SKB, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"cgroupsock/"</span>, BPF_PROG_TYPE_CGROUP_SOCK, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"kprobe/"</span>, BPF_PROG_TYPE_KPROBE, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"perf_event/"</span>, BPF_PROG_TYPE_PERF_EVENT, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"schedact/"</span>, BPF_PROG_TYPE_SCHED_ACT, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"schedcls/"</span>, BPF_PROG_TYPE_SCHED_CLS, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"skfilter/"</span>, BPF_PROG_TYPE_SOCKET_FILTER, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"tracepoint/"</span>, BPF_PROG_TYPE_TRACEPOINT, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">		&#123;<span class="string">"xdp/"</span>, BPF_PROG_TYPE_XDP, BPF_ATTACH_TYPE_UNSPEC&#125;,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="2-2-创建map对象"><a href="#2-2-创建map对象" class="headerlink" title="2.2 创建map对象"></a>2.2 创建map对象</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BPF_FS_PATH <span class="meta-string">"/sys/fs/bpf/"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">createMaps</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* elfPath, ifstream&amp; elfFile, <span class="built_in">vector</span>&lt;unique_fd&gt;&amp; mapFds,</span></span></span><br><span class="line"><span class="function"><span class="params">					  <span class="keyword">const</span> <span class="keyword">char</span>* prefix, <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span> allowedDomainBitmask,</span></span></span><br><span class="line"><span class="function"><span class="params">					  <span class="keyword">const</span> <span class="keyword">size_t</span> sizeOfBpfMapDef)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line">	<span class="built_in">vector</span>&lt;<span class="keyword">char</span>&gt; mdData, btfData;</span><br><span class="line">	<span class="built_in">vector</span>&lt;struct bpf_map_def&gt; md;</span><br><span class="line">	<span class="built_in">vector</span>&lt;<span class="built_in">string</span>&gt; mapNames;</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">unordered_map</span>&lt;<span class="built_in">string</span>, <span class="built_in">std</span>::pair&lt;<span class="keyword">uint32_t</span>, <span class="keyword">uint32_t</span>&gt;&gt; btfTypeIdMap;</span><br><span class="line">	<span class="built_in">string</span> fname = pathToFilename(<span class="built_in">string</span>(elfPath), <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">	ret = readSectionByName(<span class="string">"maps"</span>, elfFile, mdData);</span><br><span class="line">	<span class="keyword">if</span> (ret == <span class="number">-2</span>) <span class="keyword">return</span> <span class="number">0</span>;  <span class="comment">// no maps to read</span></span><br><span class="line">	<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line">	...</span><br><span class="line">	</span><br><span class="line">	ret = getSectionSymNames(elfFile, <span class="string">"maps"</span>, mapNames);</span><br><span class="line">	<span class="keyword">if</span> (ret) <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">unsigned</span> btfMinBpfLoaderVer = readSectionUint(<span class="string">"btf_min_bpfloader_ver"</span>, elfFile, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">unsigned</span> btfMinKernelVer = readSectionUint(<span class="string">"btf_min_kernel_ver"</span>, elfFile, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">unsigned</span> kvers = kernelVersion();</span><br><span class="line"></span><br><span class="line">	<span class="built_in">std</span>::optional&lt;unique_fd&gt; btfFd;</span><br><span class="line">	<span class="keyword">if</span> ((BPFLOADER_VERSION &gt;= btfMinBpfLoaderVer) &amp;&amp; (kvers &gt;= btfMinKernelVer) &amp;&amp;</span><br><span class="line">		(!readSectionByName(<span class="string">".BTF"</span>, elfFile, btfData))) &#123;</span><br><span class="line">		btfFd = getMapBtfInfo(elfPath, btfTypeIdMap);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; (<span class="keyword">int</span>)mapNames.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">	   </span><br><span class="line">		<span class="keyword">enum</span> bpf_map_type type = md[i].type;</span><br><span class="line"></span><br><span class="line">		...</span><br><span class="line"></span><br><span class="line">		 <span class="keyword">if</span> (!reuse) &#123;</span><br><span class="line">			 <span class="keyword">if</span> (specified(selinux_context)) &#123;</span><br><span class="line">				 <span class="built_in">string</span> createLoc = <span class="built_in">string</span>(BPF_FS_PATH) + lookupPinSubdir(selinux_context) +</span><br><span class="line">									<span class="string">"tmp_map_"</span> + fname + <span class="string">"_"</span> + mapNames[i];</span><br><span class="line">				 ret = bpf_obj_pin(fd, createLoc.c_str());</span><br><span class="line">				 <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">					 <span class="keyword">int</span> err = errno;</span><br><span class="line">					 ALOGE(<span class="string">"create %s -&gt; %d [%d:%s]"</span>, createLoc.c_str(), ret, err, strerror(err));</span><br><span class="line">					 <span class="keyword">return</span> -err;</span><br><span class="line">				 &#125;</span><br><span class="line">				 ret = rename(createLoc.c_str(), mapPinLoc.c_str());</span><br><span class="line">				 <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">					 <span class="keyword">int</span> err = errno;</span><br><span class="line">					 ALOGE(<span class="string">"rename %s %s -&gt; %d [%d:%s]"</span>, createLoc.c_str(), mapPinLoc.c_str(), ret,</span><br><span class="line">						   err, strerror(err));</span><br><span class="line">					 <span class="keyword">return</span> -err;</span><br><span class="line">				 &#125;</span><br><span class="line">			 &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				 ret = bpf_obj_pin(fd, mapPinLoc.c_str());</span><br><span class="line">				 <span class="keyword">if</span> (ret) <span class="keyword">return</span> -errno;</span><br><span class="line">			 &#125;</span><br><span class="line">			 </span><br><span class="line">			 ...</span><br><span class="line">		 &#125;</span><br><span class="line">		</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">bpf_map_info</span> <span class="title">map_info</span> = &#123;</span>&#125;;</span><br><span class="line">		__u32 map_info_len = <span class="keyword">sizeof</span>(map_info);</span><br><span class="line">		<span class="keyword">int</span> rv = bpf_obj_get_info_by_fd(fd, &amp;map_info, &amp;map_info_len);</span><br><span class="line">		<span class="keyword">if</span> (rv) &#123;</span><br><span class="line">			ALOGE(<span class="string">"bpf_obj_get_info_by_fd failed, ret: %d [%d]"</span>, rv, errno);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			ALOGI(<span class="string">"map %s id %d"</span>, mapPinLoc.c_str(), map_info.id);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		mapFds.push_back(<span class="built_in">std</span>::<span class="built_in">move</span>(fd));</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">																					 <span class="number">903</span>,<span class="number">0</span><span class="number">-1</span>                                                                                     <span class="number">672</span>,<span class="number">12</span></span><br></pre></td></tr></table></figure>
+<p>  为了避免map对象在bpfloader服务退出之后被销毁，会通过bpf_obj_pin将这些对象固定到/sys/fs/bpf/文件节点</p>
+<p>  映射的文件节点，其命名有特定规则，以便其他prog能通过文件路径名称来找到对应的bpfprog。</p>
+<h2 id="2-3-加载prog"><a href="#2-3-加载prog" class="headerlink" title="2.3 加载prog"></a>2.3 加载prog</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">loadCodeSections</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* elfPath, <span class="built_in">vector</span>&lt;codeSection&gt;&amp; cs, <span class="keyword">const</span> <span class="built_in">string</span>&amp; license,</span></span></span><br><span class="line"><span class="function"><span class="params">						   <span class="keyword">const</span> <span class="keyword">char</span>* prefix, <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span> allowedDomainBitmask)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">unsigned</span> kvers = kernelVersion();</span><br><span class="line">   <span class="keyword">int</span> ret, fd;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (!kvers) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">   <span class="built_in">string</span> fname = pathToFilename(<span class="built_in">string</span>(elfPath), <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; (<span class="keyword">int</span>)cs.<span class="built_in">size</span>(); i++) &#123;</span><br><span class="line">	   <span class="built_in">string</span> name = cs[i].name;</span><br><span class="line">	   <span class="keyword">unsigned</span> bpfMinVer = DEFAULT_BPFLOADER_MIN_VER;  <span class="comment">// v0.0</span></span><br><span class="line">	   <span class="keyword">unsigned</span> bpfMaxVer = DEFAULT_BPFLOADER_MAX_VER;  <span class="comment">// v1.0</span></span><br><span class="line">	   domain selinux_context = domain::unspecified;</span><br><span class="line">	   domain pin_subdir = domain::unspecified;</span><br><span class="line"></span><br><span class="line">	   <span class="keyword">if</span> (cs[i].prog_def.has_value()) &#123;</span><br><span class="line">		   <span class="keyword">unsigned</span> min_kver = cs[i].prog_def-&gt;min_kver;</span><br><span class="line">		   <span class="keyword">unsigned</span> max_kver = cs[i].prog_def-&gt;max_kver;</span><br><span class="line">		   ALOGD(<span class="string">"cs[%d].name:%s min_kver:%x .max_kver:%x (kvers:%x)"</span>, i, name.c_str(), min_kver,</span><br><span class="line">				 max_kver, kvers);</span><br><span class="line">		   <span class="keyword">if</span> (kvers &lt; min_kver) <span class="keyword">continue</span>;</span><br><span class="line">		   <span class="keyword">if</span> (kvers &gt;= max_kver) <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">			bpfMinVer = cs[i].prog_def-&gt;bpfloader_min_ver;</span><br><span class="line">			bpfMaxVer = cs[i].prog_def-&gt;bpfloader_max_ver;</span><br><span class="line">			selinux_context = getDomainFromSelinuxContext(cs[i].prog_def-&gt;selinux_context);</span><br><span class="line">			pin_subdir = getDomainFromPinSubdir(cs[i].prog_def-&gt;pin_subdir);</span><br><span class="line">			<span class="comment">// Note: make sure to only check for unrecognized *after* verifying bpfloader</span></span><br><span class="line">			<span class="comment">// version limits include this bpfloader's version.</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		ALOGD(<span class="string">"cs[%d].name:%s requires bpfloader version [0x%05x,0x%05x)"</span>, i, name.c_str(),</span><br><span class="line">			  bpfMinVer, bpfMaxVer);</span><br><span class="line">		<span class="keyword">if</span> (BPFLOADER_VERSION &lt; bpfMinVer) <span class="keyword">continue</span>;</span><br><span class="line">		<span class="keyword">if</span> (BPFLOADER_VERSION &gt;= bpfMaxVer) <span class="keyword">continue</span>;</span><br><span class="line">		<span class="keyword">if</span> (unrecognized(pin_subdir)) <span class="keyword">return</span> -ENOTDIR;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (specified(selinux_context)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!inDomainBitmask(selinux_context, allowedDomainBitmask)) &#123;</span><br><span class="line">				ALOGE(<span class="string">"prog %s has invalid selinux_context of %d (allowed bitmask 0x%llx)"</span>,</span><br><span class="line">					  name.c_str(), selinux_context, allowedDomainBitmask);</span><br><span class="line">				<span class="keyword">return</span> -EINVAL;</span><br><span class="line">			&#125;</span><br><span class="line">			ALOGI(<span class="string">"prog %s selinux_context [%32s] -&gt; %d -&gt; '%s' (%s)"</span>, name.c_str(),</span><br><span class="line">				  cs[i].prog_def-&gt;selinux_context, selinux_context,</span><br><span class="line">				  lookupSelinuxContext(selinux_context), lookupPinSubdir(selinux_context));</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (specified(pin_subdir)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!inDomainBitmask(pin_subdir, allowedDomainBitmask)) &#123;</span><br><span class="line">				ALOGE(<span class="string">"prog %s has invalid pin_subdir of %d (allowed bitmask 0x%llx)"</span>, name.c_str(),</span><br><span class="line">					  pin_subdir, allowedDomainBitmask);</span><br><span class="line">				<span class="keyword">return</span> -EINVAL;</span><br><span class="line">			&#125;</span><br><span class="line">			ALOGI(<span class="string">"prog %s pin_subdir [%32s] -&gt; %d -&gt; '%s'"</span>, name.c_str(),</span><br><span class="line">				  cs[i].prog_def-&gt;pin_subdir, pin_subdir, lookupPinSubdir(pin_subdir));</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// strip any potential $foo suffix</span></span><br><span class="line">		<span class="comment">// this can be used to provide duplicate programs</span></span><br><span class="line">		<span class="comment">// conditionally loaded based on running kernel version</span></span><br><span class="line">		name = name.substr(<span class="number">0</span>, name.find_last_of(<span class="string">'$'</span>));</span><br><span class="line"></span><br><span class="line">		<span class="keyword">bool</span> reuse = <span class="literal">false</span>;</span><br><span class="line">		<span class="comment">// Format of pin location is</span></span><br><span class="line">		<span class="comment">// /sys/fs/bpf/&lt;prefix&gt;prog_&lt;filename&gt;_&lt;mapname&gt;</span></span><br><span class="line">		<span class="built_in">string</span> progPinLoc = <span class="built_in">string</span>(BPF_FS_PATH) + lookupPinSubdir(pin_subdir, prefix) + <span class="string">"prog_"</span> +</span><br><span class="line">							fname + <span class="string">'_'</span> + <span class="built_in">string</span>(name);</span><br><span class="line">		<span class="keyword">if</span> (access(progPinLoc.c_str(), F_OK) == <span class="number">0</span>) &#123;</span><br><span class="line">			fd = retrieveProgram(progPinLoc.c_str());</span><br><span class="line">			ALOGD(<span class="string">"New bpf prog load reusing prog %s, ret: %d (%s)"</span>, progPinLoc.c_str(), fd,</span><br><span class="line">				  (fd &lt; <span class="number">0</span> ? <span class="built_in">std</span>::strerror(errno) : <span class="string">"no error"</span>));</span><br><span class="line">			reuse = <span class="literal">true</span>;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="built_in">vector</span>&lt;<span class="keyword">char</span>&gt; log_buf(BPF_LOAD_LOG_SZ, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">			<span class="class"><span class="keyword">struct</span> <span class="title">bpf_load_program_attr</span> <span class="title">attr</span> = &#123;</span></span><br><span class="line">				.prog_type = cs[i].type,</span><br><span class="line">				.name = name.c_str(),</span><br><span class="line">				.insns = (struct bpf_insn*)cs[i].data.data(),</span><br><span class="line">				.license = license.c_str(),</span><br><span class="line">				.log_level = <span class="number">0</span>,</span><br><span class="line">				.expected_attach_type = cs[i].expected_attach_type,</span><br><span class="line">			&#125;;</span><br><span class="line"></span><br><span class="line">			fd = bcc_prog_load_xattr(&amp;attr, cs[i].data.<span class="built_in">size</span>(), log_buf.data(), log_buf.<span class="built_in">size</span>(),</span><br><span class="line">					<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">			...</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (fd &lt; <span class="number">0</span>) <span class="keyword">return</span> fd;</span><br><span class="line">		<span class="keyword">if</span> (fd == <span class="number">0</span>) <span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!reuse) &#123;</span><br><span class="line">			<span class="keyword">if</span> (specified(selinux_context)) &#123;</span><br><span class="line">				<span class="built_in">string</span> createLoc = <span class="built_in">string</span>(BPF_FS_PATH) + lookupPinSubdir(selinux_context) +</span><br><span class="line">								   <span class="string">"tmp_prog_"</span> + fname + <span class="string">'_'</span> + <span class="built_in">string</span>(name);</span><br><span class="line">				ret = bpf_obj_pin(fd, createLoc.c_str());</span><br><span class="line">				...</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				ret = bpf_obj_pin(fd, progPinLoc.c_str());</span><br><span class="line">				...</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">bpf_prog_info</span> <span class="title">prog_info</span> = &#123;</span>&#125;;</span><br><span class="line">		__u32 prog_info_len = <span class="keyword">sizeof</span>(prog_info);</span><br><span class="line">		<span class="keyword">int</span> rv = bpf_obj_get_info_by_fd(fd, &amp;prog_info, &amp;prog_info_len);</span><br><span class="line">		...</span><br><span class="line"></span><br><span class="line">		cs[i].prog_fd.reset(fd);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  在上面的load过程中，loader通过attr来明确该prog的信息，将其加载到指定位置，并将加载结果返回给句柄fd，再通过bpf_obj_pin 将该prog固定到/sys/fs/bpf/，防止bpfloader加载完退出后eBPF-prog被销毁。</p>
+<p>  到这一步，eBPF-prog完成了初始化，并且prog也load到了内核。</p>
+<p>  此时只要内核有相应事件发生，都会调到prog处理，并将结果保存在对应的map对象中，用户进程只需要通过bpf的接口BPF_MAP_LOOKUP_ELEM等即可获取map对象中的数据，以完成响应的处理工作</p>
+<h1 id="3-eBPF实例"><a href="#3-eBPF实例" class="headerlink" title="3.  eBPF实例"></a>3.  eBPF实例</h1><p>  接下来，再通过几个实例来进一步认识eBPF的功能</p>
+<h2 id="3-1-Hello，-eBPF-！"><a href="#3-1-Hello，-eBPF-！" class="headerlink" title="3.1 Hello， eBPF ！"></a>3.1 Hello， eBPF ！</h2><p>  先来一个简单的例子，</p>
+<p>  kernel层hello_kern.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/bpf.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"bpf/bpf_helpers.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SEC(NAME) __attribute__((section(NAME), used))</span></span><br><span class="line"></span><br><span class="line">SEC(<span class="string">"tracepoint/syscalls/sys_enter_execve"</span>)</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">bpf_prog</span><span class="params">(<span class="keyword">void</span> *ctx)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">char</span> str[] = <span class="string">"Hello, eBPF !!!\n"</span>;</span><br><span class="line">	bpf_trace_printk(str, <span class="keyword">sizeof</span>(str)); </span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">char</span> _license[] SEC(<span class="string">"license"</span>) = <span class="string">"GPL"</span>;</span><br></pre></td></tr></table></figure>
+<p>  user层hello_user.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"bpf_load.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(load_bpf_file(<span class="string">"hello_kern.o"</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">"The kernel didn't load eBPF-prog\n"</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	read_trace_pipe();</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  将其放到samples/bpf目录下，在makefile中，添加我们的模块</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tprogs-y += hello_ebpf</span><br><span class="line">hello-objs := bpf_load.o hello_user.o</span><br><span class="line">always-y += hello_kern.o</span><br></pre></td></tr></table></figure>
+<p>  接着</p>
+<ol>
+<li><p>通过运行<code>./hello_user</code>命令来完成。这将加载<code>hello_kern.o</code>到内核中。<code>load_bpf_file</code>函数负责加载内核模块并将其附加到内核。在这个过程中，内核模块中的eBPF程序（<code>bpf_prog</code>）会被加载到内核中。</p>
+</li>
+<li><p>运行可执行程序<code>./hello</code>（随意一个可执行执行程序），就会触发<code>sys_enter_execve</code> tracepoint。当触发该tracepoint时，内核中已加载的 <code>hello_kern.o</code> eBPF程序（<code>bpf_prog</code>）会被执行，打印一条消息：”Hello, eBPF !!!”。用户空间程序（<code>hello_user</code>）通过读取tracepoint输出，可以看到eBPF程序打印的消息。</p>
+</li>
+</ol>
+<p>  这个简单的示例展示了如何在Linux内核中使用eBPF跟踪tracepoint并打印一条消息。通过这个示例，你可以了解eBPF的基本概念和使用方法。</p>
+<h2 id="3-2-网络管控"><a href="#3-2-网络管控" class="headerlink" title="3.2 网络管控"></a>3.2 网络管控</h2><p>  我们知道在android中有一个doze模式，用来优化息屏下的待机功耗，它定义了一系列的策略，其中有一个是限制息屏下的网络，我们来研究下它是如何实现的。</p>
+<p>  先看下大概流程图，参考如下</p>
+<p><img src="Android_Doze.png" alt=""></p>
+<p>  在 Android Doze模式下，系统会对网络连接进行限制，以减少后台应用程序的网络活动和降低功耗。</p>
+<p>  进入idle后，上层会在deviceidlecontroller 中调用接口实现策略更新，随后将更新后的策略通过 setUidFirewallRule 接口从fwk侧传递到网络侧 packages/modules/Connectivity，最终在ConnectivityService 中来实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUidFirewallRule</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> chain, <span class="keyword">final</span> <span class="keyword">int</span> uid, <span class="keyword">final</span> <span class="keyword">int</span> rule)</span> </span>&#123;</span><br><span class="line">	enforceNetworkStackOrSettingsPermission();</span><br><span class="line">	.....</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		mBpfNetMaps.setUidRule(chain, uid, firewallRule);</span><br><span class="line">	&#125; <span class="keyword">catch</span> (ServiceSpecificException e) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(e);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Set firewall rule for uid</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> childChain   target chain</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> uid          uid to allow/deny</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> firewallRule either FIREWALL_RULE_ALLOW or FIREWALL_RULE_DENY</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> ServiceSpecificException in case of failure, with an error code indicating the</span></span><br><span class="line"><span class="comment"> *                                  cause of the failure.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUidRule</span><span class="params">(<span class="keyword">final</span> <span class="keyword">int</span> childChain, <span class="keyword">final</span> <span class="keyword">int</span> uid, <span class="keyword">final</span> <span class="keyword">int</span> firewallRule)</span> </span>&#123;</span><br><span class="line">	throwIfPreT(<span class="string">"setUidRule is not available on pre-T devices"</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (sEnableJavaBpfMap) &#123;</span><br><span class="line">		<span class="keyword">final</span> <span class="keyword">long</span> match = getMatchByFirewallChain(childChain);</span><br><span class="line">		<span class="keyword">final</span> <span class="keyword">boolean</span> isAllowList = isFirewallAllowList(childChain);</span><br><span class="line">		<span class="keyword">final</span> <span class="keyword">boolean</span> add = (firewallRule == FIREWALL_RULE_ALLOW &amp;&amp; isAllowList)</span><br><span class="line">				|| (firewallRule == FIREWALL_RULE_DENY &amp;&amp; !isAllowList);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (add) &#123;</span><br><span class="line">			addRule(uid, match, <span class="string">"setUidRule"</span>);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			removeRule(uid, match, <span class="string">"setUidRule"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">final</span> <span class="keyword">int</span> err = native_setUidRule(childChain, uid, firewallRule);</span><br><span class="line">		maybeThrow(err, <span class="string">"Unable to set uid rule"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> jint <span class="title">native_setChildChain</span><span class="params">(JNIEnv* env, jobject self, jint childChain, jboolean enable)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">auto</span> chain = <span class="keyword">static_cast</span>&lt;ChildChain&gt;(childChain);</span><br><span class="line">  <span class="keyword">int</span> res = mTc.toggleUidOwnerMap(chain, enable);</span><br><span class="line">  <span class="keyword">if</span> (res) ALOGE(<span class="string">"%s failed, error code = %d"</span>, __func__, res);</span><br><span class="line">  <span class="keyword">return</span> (jint)res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  最终在 TrafficController 中完成规则的更新</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> TrafficController::toggleUidOwnerMap(ChildChain chain, bool enable) &#123;</span><br><span class="line">	std::<span class="function">lock_guard <span class="title">guard</span><span class="params">(mMutex)</span></span>;</span><br><span class="line">	uint32_t key = UID_RULES_CONFIGURATION_KEY;</span><br><span class="line">	auto oldConfigure = mConfigurationMap.readValue(key);</span><br><span class="line">	<span class="keyword">if</span> (!oldConfigure.ok()) &#123;</span><br><span class="line">		ALOGE(<span class="string">"Cannot read the old configuration from map: %s"</span>,</span><br><span class="line">			  oldConfigure.error().message().c_str());</span><br><span class="line">		<span class="keyword">return</span> -oldConfigure.error().code();</span><br><span class="line">	&#125;</span><br><span class="line">	uint32_t match;</span><br><span class="line">	<span class="keyword">switch</span> (chain) &#123;</span><br><span class="line">		<span class="keyword">case</span> DOZABLE:</span><br><span class="line">			match = DOZABLE_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> STANDBY:</span><br><span class="line">			match = STANDBY_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> POWERSAVE:</span><br><span class="line">			match = POWERSAVE_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> RESTRICTED:</span><br><span class="line">			match = RESTRICTED_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> LOW_POWER_STANDBY:</span><br><span class="line">			match = LOW_POWER_STANDBY_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> OEM_DENY_1:</span><br><span class="line">			match = OEM_DENY_1_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> OEM_DENY_2:</span><br><span class="line">			match = OEM_DENY_2_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> OEM_DENY_3:</span><br><span class="line">			match = OEM_DENY_3_MATCH;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="keyword">return</span> -EINVAL;</span><br><span class="line">	&#125;</span><br><span class="line">	BpfConfig newConfiguration =</span><br><span class="line">			enable ? (oldConfigure.value() | match) : (oldConfigure.value() &amp; ~match);</span><br><span class="line">	Status res = mConfigurationMap.writeValue(key, newConfiguration, BPF_EXIST);</span><br><span class="line">	<span class="keyword">if</span> (!isOk(res)) &#123;</span><br><span class="line">		ALOGE(<span class="string">"Failed to toggleUidOwnerMap(%d): %s"</span>, chain, res.msg().c_str());</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> -res.code();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  当手机处于doze模式下待机，网卡接收到数据包通过中断唤醒CPU后，经由协议栈解析socket包（这里假设是tcp的包）时</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* The socket must have it's spinlock held when we get</span></span><br><span class="line"><span class="comment"> * here, unless it is a TCP_LISTEN socket.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * We have a potential double-lock case here, so even when</span></span><br><span class="line"><span class="comment"> * doing backlog processing we use the BH locking scheme.</span></span><br><span class="line"><span class="comment"> * This is because we cannot sleep with the original spinlock</span></span><br><span class="line"><span class="comment"> * held.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tcp_v4_do_rcv</span><span class="params">(struct sock *sk, struct sk_buff *skb)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">		<span class="keyword">enum</span> skb_drop_reason reason;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">sock</span> *<span class="title">rsk</span>;</span></span><br><span class="line"></span><br><span class="line">		<span class="comment">//假设需要我们处理的是 ESTABLISH 状态下的包  </span></span><br><span class="line">		<span class="keyword">if</span> (sk-&gt;sk_state == TCP_ESTABLISHED) &#123; <span class="comment">/* Fast path */</span></span><br><span class="line">				<span class="class"><span class="keyword">struct</span> <span class="title">dst_entry</span> *<span class="title">dst</span>;</span></span><br><span class="line"></span><br><span class="line">				dst = rcu_dereference_protected(sk-&gt;sk_rx_dst,</span><br><span class="line">												lockdep_sock_is_held(sk));</span><br><span class="line"></span><br><span class="line">				sock_rps_save_rxhash(sk, skb);</span><br><span class="line">				sk_mark_napi_id(sk, skb);</span><br><span class="line">				<span class="keyword">if</span> (dst) &#123;</span><br><span class="line">						<span class="keyword">if</span> (sk-&gt;sk_rx_dst_ifindex != skb-&gt;skb_iif ||</span><br><span class="line">							!INDIRECT_CALL_1(dst-&gt;ops-&gt;check, ipv4_dst_check,</span><br><span class="line">											 dst, <span class="number">0</span>)) &#123;</span><br><span class="line">								RCU_INIT_POINTER(sk-&gt;sk_rx_dst, <span class="literal">NULL</span>);</span><br><span class="line">								dst_release(dst);</span><br><span class="line">						&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				tcp_rcv_established(sk, skb);</span><br><span class="line">				<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		reason = SKB_DROP_REASON_NOT_SPECIFIED;</span><br><span class="line">		<span class="keyword">if</span> (tcp_checksum_complete(skb))</span><br><span class="line">				<span class="keyword">goto</span> csum_err;</span><br><span class="line"></span><br><span class="line">		......</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(tcp_v4_do_rcv);</span><br></pre></td></tr></table></figure>
+<p>  进一处理处于连接状态下的skb数据</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">tcp_rcv_established</span><span class="params">(struct sock *sk, struct sk_buff *skb)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">		. . .    </span><br><span class="line">		<span class="comment">//关于协议栈处理数据包的源码太长，只关注我们需要的部分</span></span><br><span class="line">		<span class="keyword">if</span> (!tcp_validate_incoming(sk, skb, th, <span class="number">1</span>))</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">		. . .</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(tcp_rcv_established);</span><br></pre></td></tr></table></figure>
+<p>  这里会根据skb里header的source和dest信息来查找对应socket</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">tcp_validate_incoming</span><span class="params">(struct sock *sk, struct sk_buff *skb,</span></span></span><br><span class="line"><span class="function"><span class="params">								  <span class="keyword">const</span> struct tcphdr *th, <span class="keyword">int</span> syn_inerr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">tcp_sock</span> *<span class="title">tp</span> = <span class="title">tcp_sk</span>(<span class="title">sk</span>);</span></span><br><span class="line">		SKB_DR(reason);</span><br><span class="line"></span><br><span class="line">		.....</span><br><span class="line"></span><br><span class="line">		bpf_skops_parse_hdr(sk, skb);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">discard:</span><br><span class="line">		tcp_drop_reason(sk, skb, reason);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">		.....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  走到这里，终于回到了我们的eBPF程序上。当一个网络数据包到达设备时，eBPF会根据预先定义的过滤规则来决定是否允许该数据包通过。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_CGROUP_BPF</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bpf_skops_parse_hdr</span><span class="params">(struct sock *sk, struct sk_buff *skb)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">		.....</span><br><span class="line">		<span class="comment">/* The skb will be handled in the</span></span><br><span class="line"><span class="comment">		 * bpf_skops_established() or</span></span><br><span class="line"><span class="comment">		 * bpf_skops_write_hdr_opt().</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">switch</span> (sk-&gt;sk_state) &#123;</span><br><span class="line">		<span class="keyword">case</span> TCP_SYN_RECV:</span><br><span class="line">		<span class="keyword">case</span> TCP_SYN_SENT:</span><br><span class="line">		<span class="keyword">case</span> TCP_LISTEN:</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		sock_owned_by_me(sk);</span><br><span class="line"></span><br><span class="line">		<span class="built_in">memset</span>(&amp;sock_ops, <span class="number">0</span>, offsetof(struct bpf_sock_ops_kern, temp));</span><br><span class="line">		sock_ops.op = BPF_SOCK_OPS_PARSE_HDR_OPT_CB;</span><br><span class="line">		sock_ops.is_fullsock = <span class="number">1</span>;</span><br><span class="line">		sock_ops.sk = sk;</span><br><span class="line">		bpf_skops_init_skb(&amp;sock_ops, skb, tcp_hdrlen(skb));</span><br><span class="line"></span><br><span class="line">		BPF_CGROUP_RUN_PROG_SOCK_OPS(&amp;sock_ops);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  这个宏的定义如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BPF_CGROUP_RUN_PROG_SOCK_OPS(sock_ops)                                       \</span></span><br><span class="line">(&#123;                                                                               \</span><br><span class="line">		<span class="keyword">int</span> __ret = <span class="number">0</span>;                                                               \</span><br><span class="line">		<span class="keyword">if</span> (cgroup_bpf_enabled(CGROUP_SOCK_OPS) &amp;&amp; (sock_ops)-&gt;sk) &#123;       \</span><br><span class="line">				typeof(sk) __sk = sk_to_full_sk((sock_ops)-&gt;sk);               \</span><br><span class="line">				<span class="keyword">if</span> (__sk &amp;&amp; sk_fullsock(__sk))                                       \</span><br><span class="line">						__ret = __cgroup_bpf_run_filter_sock_ops(__sk,               \</span><br><span class="line">																 sock_ops,     \</span><br><span class="line">														 CGROUP_SOCK_OPS); \</span><br><span class="line">		&#125;                                                                       \</span><br><span class="line">		__ret;                                                                       \</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>  在cgroup中实现如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * __cgroup_bpf_run_filter_sock_ops() - Run a program on a sock</span></span><br><span class="line"><span class="comment"> * @sk: socket to get cgroup from</span></span><br><span class="line"><span class="comment"> * @sock_ops: bpf_sock_ops_kern struct to pass to program. Contains</span></span><br><span class="line"><span class="comment"> * sk with connection information (IP addresses, etc.) May not contain</span></span><br><span class="line"><span class="comment"> * cgroup info if it is a req sock.</span></span><br><span class="line"><span class="comment"> * @type: The type of program to be executed</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * socket passed is expected to be of type INET or INET6.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * The program type passed in via @type must be suitable for sock_ops</span></span><br><span class="line"><span class="comment"> * filtering. No further check is performed to assert that.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * This function will return %-EPERM if any if an attached program was found</span></span><br><span class="line"><span class="comment"> * and if it returned != 1 during execution. In all other cases, 0 is returned.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">int</span> __cgroup_bpf_run_filter_sock_ops(struct sock *sk,</span><br><span class="line">									 struct bpf_sock_ops_kern *sock_ops,</span><br><span class="line">									 <span class="keyword">enum</span> cgroup_bpf_attach_type atype)</span><br><span class="line">&#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">cgroup</span> *<span class="title">cgrp</span> = <span class="title">sock_cgroup_ptr</span>(&amp;<span class="title">sk</span>-&gt;<span class="title">sk_cgrp_data</span>);</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> bpf_prog_run_array_cg(&amp;cgrp-&gt;bpf, atype, sock_ops, bpf_prog_run,</span><br><span class="line">									 <span class="number">0</span>, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(__cgroup_bpf_run_filter_sock_ops);</span><br></pre></td></tr></table></figure>
+<p>  走到这里，就调到了hook的eBPF-prog，这里挂载的是网络侧的netd，源码位于</p>
+<p>  packages/modules/Connectivity/bpf_progs/netd.c，与之相关的挂载点如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">DEFINE_BPF_PROG_EXT(<span class="string">"cgroupskb/ingress/stats$trace"</span>, AID_ROOT, AID_SYSTEM,</span><br><span class="line">					bpf_cgroup_ingress_trace, KVER(<span class="number">5</span>, <span class="number">8</span>, <span class="number">0</span>), KVER_INF,</span><br><span class="line">					BPFLOADER_IGNORED_ON_VERSION, BPFLOADER_MAX_VER, <span class="literal">false</span>,</span><br><span class="line">					<span class="string">"fs_bpf_netd_readonly"</span>, <span class="string">""</span>, <span class="literal">false</span>, <span class="literal">true</span>, <span class="literal">false</span>)</span><br><span class="line">(struct __sk_buff* skb) &#123;</span><br><span class="line">	<span class="keyword">return</span> bpf_traffic_account(skb, INGRESS, TRACE_ON, KVER(<span class="number">5</span>, <span class="number">8</span>, <span class="number">0</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">DEFINE_NETD_BPF_PROG_KVER_RANGE(<span class="string">"cgroupskb/ingress/stats$4_19"</span>, AID_ROOT, AID_SYSTEM,</span><br><span class="line">								bpf_cgroup_ingress_4_19, KVER(<span class="number">4</span>, <span class="number">19</span>, <span class="number">0</span>), KVER_INF)</span><br><span class="line">(struct __sk_buff* skb) &#123;</span><br><span class="line">	<span class="keyword">return</span> bpf_traffic_account(skb, INGRESS, TRACE_OFF, KVER(<span class="number">4</span>, <span class="number">19</span>, <span class="number">0</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">DEFINE_NETD_BPF_PROG_KVER_RANGE(<span class="string">"cgroupskb/ingress/stats$4_14"</span>, AID_ROOT, AID_SYSTEM,</span><br><span class="line">								bpf_cgroup_ingress_4_14, KVER_NONE, KVER(<span class="number">4</span>, <span class="number">19</span>, <span class="number">0</span>))</span><br><span class="line">(struct __sk_buff* skb) &#123;</span><br><span class="line">	<span class="keyword">return</span> bpf_traffic_account(skb, INGRESS, TRACE_OFF, KVER_NONE);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">DEFINE_BPF_PROG_EXT(<span class="string">"cgroupskb/egress/stats$trace"</span>, AID_ROOT, AID_SYSTEM,</span><br><span class="line">					bpf_cgroup_egress_trace, KVER(<span class="number">5</span>, <span class="number">8</span>, <span class="number">0</span>), KVER_INF,</span><br><span class="line">					BPFLOADER_IGNORED_ON_VERSION, BPFLOADER_MAX_VER, <span class="literal">false</span>,</span><br><span class="line">					<span class="string">"fs_bpf_netd_readonly"</span>, <span class="string">""</span>, <span class="literal">false</span>, <span class="literal">true</span>, <span class="literal">false</span>)</span><br><span class="line">(struct __sk_buff* skb) &#123;</span><br><span class="line">	<span class="keyword">return</span> bpf_traffic_account(skb, EGRESS, TRACE_ON, KVER(<span class="number">5</span>, <span class="number">8</span>, <span class="number">0</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">DEFINE_NETD_BPF_PROG_KVER_RANGE(<span class="string">"cgroupskb/egress/stats$4_19"</span>, AID_ROOT, AID_SYSTEM,</span><br><span class="line">								bpf_cgroup_egress_4_19, KVER(<span class="number">4</span>, <span class="number">19</span>, <span class="number">0</span>), KVER_INF)</span><br><span class="line">(struct __sk_buff* skb) &#123;</span><br><span class="line">	<span class="keyword">return</span> bpf_traffic_account(skb, EGRESS, TRACE_OFF, KVER(<span class="number">4</span>, <span class="number">19</span>, <span class="number">0</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">DEFINE_NETD_BPF_PROG_KVER_RANGE(<span class="string">"cgroupskb/egress/stats$4_14"</span>, AID_ROOT, AID_SYSTEM,</span><br><span class="line">								bpf_cgroup_egress_4_14, KVER_NONE, KVER(<span class="number">4</span>, <span class="number">19</span>, <span class="number">0</span>))</span><br><span class="line">(struct __sk_buff* skb) &#123;</span><br><span class="line">	<span class="keyword">return</span> bpf_traffic_account(skb, EGRESS, TRACE_OFF, KVER_NONE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  均会调到 bpf_traffic_account</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">static</span> __always_inline <span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">bpf_traffic_account</span><span class="params">(struct __sk_buff* skb, <span class="keyword">bool</span> egress,</span></span></span><br><span class="line"><span class="function"><span class="params">													  <span class="keyword">const</span> <span class="keyword">bool</span> enable_tracing,</span></span></span><br><span class="line"><span class="function"><span class="params">													  <span class="keyword">const</span> <span class="keyword">unsigned</span> kver)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">uint32_t</span> sock_uid = bpf_get_socket_uid(skb);</span><br><span class="line">	<span class="keyword">uint64_t</span> cookie = bpf_get_socket_cookie(skb);</span><br><span class="line">	. . .</span><br><span class="line">	<span class="keyword">int</span> match = bpf_owner_match(skb, sock_uid, egress, kver);</span><br><span class="line">	. . .</span><br><span class="line">	<span class="keyword">return</span> match;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  在这里设定了skb的处理规则</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DROP_IF_SET is set of rules that DROP if rule is globally enabled, and per-uid bit is set</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DROP_IF_SET (STANDBY_MATCH | OEM_DENY_1_MATCH | OEM_DENY_2_MATCH | OEM_DENY_3_MATCH)</span></span><br><span class="line"><span class="comment">// DROP_IF_UNSET is set of rules that should DROP if globally enabled, and per-uid bit is NOT set</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DROP_IF_UNSET (DOZABLE_MATCH | POWERSAVE_MATCH | RESTRICTED_MATCH | LOW_POWER_STANDBY_MATCH)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> __always_inline <span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">bpf_owner_match</span><span class="params">(struct __sk_buff* skb, <span class="keyword">uint32_t</span> uid,</span></span></span><br><span class="line"><span class="function"><span class="params">												  <span class="keyword">bool</span> egress, <span class="keyword">const</span> <span class="keyword">unsigned</span> kver)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (is_system_uid(uid)) <span class="keyword">return</span> PASS;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (skip_owner_match(skb, egress, kver)) <span class="keyword">return</span> PASS;</span><br><span class="line"></span><br><span class="line">	BpfConfig enabledRules = getConfig(UID_RULES_CONFIGURATION_KEY);</span><br><span class="line"></span><br><span class="line">	UidOwnerValue* uidEntry = bpf_uid_owner_map_lookup_elem(&amp;uid);</span><br><span class="line">	<span class="keyword">uint32_t</span> uidRules = uidEntry ? uidEntry-&gt;rule : <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">uint32_t</span> allowed_iif = uidEntry ? uidEntry-&gt;iif : <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Warning: funky bit-wise arithmetic: in parallel, for all DROP_IF_SET/UNSET rules</span></span><br><span class="line">	<span class="comment">// check whether the rules are globally enabled, and if so whether the rules are</span></span><br><span class="line">	<span class="comment">// set/unset for the specific uid.  DROP if that is the case for ANY of the rules.</span></span><br><span class="line">	<span class="comment">// We achieve this by masking out only the bits/rules we're interested in checking,</span></span><br><span class="line">	<span class="comment">// and negating (via bit-wise xor) the bits/rules that should drop if unset.</span></span><br><span class="line">	<span class="keyword">if</span> (enabledRules &amp; (DROP_IF_SET | DROP_IF_UNSET) &amp; (uidRules ^ DROP_IF_UNSET)) <span class="keyword">return</span> DROP;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!egress &amp;&amp; skb-&gt;ifindex != <span class="number">1</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (uidRules &amp; IIF_MATCH) &#123;</span><br><span class="line">			<span class="keyword">if</span> (allowed_iif &amp;&amp; skb-&gt;ifindex != allowed_iif) &#123;</span><br><span class="line">				<span class="comment">// Drops packets not coming from lo nor the allowed interface</span></span><br><span class="line">				<span class="comment">// allowed interface=0 is a wildcard and does not drop packets</span></span><br><span class="line">				<span class="keyword">return</span> DROP_UNLESS_DNS;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (uidRules &amp; LOCKDOWN_VPN_MATCH) &#123;</span><br><span class="line">			<span class="comment">// Drops packets not coming from lo and rule does not have IIF_MATCH but has</span></span><br><span class="line">			<span class="comment">// LOCKDOWN_VPN_MATCH</span></span><br><span class="line">			<span class="keyword">return</span> DROP_UNLESS_DNS;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> PASS;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  根据预设的规则来决定该socket包的处理方式，是BPF_ALLOW还是DROP，分别对应该socket包的流转方式，比如BPF_ALLOW代表允许该socket包按照预设流程继续流转（唤醒客户端进程，传递socket包给应用程序解析），DROP即代表抛弃该socket包，停止流转。</p>
+<p>  以上是eBPF在tcp包上的应用，udp的包处理方式类似，就是在kernel中协议栈那里调用的接口不同。</p>
+<p>  以上就是android基于eBPF来实现doze下网络限制的基本原理。基于android实现的netd，我们还可扩展很多其他功能。比如我们期望能过滤指定应用的数据，而将其他应用的数据全部给拦截下来，这个在上层实现可能比较困难，但是基于eBPF实现就非常简单。可以通过将指定应用的uid写入map，在netd拦截到skb时去读取map来校验是否匹配，从而选择对应的处理方式。将超白名单中的所有即时通讯应用都纳入冻结管控，清除超级白名单，而应用收到网络消息的时候也能触发解冻流程，避免消息数据延迟和丢失，又能降低功耗。</p>
+<p>  流量过滤也是类似原理，大家有兴趣可以自行研究。</p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p><a href="https://www.kernel.org/doc/Documentation/networking/filter.txt" target="_blank" rel="noopener">Linux Socket Filtering aka Berkeley Packet Filter (BPF)</a><br><a href="https://linux.cn/article-9507-1.html" target="_blank" rel="noopener">技术|深入理解 BPF:一个阅读清单</a><br><a href="https://www.brendangregg.com/blog/2019-01-01/learn-ebpf-tracing.html" target="_blank" rel="noopener">Learn eBPF Tracing: Tutorial and Examples</a><br><a href="https://www.ferrisellis.com/content/ebpf_syscall_and_maps/" target="_blank" rel="noopener">FerrisEllis.com</a><br><a href="https://github.com/iovisor/bcc" target="_blank" rel="noopener">GitHub - iovisor/bcc: BCC - Tools for BPF-based Linux IO analysis, networking, monitoring, and more</a></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2023/11/10/Qcom_mvp/" data-toggle="tooltip" data-placement="top" title="浅析高通 mvp 进程优先调度">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2023/10/27/Android-inputTuning-and-Optimizing/" data-toggle="tooltip" data-placement="top" title="Android Input 调试与优化">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#1-概述"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">1. 概述</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-1-eBPF是什么"><span class="toc-nav-number">1.1.</span> <span class="toc-nav-text">1.1 eBPF是什么</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-1-1-简介"><span class="toc-nav-number">1.1.1.</span> <span class="toc-nav-text">1.1.1   简介</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-2-eBPF的工作流程"><span class="toc-nav-number">1.2.</span> <span class="toc-nav-text">1.2 eBPF的工作流程</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-2-1-Hook"><span class="toc-nav-number">1.2.1.</span> <span class="toc-nav-text">1.2.1 Hook</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-2-2-Map"><span class="toc-nav-number">1.2.2.</span> <span class="toc-nav-text">1.2.2 Map</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-2-3-JIT-Compailation"><span class="toc-nav-number">1.2.3.</span> <span class="toc-nav-text">1.2.3 JIT Compailation</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-2-4-eBPF-Safety"><span class="toc-nav-number">1.2.4.</span> <span class="toc-nav-text">1.2.4 eBPF Safety</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#i、Verifier"><span class="toc-nav-number">1.2.4.1.</span> <span class="toc-nav-text">i、Verifier</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#ii、Privileges"><span class="toc-nav-number">1.2.4.2.</span> <span class="toc-nav-text">ii、Privileges</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#iii、Hardening"><span class="toc-nav-number">1.2.4.3.</span> <span class="toc-nav-text">iii、Hardening</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#iv、Abstracted-Runtime-Context"><span class="toc-nav-number">1.2.4.4.</span> <span class="toc-nav-text">iv、Abstracted Runtime Context</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#1-2-5-Tail-Calls"><span class="toc-nav-number">1.2.5.</span> <span class="toc-nav-text">1.2.5 Tail Calls</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-3-eBPF能做什么"><span class="toc-nav-number">1.3.</span> <span class="toc-nav-text">1.3 eBPF能做什么</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#2-eBPF的加载bpfloader"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">2. eBPF的加载bpfloader</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-1-生成代码段"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">2.1 生成代码段</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-2-创建map对象"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">2.2 创建map对象</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-3-加载prog"><span class="toc-nav-number">2.3.</span> <span class="toc-nav-text">2.3 加载prog</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#3-eBPF实例"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">3.  eBPF实例</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-1-Hello，-eBPF-！"><span class="toc-nav-number">3.1.</span> <span class="toc-nav-text">3.1 Hello， eBPF ！</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-2-网络管控"><span class="toc-nav-number">3.2.</span> <span class="toc-nav-text">3.2 网络管控</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#参考文献"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">参考文献</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#调试" title="调试">调试</a>
+                        
+                          <a class="tag" href="/tags/#eBPF" title="eBPF">eBPF</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          焕新存储技术：UFS 4.0 FBO 底层逻辑剖析 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2023/11/23/Analysis-of-the-USB-4-0-FBO/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#UFS" title="UFS">UFS</a>
+                            
+                        </div>
+                        <h1>焕新存储技术：UFS 4.0 FBO 底层逻辑剖析</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Sida Li on
+                            2023-11-23
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>FBO (File Based Optimization) 是 UFS 4.0 标准中新引入的功能，用于优化 UFS 长久使用后由于文件碎片导致的读写性能下降问题。了解 FBO 之前我们先了解下 UFS 的一些基本概念及文件碎片问题。</p>
+<h2 id="一、FBO-诞生的原因"><a href="#一、FBO-诞生的原因" class="headerlink" title="一、FBO 诞生的原因"></a>一、FBO 诞生的原因</h2><p>UFS (Universal Flash Storage) 通用闪存存储器以良好的性能被广泛用在手机、平板等设备上。UFS 协议由 JEDEC 协会制定，2022年推出了4.0标准。UFS 由闪存和控制器组成，闪存 (Flash) 是存储数据的实际介质，控制器处理主机 (Host) 指令和管理闪存。控制器负责磨损均衡、垃圾回收、掉电恢复、坏块管理等功能外，维护了 L2P (Logical To Physical) 逻辑地址到物理地址的映射表来管理闪存数据的读取写入地址。</p>
+<p><img src="1.png" alt=""></p>
+<p>闪存将存储空间划分为一个个物理块，使用 PBA (Physical Block Address) 物理块地址来寻址。操作系统在逻辑空间划分了逻辑块，使用LBA (Logical Block Address) 逻辑块地址来寻址。用户访问文件数据时，系统先找到文件对应的 LBA 发送给 UFS，UFS 控制器查阅 L2P 映射表找到对应的 PBA，通过访问物理空间得到要访问的数据。理想情况下在逻辑空间和物理空间用连续的块来存储一个文件，这样用起始地址和长度可以一次性访问更多的空间，如果文件被分散存储则需要更多的查阅映射表和执行 IO 操作。</p>
+<p><img src="2.png" alt=""></p>
+<p>现实中受多用户同时写入，文件大小变化等因素影响，一个文件在逻辑空间和物理空间被存放在了多个不连续的块中。逻辑空间不连续称为逻辑碎片化，物理空间不连续称为物理碎片化。除了写入的不连续外，UFS 控制器在执行垃圾回收、坏块管理等块搬移操作时也可能把原本连续块的数据搬移到不连续的块上。UFS 使用较长的时间后，闪存上的文件碎片会越来越多，新的文件可能由于没有分配到连续的物理空间在写入时写到了不连续的块上，久而久之，存储卡的读写性能下降，设备越来越卡。</p>
+<p><img src="3.png" alt=""></p>
+<p>为了优化这个问题，FBO 诞生了！FBO 的功能是消除物理碎片化，也就是将物理空间上不连续的文件整理成物理连续的文件，从而优化由于文件碎片导致的 UFS 读写性能问题。实验证明，使用 FBO 功能的 UFS 测试组在经过长期读写测试，性能未见明显下降，与未使用 FBO 功能的测试组形成鲜明对比，该性能测试对于采用“本地更新”机制的文件系统如 ext4 更明显。</p>
+<p><img src="4.png" alt=""></p>
+<h2 id="二、FBO-功能的实现"><a href="#二、FBO-功能的实现" class="headerlink" title="二、FBO 功能的实现"></a>二、FBO 功能的实现</h2><p>FBO 的实现依赖于主机 (Host) 端驱动和 UFS (Device) 端固件的共同协作，在 UFS 4.0 标准中描述了FBO 实现的流程。主机负责整个流程的控制，通过 bFBOControl 值请求 UFS 执行相应的操作。UFS 负责处理主机指令对闪存进行基于文件的优化，通过 bFBOProgressState 值告知主机 FBO 操作的状态。UFS 端固件一般由 UFS 供应商实现，我们主要关注主机端驱动的实现。FBO 分为两个阶段：分析阶段和优化阶段。</p>
+<p><img src="5.png" alt=""></p>
+<h3 id="2-1-分析阶段"><a href="#2-1-分析阶段" class="headerlink" title="2.1 分析阶段"></a>2.1 分析阶段</h3><p>分析阶段主机获取 UFS 设备 FBO 信息，主机将想要优化的文件的 LBA 告诉 UFS，UFS 查询这个文件在闪存中物理碎片化的程度并告知主机。</p>
+<p><img src="6.png" alt=""></p>
+<ul>
+<li>Get FBO_Descriptor：主机端发起请求获取 UFS 设备 FBO Descriptor。UFS 回复信息：FBO 版本、建议的 LBA 范围大小、最大 LBA 范围大小、最小 LBA 范围大小、最大 LBA 范围个数、LBA 范围对齐。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* FBO Descriptor idn&#x3D;0xA *&#x2F;</span><br><span class="line">int ufshcd_query_descriptor_retry(struct ufs_hba *hba,</span><br><span class="line">                  enum query_opcode opcode,</span><br><span class="line">                  enum desc_idn idn, u8 index,</span><br><span class="line">                  u8 selector,</span><br><span class="line">                  u8 *desc_buf, int *buf_len);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Set FBO_WriteBuffer：主机端发送想要进行整理的文件的信息给 UFS 设备，信息按 FBO WriteBuffer 格式发送。文件的一个逻辑块碎片作为一个 ENTRY 最多存放255个 ENTRY，ENTRY 中包含逻辑块起始地址和长度。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* cmd[0]&#x3D;WRITE_BUFFER; cmd[2]&#x3D;0x1; opf&#x3D;REQ_OP_DRV_OUT;*&#x2F;</span><br><span class="line">int scsi_execute_cmd(struct scsi_device *sdev, const unsigned char *cmd,</span><br><span class="line">                     blk_opf_t opf, void *buffer, unsigned int bufflen,</span><br><span class="line">                     int timeout, int retries,</span><br><span class="line">                     const struct scsi_exec_args *args);</span><br></pre></td></tr></table></figure>
+<p><img src="7.png" alt=""></p>
+<ul>
+<li>Set bFBOControl=0x1：主机端请求 UFS 进行分析，UFS 收到后对文件的物理碎片化进行分析</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* opcode&#x3D;UPIU_QUERY_OPCODE_WRITE_ATTR; FBO Control idn&#x3D;0x31; *attr_val&#x3D;0x1 *&#x2F;</span><br><span class="line">int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,</span><br><span class="line">                      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Get bFBOProgressState：主机端发起获取 UFS 分析状态的请求，UFS 返回分析状态，主机轮询等待设备分析完成。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* opcode&#x3D;UPIU_QUERY_OPCODE_READ_ATTR; FBO Progress State idn&#x3D;0x33 *&#x2F;</span><br><span class="line">int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,</span><br><span class="line">                      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Get FBOReadBuffer：主机收到 UFS 返回的分析完成状态后，读取 FBOReadBuffer 获取 FBO 分析结果。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* cmd[0]&#x3D;READ_BUFFER; cmd[2]&#x3D;0x2; opf&#x3D;REQ_OP_DRV_IN;*&#x2F;</span><br><span class="line">int scsi_execute_cmd(struct scsi_device *sdev, const unsigned char *cmd,</span><br><span class="line">                     blk_opf_t opf, void *buffer, unsigned int bufflen,</span><br><span class="line">                     int timeout, int retries,</span><br><span class="line">                     const struct scsi_exec_args *args);</span><br></pre></td></tr></table></figure>
+<p><img src="8.png" alt=""></p>
+<h3 id="2-2-优化阶段"><a href="#2-2-优化阶段" class="headerlink" title="2.2 优化阶段"></a>2.2 优化阶段</h3><p>优化阶段主机告诉 UFS 设备要执行 FBO 的 Regression Level 范围，UFS 根据等级范围和前面 WriteBuffer 找到的文件进行闪存碎片化整理。</p>
+<p><img src="9.png" alt=""></p>
+<ul>
+<li>Set FBOExecuteThreshold：主机发送想要 UFS 设备对那个 Regression Level 范围执行文件优化。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* opcode&#x3D;UPIU_QUERY_OPCODE_WRITE_ATTR; FBO Execute Threshold idn&#x3D;0x32 *&#x2F;</span><br><span class="line">int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,</span><br><span class="line">                      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);</span><br></pre></td></tr></table></figure>
+<p><img src="10.png" alt=""></p>
+<ul>
+<li>Set bFBOControl=0x2：主机端请求 UFS 执行 FBO，UFS 收到后进行基于文件的优化。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* opcode&#x3D;UPIU_QUERY_OPCODE_WRITE_ATTR; FBO Control idn&#x3D;0x31; *attr_val&#x3D;0x2 *&#x2F;</span><br><span class="line">int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,</span><br><span class="line">                      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Get bFBOProgressState：主机端发起获取 UFS 优化状态的请求，UFS 返回优化状态，主机轮询等待设备优化完成。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;* opcode&#x3D;UPIU_QUERY_OPCODE_READ_ATTR; FBO Progress State idn&#x3D;0x33 *&#x2F;</span><br><span class="line">int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,</span><br><span class="line">                      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);</span><br></pre></td></tr></table></figure>
+<h3 id="NOTE-FBO-操作和-UFS-其他操作是独立的，不会相互影响。"><a href="#NOTE-FBO-操作和-UFS-其他操作是独立的，不会相互影响。" class="headerlink" title="NOTE: FBO 操作和 UFS 其他操作是独立的，不会相互影响。"></a><em><strong>NOTE:</strong></em> <em><strong>FBO 操作和 UFS 其他操作是独立的，不会相互影响。</strong></em></h3><h2 id="三、参考资料"><a href="#三、参考资料" class="headerlink" title="三、参考资料"></a>三、参考资料</h2><ol>
+<li>JEDEC STANDARD - JESD231JEDEC STANDARD</li>
+</ol>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2023/12/13/Full-stack-resolution-of-the-Linux-time-subsystem/" data-toggle="tooltip" data-placement="top" title="从硬件到软件，Linux 时间子系统全栈解析">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2023/11/10/Qcom_mvp/" data-toggle="tooltip" data-placement="top" title="浅析高通 mvp 进程优先调度">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#一、FBO-诞生的原因"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">一、FBO 诞生的原因</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#二、FBO-功能的实现"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">二、FBO 功能的实现</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#2-1-分析阶段"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">2.1 分析阶段</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#2-2-优化阶段"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">2.2 优化阶段</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#NOTE-FBO-操作和-UFS-其他操作是独立的，不会相互影响。"><span class="toc-nav-number">2.3.</span> <span class="toc-nav-text">NOTE: FBO 操作和 UFS 其他操作是独立的，不会相互影响。</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#三、参考资料"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">三、参考资料</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#UFS" title="UFS">UFS</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

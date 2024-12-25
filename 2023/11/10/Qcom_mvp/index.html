@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          浅析高通 mvp 进程优先调度 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2023/11/10/Qcom_mvp/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Performance" title="Performance">Performance</a>
+                            
+                        </div>
+                        <h1>浅析高通 mvp 进程优先调度</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Pengcheng Lai on
+                            2023-11-10
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h1><p>众所周知，原生 Linux 内核大部分进程是采用完全公平调度CFS（Completely Fair Scheduler），服务于 PC 机/服务器/Android设备/嵌入式设备等等。然而 Android 设备要求前台应用具有交互和UI的高响应性和高流畅性。原来不区分前后台应用的 CFS 机制似乎没有专门为交互设备考虑到这点，以至于国内大厂纷纷魔改内核调度策略，如 vip 线程、不公平调度、UI First、Turbo X等，慢半拍的厂商甚至名字都取不上了。下面我们基于 github 已公开的源码，梳理一下芯片原厂高通的 cfs 线程 mvp 优先调度策略。</p>
+<p><img src="1.png" alt=""></p>
+<p>Linux 标准内核完全公平调度总是选择虚拟时间最小的进程进行调度，这样对于滑动、游戏等游戏场景的任务调度来讲会导致重要进程的 runnable 时间长，schedule latency 时间长，没有能够及时调度执行，导致丢帧卡顿、响应不及时等问题。为了解决卡顿丢帧等问题，需要对哪些重要的线程进行优先调度呢？</p>
+<h1 id="二、内核调度流程简介"><a href="#二、内核调度流程简介" class="headerlink" title="二、内核调度流程简介"></a>二、内核调度流程简介</h1><h2 id="2-1-相关结构体"><a href="#2-1-相关结构体" class="headerlink" title="2.1 相关结构体"></a>2.1 相关结构体</h2><ol>
+<li><p>task_struct<br>linux 内核采用进程描述符来抽象和描述一个进程，使用 task_struct 数据结构来描述。task_struct 用于描述进程运行状况和控制进程运行的全部信息。</p>
+</li>
+<li><p>sched_entity<br>进程调度中有一个非常重要的数据结构 task_entity，称为调度实体，它描述进程作为一个调度实体参与调度所需要的全部信息。</p>
+</li>
+<li><p>rq<br>rq 数据结构是描述 cpu 的通用就绪队列，rq 数据结构中记录了一个就绪队列所需要的全部信息，包括一个 cfs 就绪队列数据结构 cfs_rq，一个实时进程调度器就绪队列数据结构 rt_rq 和一个实时调度器 deadline 就绪队列数据结构 dl_rq。</p>
+</li>
+</ol>
+<p>相关数据结构关系如下图所示</p>
+<p><img src="2.png" alt=""></p>
+<h2 id="2-2-task-enqueue入队流程"><a href="#2-2-task-enqueue入队流程" class="headerlink" title="2.2 task enqueue入队流程"></a>2.2 task enqueue入队流程</h2><p>Task入队调用路径：</p>
+<p><img src="3.png" alt=""></p>
+<h2 id="2-3-CFS选择-task-路径"><a href="#2-3-CFS选择-task-路径" class="headerlink" title="2.3 CFS选择 task 路径"></a>2.3 CFS选择 task 路径</h2><p>在cpu进行上下文切换的时候，会进行task的选择，根据调度器的不同，会执行到不同的pick_next_task回调函数。cfs调度器会调用到pick_next_task_fair函数：</p>
+<p><img src="4.png" alt=""></p>
+<p>cfs调度器总是选择红黑树最左边的task，进行调度。</p>
+<p><img src="5.png" alt=""></p>
+<h1 id="三、选择什么样的进程进行优先调度？"><a href="#三、选择什么样的进程进行优先调度？" class="headerlink" title="三、选择什么样的进程进行优先调度？"></a>三、选择什么样的进程进行优先调度？</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Higher prio mvp can preempt lower prio mvp.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * However, the lower prio MVP slice will be more since we expect them to</span></span><br><span class="line"><span class="comment"> * be the work horses. For example, binders will have higher prio MVP and</span></span><br><span class="line"><span class="comment"> * they can preempt long running rtg prio tasks but binders loose their</span></span><br><span class="line"><span class="comment"> * powers with in 3 msec where as rtg prio tasks can run more than that.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">walt_get_mvp_task_prio</span><span class="params">(struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (walt_procfs_low_latency_task(p) ||</span><br><span class="line">          walt_pipeline_low_latency_task(p))</span><br><span class="line">      <span class="keyword">return</span> WALT_LL_PIPE_MVP</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">if</span> (per_task_boost(p) == TASK_BOOST_STRICT_MAX)</span><br><span class="line">      <span class="keyword">return</span> WALT_TASK_BOOST_MVP;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (walt_binder_low_latency_task(p))</span><br><span class="line">      <span class="keyword">return</span> WALT_BINDER_MVP;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (task_rtg_high_prio(p))</span><br><span class="line">      <span class="keyword">return</span> WALT_RTG_MVP;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> WALT_NOT_MVP;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从 walt_get_mvp_task_prio 中可以看出一共有 4 类 task 可以进行优先调度，分别为</p>
+<ul>
+<li>walt_procfs_low_latency_task || walt_pipeline_low_latency_task</li>
+<li>per_task_boost</li>
+<li>walt_binder_low_latency_task</li>
+<li>task_rtg_high_prio</li>
+</ul>
+<h1 id="四、4-种mvp-task类型解析"><a href="#四、4-种mvp-task类型解析" class="headerlink" title="四、4 种mvp task类型解析"></a>四、4 种mvp task类型解析</h1><p>mvp task flag基本定义：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WALT_MVP_SLICE                3000000U</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WALT_MVP_LIMIT                (4 * WALT_MVP_SLICE)</span></span><br><span class="line">  </span><br><span class="line"><span class="comment">/* higher number, better priority */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WALT_RTG_MVP                0</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WALT_BINDER_MVP                1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WALT_TASK_BOOST_MVP        2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WALT_LL_PIPE_MVP        3</span></span><br><span class="line">  </span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WALT_NOT_MVP                -1</span></span><br></pre></td></tr></table></figure>
+<p>即定义了4种不同类型的task，并为这些task限制了running time。</p>
+<h2 id="4-1-低延迟任务"><a href="#4-1-低延迟任务" class="headerlink" title="4.1 低延迟任务"></a>4.1 低延迟任务</h2><p>低延迟任务是第一优先级，包括以下两类：</p>
+<ul>
+<li>walt_procfs_low_latency_task：</li>
+</ul>
+<p>即 task-&gt;low_latency 需要赋值 WALT_LOW_LATENCY_PROCFS，并且 task 的负载需要小于 sysctl_walt_low_latency_task_threshold。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">bool</span> <span class="title">walt_procfs_low_latency_task</span><span class="params">(struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">p</span>-&gt;<span class="title">android_vendor_data1</span>;</span> </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (wts-&gt;low_latency &amp; WALT_LOW_LATENCY_PROCFS) &amp;&amp;</span><br><span class="line">      (task_util(p) &lt; sysctl_walt_low_latency_task_threshold);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>walt_procfs_low_latency_task 通过 proc/sys/walt/sched_low_latency 来进行设置，属于 per task 类型，user空间可以自行对该类型的 task 进行设置。</p>
+<p>调用函数为：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">sched_task_handler</span><br><span class="line">&#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">case</span> LOW_LATENCY:</span><br><span class="line">    <span class="keyword">if</span> (val)</span><br><span class="line">      wts-&gt;low_latency |= WALT_LOW_LATENCY_PROCFS;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      ts-&gt;low_latency &amp;= ~WALT_LOW_LATENCY_PROCFS;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>walt_pipeline_low_latency_task：</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">bool</span> <span class="title">walt_pipeline_low_latency_task</span><span class="params">(struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">p</span>-&gt;<span class="title">android_vendor_data1</span>;</span> </span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> wts-&gt;low_latency &amp; WALT_LOW_LATENCY_PIPELINE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同 WALT_LOW_LATENCY_PROCFS，只不过少了对 task_util 的限制。同样在 sysctl中sched_task_handler 中来进行赋值：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> PIPELINE:</span><br><span class="line">  <span class="keyword">if</span> (val)</span><br><span class="line">  wts-&gt;low_latency |= WALT_LOW_LATENCY_PIPELINE;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  wts-&gt;low_latency &amp;= ~WALT_LOW_LATENCY_PIPELINE;</span><br><span class="line"><span class="keyword">break</span>;</span><br></pre></td></tr></table></figure>
+<h2 id="4-2-per-task-类型-boost-任务"><a href="#4-2-per-task-类型-boost-任务" class="headerlink" title="4.2 per-task 类型 boost 任务"></a>4.2 per-task 类型 boost 任务</h2><p>per-task 类型 boost task是第二优先级，即 WALT_TASK_BOOST_MVP。</p>
+<ol>
+<li><p>底层通过提供接口，上层进行设置sched_per_task_boost，使该 task 变成 mvp task 进行优先调度。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> PER_TASK_BOOST:</span><br><span class="line"><span class="keyword">if</span> (val &lt; TASK_BOOST_NONE || val &gt;= TASK_BOOST_END) &#123;</span><br><span class="line">  ret = -EINVAL;</span><br><span class="line">  <span class="keyword">goto</span> put_task;</span><br><span class="line">&#125;</span><br><span class="line">wts-&gt;boost = val;</span><br><span class="line"><span class="keyword">if</span> (val == <span class="number">0</span>)</span><br><span class="line">  wts-&gt;boost_period = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">break</span>;</span><br></pre></td></tr></table></figure>
+<p>将 task 变为 mvp task 进行优先调度。boost类型如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> task_boost_type &#123;</span><br><span class="line">TASK_BOOST_NONE = <span class="number">0</span>,</span><br><span class="line">TASK_BOOST_ON_MID,</span><br><span class="line">TASK_BOOST_ON_MAX,</span><br><span class="line">TASK_BOOST_STRICT_MAX,</span><br><span class="line">TASK_BOOST_END,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>只有设置了 wts-&gt;boost = 3才会生效。</p>
+</li>
+<li><p>在 binder set prio 处进行调用</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">binder_set_priority_hook</span><span class="params">(<span class="keyword">void</span> *data,</span></span></span><br><span class="line"><span class="function"><span class="params">struct binder_transaction *bndrtrans, struct task_struct *task)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">task</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">current_wts</span> =</span></span><br><span class="line"><span class="class">      (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">current</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (unlikely(walt_disabled))</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bndrtrans &amp;&amp; bndrtrans-&gt;need_reply &amp;&amp; current_wts-&gt;boost == TASK_BOOST_STRICT_MAX) &#123;</span><br><span class="line">       bndrtrans-&gt;android_vendor_data1  = wts-&gt;boost;</span><br><span class="line">        wts-&gt;boost = TASK_BOOST_STRICT_MAX;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果当前的 task-&gt;boost == TASK_BOOST_STRICT_MAX, 即能够把对端的 task-&gt;boost 赋值为TASK_BOOST_STRICT_MAX，成为 mvp task。</p>
+</li>
+</ol>
+<h2 id="4-3-binder-类型优先调度任务"><a href="#4-3-binder-类型优先调度任务" class="headerlink" title="4.3 binder 类型优先调度任务"></a>4.3 binder 类型优先调度任务</h2><p>binder 类型优先调度是第三优先级，即 WALT_BINDER_MVP。</p>
+<p>在 binder 进程间通信时，客户端进程唤醒等待的 rtg 进程的时候，把将要唤醒的 rtg 线程当作 mvp task 进行优先调度。</p>
+<p>Vendor hook 为 trace_android_vh_binder_wakeup_ilocked。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">walt_binder_low_latency_set</span><span class="params">(<span class="keyword">void</span> *unused, struct task_struct *task,</span></span></span><br><span class="line"><span class="function"><span class="params">                                        <span class="keyword">bool</span> sync, struct binder_proc *proc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">task</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (unlikely(walt_disabled))</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">if</span> (task &amp;&amp; ((task_in_related_thread_group(current) &amp;&amp;</span><br><span class="line">                        task-&gt;group_leader-&gt;prio &lt; MAX_RT_PRIO) ||</span><br><span class="line">                        (current-&gt;group_leader-&gt;prio &lt; MAX_RT_PRIO &amp;&amp;</span><br><span class="line">                        task_in_related_thread_group(task))))</span><br><span class="line">                wts-&gt;low_latency |= WALT_LOW_LATENCY_BINDER;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * Clear low_latency flag if criterion above is not met, this</span></span><br><span class="line"><span class="comment">                 * will handle usecase where for a binder thread WALT_LOW_LATENCY_BINDER</span></span><br><span class="line"><span class="comment">                 * is set by one task and before WALT clears this flag after timer expiry</span></span><br><span class="line"><span class="comment">                 * some other task tries to use same binder thread.</span></span><br><span class="line"><span class="comment">                 *</span></span><br><span class="line"><span class="comment">                 * The only gets cleared when binder transaction is initiated</span></span><br><span class="line"><span class="comment">                 * and the above condition to set flasg is nto satisfied.</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                wts-&gt;low_latency &amp;= ~WALT_LOW_LATENCY_BINDER;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该 task 需要满足如下条件：</p>
+<ul>
+<li>当前 waker 在 related thread group 组中，目前可以直接理解为 top app 线程 &amp;&amp; 该 waker 为 rt 线程或者该 waker 的主进程为 rt 并且 wakee 的线程也需要在 rtg 组里面。</li>
+<li>当进行优先调度的时候，还需满足该 task 的负载 &lt; sysctl_walt_low_latency_task_threshold。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">bool</span> <span class="title">walt_binder_low_latency_task</span><span class="params">(struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">p</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (wts-&gt;low_latency &amp; WALT_LOW_LATENCY_BINDER) &amp;&amp;</span><br><span class="line">                (task_util(p) &lt; sysctl_walt_low_latency_task_threshold);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-4-特定-RTG-类型任务"><a href="#4-4-特定-RTG-类型任务" class="headerlink" title="4.4 特定 RTG 类型任务"></a>4.4 特定 RTG 类型任务</h2><p>RTG task 类型是第四优先级，即WALT_RTG_MVP。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">bool</span> <span class="title">task_rtg_high_prio</span><span class="params">(struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> task_in_related_thread_group(p) &amp;&amp;</span><br><span class="line">                (p-&gt;prio &lt;= sysctl_walt_rtg_cfs_boost_prio);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="4-4-1-加入-related-thread-group-时机"><a href="#4-4-1-加入-related-thread-group-时机" class="headerlink" title="4.4.1 加入 related thread group 时机"></a>4.4.1 加入 related thread group 时机</h4><p>在 walt 初始化的时候，会给 related_thread_group 分配空间，为 20 个分组。在 cpu_cgroup_attach 中调用vendor hook trace_android_rvh_cpu_cgroup_attach，将 topapp 分组里面的线程默认加入到DEFAULT_CGROUP_COLOC_ID 分组中。其他 non-topapp task 可根据需要由user空间进行分到其他不同的组中。</p>
+<h4 id="4-4-2-成为-mvp-task-的条件"><a href="#4-4-2-成为-mvp-task-的条件" class="headerlink" title="4.4.2 成为 mvp task 的条件"></a>4.4.2 成为 mvp task 的条件</h4><ul>
+<li>task需要在related thread group中</li>
+<li>优先级需小于或等于sysctl_walt_rtg_cfs_boost_prio</li>
+</ul>
+<p>正常情况下是不会进行 rtg 组优先调度的，不同场景区分 sysctl_walt_rtg_cfs_boost_prio 也不同。正常情况sysctl_walt_rtg_cfs_boost_prio 默认为 99，fps变化刷新的时候如滑动场景sysctl_walt_rtg_cfs_boost_prio=119，该节点上层通过 perflock 来进行设置。</p>
+<h4 id="4-4-3-用户调用接口"><a href="#4-4-3-用户调用接口" class="headerlink" title="4.4.3 用户调用接口"></a>4.4.3 用户调用接口</h4><p>加入到 rtg 分组接口：</p>
+<p>echo xxx（xxx为线程号） y(y为rtg分组) &gt; sched_group_id</p>
+<h1 id="五、mvp-task调用过程"><a href="#五、mvp-task调用过程" class="headerlink" title="五、mvp task调用过程"></a>五、mvp task调用过程</h1><p>在介绍 mvp task 如何被调度前，我们先简要看一下 Linux 内核调度触发时机图：</p>
+<p><img src="6.png" alt=""></p>
+<p>在 task 入队的时候，去调用 walt_get_mvt_task_prio 获取该 task 的 mvp 调度的 prio，根据 prio 来决定加入 mvp list中的顺序。</p>
+<p><img src="7.png" alt=""></p>
+<p>cfs调度器选择mvp task的流程：</p>
+<p><img src="8.png" alt=""></p>
+<p>walt_cfs_enqueue_task—&gt;walt_get_mvp_task_prio</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">walt_cfs_enqueue_task</span><span class="params">(struct rq *rq, struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_rq</span> *<span class="title">wrq</span> = (<span class="title">struct</span> <span class="title">walt_rq</span> *) <span class="title">rq</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">p</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="keyword">int</span> mvp_prio = walt_get_mvp_task_prio(p);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mvp_prio == WALT_NOT_MVP)</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * This can happen during migration or enq/deq for prio/class change.</span></span><br><span class="line"><span class="comment">         * it was once MVP but got demoted, it will not be MVP until</span></span><br><span class="line"><span class="comment">         * it goes to sleep again.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (wts-&gt;total_exec &gt; walt_cfs_mvp_task_limit(p))</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        wts-&gt;mvp_prio = mvp_prio;</span><br><span class="line">        walt_cfs_insert_mvp_task(wrq, wts, task_running(rq, p));</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * We inserted the task at the appropriate position. Take the</span></span><br><span class="line"><span class="comment">         * task runtime snapshot. From now onwards we use this point as a</span></span><br><span class="line"><span class="comment">         * baseline to enforce the slice and demotion.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (!wts-&gt;total_exec) <span class="comment">/* queue after sleep */</span> &#123;</span><br><span class="line">                wts-&gt;sum_exec_snapshot_for_total = p-&gt;se.sum_exec_runtime;</span><br><span class="line">                wts-&gt;sum_exec_snapshot_for_slice = p-&gt;se.sum_exec_runtime;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>total_exec 记录了 task 运行的总时间，如果超过了该 mvp task time limit 就不会加入到 mvp task list 中。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">walt_cfs_mvp_task_limit</span><span class="params">(struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">p</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Binder MVP tasks are high prio but have only single slice */</span></span><br><span class="line">        <span class="keyword">if</span> (wts-&gt;mvp_prio == WALT_BINDER_MVP)</span><br><span class="line">                <span class="keyword">return</span> WALT_MVP_SLICE;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> WALT_MVP_LIMIT;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Binder mvp 调度运行时间默认为 3ms，其他 mvp task time limit 为 12ms。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">walt_cfs_insert_mvp_task</span><span class="params">(struct walt_rq *wrq, struct walt_task_struct *wts,</span></span></span><br><span class="line"><span class="function"><span class="params">                                     <span class="keyword">bool</span> at_front)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> *<span class="title">pos</span>;</span></span><br><span class="line"></span><br><span class="line">        list_for_each(pos, &amp;wrq-&gt;mvp_tasks) &#123;</span><br><span class="line">                <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">tmp_wts</span> = <span class="title">container_of</span>(<span class="title">pos</span>, <span class="title">struct</span> <span class="title">walt_task_struct</span>,</span></span><br><span class="line"><span class="class">                                                                <span class="title">mvp_list</span>);</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (at_front) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (wts-&gt;mvp_prio &gt;= tmp_wts-&gt;mvp_prio)</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">if</span> (wts-&gt;mvp_prio &gt; tmp_wts-&gt;mvp_prio)</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        list_add(&amp;wts-&gt;mvp_list, pos-&gt;prev);</span><br><span class="line">        wrq-&gt;num_mvp_tasks++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据 mvp prio 的不同，决定了该 task 在 mvp task list 中的位置。</p>
+<p>紧接着，在 scheduler_tick 中去调用 walt_cfs_tick</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">walt_cfs_tick</span><span class="params">(struct rq *rq)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_rq</span> *<span class="title">wrq</span> = (<span class="title">struct</span> <span class="title">walt_rq</span> *) <span class="title">rq</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">rq</span>-&gt;<span class="title">curr</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (unlikely(walt_disabled))</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        raw_spin_lock(&amp;rq-&gt;__lock);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (list_empty(&amp;wts-&gt;mvp_list) || (wts-&gt;mvp_list.next == <span class="literal">NULL</span>))</span><br><span class="line">                <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">        walt_cfs_account_mvp_runtime(rq, rq-&gt;curr);</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * If the current is not MVP means, we have to re-schedule to</span></span><br><span class="line"><span class="comment">         * see if we can run any other task including MVP tasks.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> ((wrq-&gt;mvp_tasks.next != &amp;wts-&gt;mvp_list) &amp;&amp; rq-&gt;cfs.h_nr_running &gt; <span class="number">1</span>)</span><br><span class="line">                resched_curr(rq);</span><br><span class="line"></span><br><span class="line">out:</span><br><span class="line">        raw_spin_unlock(&amp;rq-&gt;__lock);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>即统计当前 mvp task 是否超过了exec time limit，并且在该点有个抢占点，如果当前 task 不是 mvp task，则会标记该 task 需要抢占，在下一个调度时机到来的时候，会切换task。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * When preempt = false and nopreempt = false, we leave the preemption</span></span><br><span class="line"><span class="comment"> * decision to CFS.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">walt_cfs_check_preempt_wakeup</span><span class="params">(<span class="keyword">void</span> *unused, struct rq *rq, struct task_struct *p,</span></span></span><br><span class="line"><span class="function"><span class="params">                                          <span class="keyword">bool</span> *preempt, <span class="keyword">bool</span> *nopreempt, <span class="keyword">int</span> wake_flags,</span></span></span><br><span class="line"><span class="function"><span class="params">                                          struct sched_entity *se, struct sched_entity *pse,</span></span></span><br><span class="line"><span class="function"><span class="params">                                          <span class="keyword">int</span> next_buddy_marked, <span class="keyword">unsigned</span> <span class="keyword">int</span> granularity)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_rq</span> *<span class="title">wrq</span> = (<span class="title">struct</span> <span class="title">walt_rq</span> *) <span class="title">rq</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts_p</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">p</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">c</span> = <span class="title">rq</span>-&gt;<span class="title">curr</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts_c</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">rq</span>-&gt;<span class="title">curr</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="keyword">bool</span> resched = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">bool</span> p_is_mvp, curr_is_mvp;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (unlikely(walt_disabled))</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        p_is_mvp = !list_empty(&amp;wts_p-&gt;mvp_list) &amp;&amp; wts_p-&gt;mvp_list.next;</span><br><span class="line">        curr_is_mvp = !list_empty(&amp;wts_c-&gt;mvp_list) &amp;&amp; wts_c-&gt;mvp_list.next;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * current is not MVP, so preemption decision</span></span><br><span class="line"><span class="comment">         * is simple.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (!curr_is_mvp) &#123;</span><br><span class="line">                <span class="keyword">if</span> (p_is_mvp)</span><br><span class="line">                        <span class="keyword">goto</span> preempt;</span><br><span class="line">                <span class="keyword">return</span>; <span class="comment">/* CFS decides preemption */</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * current is MVP. update its runtime before deciding the</span></span><br><span class="line"><span class="comment">         * preemption.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        walt_cfs_account_mvp_runtime(rq, c);</span><br><span class="line">        resched = (wrq-&gt;mvp_tasks.next != &amp;wts_c-&gt;mvp_list);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * current is no longer eligible to run. It must have been</span></span><br><span class="line"><span class="comment">         * picked (because of MVP) ahead of other tasks in the CFS</span></span><br><span class="line"><span class="comment">         * tree, so drive preemption to pick up the next task from</span></span><br><span class="line"><span class="comment">         * the tree, which also includes picking up the first in</span></span><br><span class="line"><span class="comment">         * the MVP queue.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (resched)</span><br><span class="line">                <span class="keyword">goto</span> preempt;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* current is the first in the queue, so no preemption */</span></span><br><span class="line">        *nopreempt = <span class="literal">true</span>;</span><br><span class="line">        trace_walt_cfs_mvp_wakeup_nopreempt(c, wts_c, walt_cfs_mvp_task_limit(c));</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">preempt:</span><br><span class="line">        *preempt = <span class="literal">true</span>;</span><br><span class="line">        trace_walt_cfs_mvp_wakeup_preempt(p, wts_p, walt_cfs_mvp_task_limit(p));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在检查抢占处，来判定 mvp task 是否能够被其他线程抢占，或者抢占其他线程</p>
+<ol>
+<li>如果当前 task 不是 mvp，需要被抢占</li>
+<li>如果当前 task 为 mvp，根据 mvp prio 的大小来决定是否能够被抢占</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * MVP task runtime update happens here. Three possibilities:</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * de-activated: The MVP consumed its runtime. Non MVP can preempt.</span></span><br><span class="line"><span class="comment"> * slice expired: MVP slice is expired and other MVP can preempt.</span></span><br><span class="line"><span class="comment"> * slice not expired: This MVP task can continue to run.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">walt_cfs_account_mvp_runtime</span><span class="params">(struct rq *rq, struct task_struct *curr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_rq</span> *<span class="title">wrq</span> = (<span class="title">struct</span> <span class="title">walt_rq</span> *) <span class="title">rq</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">curr</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        u64 slice;</span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">int</span> limit;</span><br><span class="line"></span><br><span class="line">        lockdep_assert_held(&amp;rq-&gt;__lock);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * RQ clock update happens in tick path in the scheduler.</span></span><br><span class="line"><span class="comment">         * Since we drop the lock in the scheduler before calling</span></span><br><span class="line"><span class="comment">         * into vendor hook, it is possible that update flags are</span></span><br><span class="line"><span class="comment">         * reset by another rq lock and unlock. Do the update here</span></span><br><span class="line"><span class="comment">         * if required.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (!(rq-&gt;clock_update_flags &amp; RQCF_UPDATED))</span><br><span class="line">                update_rq_clock(rq);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (curr-&gt;se.sum_exec_runtime &gt; wts-&gt;sum_exec_snapshot_for_total)</span><br><span class="line">                wts-&gt;total_exec = curr-&gt;se.sum_exec_runtime - wts-&gt;sum_exec_snapshot_for_total;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">                wts-&gt;total_exec = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (curr-&gt;se.sum_exec_runtime &gt; wts-&gt;sum_exec_snapshot_for_slice)</span><br><span class="line">                slice = curr-&gt;se.sum_exec_runtime - wts-&gt;sum_exec_snapshot_for_slice;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">                slice = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* slice is not expired */</span></span><br><span class="line">        <span class="keyword">if</span> (slice &lt; WALT_MVP_SLICE)</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        wts-&gt;sum_exec_snapshot_for_slice = curr-&gt;se.sum_exec_runtime;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * slice is expired, check if we have to deactivate the</span></span><br><span class="line"><span class="comment">         * MVP task, otherwise requeue the task in the list so</span></span><br><span class="line"><span class="comment">         * that other MVP tasks gets a chance.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"></span><br><span class="line">        limit = walt_cfs_mvp_task_limit(curr);</span><br><span class="line">        <span class="keyword">if</span> (wts-&gt;total_exec &gt; limit) &#123;</span><br><span class="line">                walt_cfs_deactivate_mvp_task(rq, curr);</span><br><span class="line">                trace_walt_cfs_deactivate_mvp_task(curr, wts, limit);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (wrq-&gt;num_mvp_tasks == <span class="number">1</span>)</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* slice expired. re-queue the task */</span></span><br><span class="line">        list_del(&amp;wts-&gt;mvp_list);</span><br><span class="line">        wrq-&gt;num_mvp_tasks--;</span><br><span class="line">        walt_cfs_insert_mvp_task(wrq, wts, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该函数的主要作用为 更新 task 的运行时间即 total_exec ，判断该 task 是否能够继续被优先调度下去，如果不能就移除 mvp task list，否则需要重新加入到 mvp task list 中。</p>
+<p>在上下文切换中，来进行 mvp task 的选择: walt_cfs_replace_next_task_fair 函数。在选择 task 的时候，去优先选择 mvp task list 中的 task，进行优先调度。如果 mvp task list 中 没有mvp task，则进行cfs 原生的完全公平调度，根据虚拟时间最小的 task 来进行选择。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">walt_cfs_replace_next_task_fair</span><span class="params">(<span class="keyword">void</span> *unused, struct rq *rq, struct task_struct **p,</span></span></span><br><span class="line"><span class="function"><span class="params">                                            struct sched_entity **se, <span class="keyword">bool</span> *repick, <span class="keyword">bool</span> simple,</span></span></span><br><span class="line"><span class="function"><span class="params">                                            struct task_struct *prev)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_rq</span> *<span class="title">wrq</span> = (<span class="title">struct</span> <span class="title">walt_rq</span> *) <span class="title">rq</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">mvp</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cfs_rq</span> *<span class="title">cfs_rq</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (unlikely(walt_disabled))</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((*p) &amp;&amp; (*p) != prev &amp;&amp; ((*p)-&gt;on_cpu == <span class="number">1</span> || (*p)-&gt;on_rq == <span class="number">0</span> ||</span><br><span class="line">                                     (*p)-&gt;on_rq == TASK_ON_RQ_MIGRATING ||</span><br><span class="line">                                     (*p)-&gt;cpu != cpu_of(rq)))</span><br><span class="line">                WALT_BUG(WALT_BUG_UPSTREAM, *p,</span><br><span class="line">                         <span class="string">"picked %s(%d) on_cpu=%d on_rq=%d p-&gt;cpu=%d cpu_of(rq)=%d kthread=%d\n"</span>,</span><br><span class="line">                         (*p)-&gt;comm, (*p)-&gt;pid, (*p)-&gt;on_cpu,</span><br><span class="line">                         (*p)-&gt;on_rq, (*p)-&gt;cpu, cpu_of(rq), ((*p)-&gt;flags &amp; PF_KTHREAD));</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* We don't have MVP tasks queued */</span></span><br><span class="line">        <span class="keyword">if</span> (list_empty(&amp;wrq-&gt;mvp_tasks))</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Return the first task from MVP queue */</span></span><br><span class="line">        wts = list_first_entry(&amp;wrq-&gt;mvp_tasks, struct walt_task_struct, mvp_list);</span><br><span class="line">        mvp = wts_to_ts(wts);</span><br><span class="line"></span><br><span class="line">        *p = mvp;</span><br><span class="line">        *se = &amp;mvp-&gt;se;</span><br><span class="line">        *repick = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (simple) &#123;</span><br><span class="line">                for_each_sched_entity((*se)) &#123;</span><br><span class="line">                        <span class="comment">/*</span></span><br><span class="line"><span class="comment">                         * TODO If CFS_BANDWIDTH is enabled, we might pick</span></span><br><span class="line"><span class="comment">                         * from a throttled cfs_rq</span></span><br><span class="line"><span class="comment">                         */</span></span><br><span class="line">                        cfs_rq = cfs_rq_of(*se);</span><br><span class="line">                        set_next_entity(cfs_rq, *se);</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((*p) &amp;&amp; (*p) != prev &amp;&amp; ((*p)-&gt;on_cpu == <span class="number">1</span> || (*p)-&gt;on_rq == <span class="number">0</span> ||</span><br><span class="line">                                     (*p)-&gt;on_rq == TASK_ON_RQ_MIGRATING ||</span><br><span class="line">                                     (*p)-&gt;cpu != cpu_of(rq)))</span><br><span class="line">                WALT_BUG(WALT_BUG_UPSTREAM, *p,</span><br><span class="line">                         <span class="string">"picked %s(%d) on_cpu=%d on_rq=%d p-&gt;cpu=%d cpu_of(rq)=%d kthread=%d\n"</span>,</span><br><span class="line">                         (*p)-&gt;comm, (*p)-&gt;pid, (*p)-&gt;on_cpu,</span><br><span class="line">                         (*p)-&gt;on_rq, (*p)-&gt;cpu, cpu_of(rq), ((*p)-&gt;flags &amp; PF_KTHREAD));</span><br><span class="line"></span><br><span class="line">        trace_walt_cfs_mvp_pick_next(mvp, wts, walt_cfs_mvp_task_limit(mvp));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>移除 mvp task：将该 task 移除 mvp task list 并且在 出队的时候将 wts-&gt;total_exec 重置。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">walt_cfs_dequeue_task</span><span class="params">(struct rq *rq, struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">walt_task_struct</span> *<span class="title">wts</span> = (<span class="title">struct</span> <span class="title">walt_task_struct</span> *) <span class="title">p</span>-&gt;<span class="title">android_vendor_data1</span>;</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!list_empty(&amp;wts-&gt;mvp_list) &amp;&amp; wts-&gt;mvp_list.next)</span><br><span class="line">                walt_cfs_deactivate_mvp_task(rq, p);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Reset the exec time during sleep so that it starts</span></span><br><span class="line"><span class="comment">         * from scratch upon next wakeup. total_exec should</span></span><br><span class="line"><span class="comment">         * be preserved when task is enq/deq while it is on</span></span><br><span class="line"><span class="comment">         * runqueue.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (READ_ONCE(p-&gt;__state) != TASK_RUNNING)</span><br><span class="line">                wts-&gt;total_exec = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h1><p>以上为高通原生的 mvp 调度，我们可以看到如下特点：</p>
+<ul>
+<li>覆盖面广，加入 mvp 的粒度大，根据进程的 prio 和 related thread group，而不明确是否和绘制/动画/显示/交互相关的进程，需要被优先调度的进程数量可能会过多</li>
+<li>部分具体控制入口不开源</li>
+<li>根据上层典型场景来动态设置，如在 FPS 变化 以及游戏重负载线程等场景（逻辑线程、渲染线程等）进行动态设置</li>
+<li>过多的调度细节暴露给用户层去操作，粒度过细，条件复杂，用户层很难理解和真正运用起来</li>
+</ul>
+<h1 id="七、参考文献"><a href="#七、参考文献" class="headerlink" title="七、参考文献"></a>七、参考文献</h1><p>rtg相关：<a href="https://www.seaxiang.com/blog/809240c5a1144be0a252ec13103beb6a" target="_blank" rel="noopener">https://www.seaxiang.com/blog/809240c5a1144be0a252ec13103beb6a</a><br>调度相关：<a href="https://www.codedump.info/post/20200503-sgfap-process-schedule/" target="_blank" rel="noopener">https://www.codedump.info/post/20200503-sgfap-process-schedule/</a><br><a href="https://blog.csdn.net/u012489236/article/details/122399231?spm=1001.2014.3001.5501" target="_blank" rel="noopener">https://blog.csdn.net/u012489236/article/details/122399231?spm=1001.2014.3001.5501</a></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2023/11/23/Analysis-of-the-USB-4-0-FBO/" data-toggle="tooltip" data-placement="top" title="焕新存储技术：UFS 4.0 FBO 底层逻辑剖析">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/" data-toggle="tooltip" data-placement="top" title="eBPF初体验：Android设备网络优化实践">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#一、前言"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">一、前言</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#二、内核调度流程简介"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">二、内核调度流程简介</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-1-相关结构体"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">2.1 相关结构体</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-2-task-enqueue入队流程"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">2.2 task enqueue入队流程</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-3-CFS选择-task-路径"><span class="toc-nav-number">2.3.</span> <span class="toc-nav-text">2.3 CFS选择 task 路径</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#三、选择什么样的进程进行优先调度？"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">三、选择什么样的进程进行优先调度？</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#四、4-种mvp-task类型解析"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">四、4 种mvp task类型解析</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-1-低延迟任务"><span class="toc-nav-number">4.1.</span> <span class="toc-nav-text">4.1 低延迟任务</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-2-per-task-类型-boost-任务"><span class="toc-nav-number">4.2.</span> <span class="toc-nav-text">4.2 per-task 类型 boost 任务</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-3-binder-类型优先调度任务"><span class="toc-nav-number">4.3.</span> <span class="toc-nav-text">4.3 binder 类型优先调度任务</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-4-特定-RTG-类型任务"><span class="toc-nav-number">4.4.</span> <span class="toc-nav-text">4.4 特定 RTG 类型任务</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#4-4-1-加入-related-thread-group-时机"><span class="toc-nav-number">4.4.0.1.</span> <span class="toc-nav-text">4.4.1 加入 related thread group 时机</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#4-4-2-成为-mvp-task-的条件"><span class="toc-nav-number">4.4.0.2.</span> <span class="toc-nav-text">4.4.2 成为 mvp task 的条件</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#4-4-3-用户调用接口"><span class="toc-nav-number">4.4.0.3.</span> <span class="toc-nav-text">4.4.3 用户调用接口</span></a></li></ol></li></ol></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#五、mvp-task调用过程"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">五、mvp task调用过程</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#六、总结"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">六、总结</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#七、参考文献"><span class="toc-nav-number">7.</span> <span class="toc-nav-text">七、参考文献</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Performance" title="Performance">Performance</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

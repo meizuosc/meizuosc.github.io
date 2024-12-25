@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Android MTP 分析 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2017/11/05/11-52-11-mtp/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                        </div>
+                        <h1>Android MTP 分析</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Chen An on
+                            2017-11-05
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="mtp简介"><a href="#mtp简介" class="headerlink" title="mtp简介"></a>mtp简介</h2><p>MTP，全称是 Media Transfer Protocol（媒体传输协议）。它是微软的一个为计算机和便携式设备之间传输图像、音乐等所定制的协议。</p>
+<p>Android 从3.0开始支持 MTP。MTP 的应用分两种角色，一个是作为 Initiator，另一个作为 Responder 。以”Android 平板电脑”连接 PC 为例，他们的关系如图所示。</p>
+<p><img src="2.png" alt="mtp_2"></p>
+<p>Initiator —— 在 MTP 中所有的请求都有 Initiator 发起。例如，PC 请求获取 Android 平板电脑上的文件数据。</p>
+<p>Responder —— 它会处理 Initiator 的请求；除此之外，Responder 也会发送 Event 事件。</p>
+<p>这里要注意的是：对于一个 MTP 事件，比如从 PC 拷贝数据到 Android 手机中，整个数据处理是双向通信的。</p>
+<h2 id="mtp-框架"><a href="#mtp-框架" class="headerlink" title="mtp 框架"></a>mtp 框架</h2><p>来张经典的 Android 框架图：</p>
+<p><img src="1.jpg" alt="mtp_frame"></p>
+<p>从图中可以看到，在 kernel 层中分为 MTP 驱动和 USB 驱动，其实呢，真正和底层直接通信的依然是 USB 驱动负责，MTP 驱动只是负责将数据进行打包封装，然后作为一层分别与上层和 USB 之间进行通信。</p>
+<p>再来看一下 JNI 层，那，如果要对 MTP 进行定制化的开发，这一层就需要额外的关注了。相关的源码位置位于：frameworks/av/media/mtp frameworks/base/media/jni/目录下</p>
+<p>在 JNI 层，MtpServer 会不断地监听 Kernel 的消息”MTP 请求”，并对相应的消息进行相关处理。同时，MTP 的 Event 事件也是通过 MtpServer 发送给 MTP 驱动的。 MtpStorage 对应一个”存储单元”；例如，SD 卡就对应一个 MtpStorage。 MtpPacket 和 MtpEventPacket 负责对 MTP 消息进行打包。android_mtp_MtpServer 是一个 JNI 类，它是”JNI 层的 MtpServer 和 Java 层的 MtpServer “沟通的桥梁。android_mtp_MtpDatabase 也是一个 JNI 类，JNI 层通过它实现了对 MtpDatabase (Framework 层)的操作。</p>
+<p>在 Framework 层，MtpServer 相当于一个服务器，它通过和底层进行通信从而提供了 MTP 的相关服务。MtpDatabase 充当着数据库的功能，但它本身并没有数据库对数据进行保存，本质上是通过 MediaProvider 数据库获取所需要的数据。MtpStorage 对应一个”存储单元”，它和”JNI 层的 MtpStorage”相对应。</p>
+<p>在 Apiplication 层，MtpReceiver 负责接收广播，接收到广播后会启动/关闭 MtpService；例如，MtpReceiver 收到 “Android 设备和 PC 连上”的消息时，会启动 MtpService。 MtpService 的作用是提供管理 MTP 的服务，它会启动 MtpServer，以及将本地存储内容和MTP的内容同步。 MediaProvider 在 MTP 中的角色，是本地存储内容查找和本地内容同步；例如，本地新增一个文件时，MediaProvider 会通知 MtpServer 从而进行 MTP 数据同步。</p>
+<h2 id="mtp-移植教程"><a href="#mtp-移植教程" class="headerlink" title="mtp 移植教程"></a>mtp 移植教程</h2><p>说了那么多，那如何在 linux 中移植 MTP 协议呢？<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (pipe(mtppipe) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">    LOGE(<span class="string">"Error creating MTP pipe\n"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* To enable MTP debug, use the twrp command line feature to</span></span><br><span class="line"><span class="comment"> * twrp set tw_mtp_debug 1</span></span><br><span class="line"><span class="comment"> */</span> </span><br><span class="line"><span class="comment">//DIR* source=opendir("/tmp");</span></span><br><span class="line"><span class="comment">//DIR* destination=opendir("/data/media/0/backup");</span></span><br><span class="line"><span class="comment">//copy_folder("/tmp","/data/media/0/backup");</span></span><br><span class="line">twrpMtp *mtp = <span class="keyword">new</span> twrpMtp(<span class="number">0</span>);</span><br><span class="line">mtppid = mtp-&gt;forkserver(mtppipe);</span><br><span class="line"><span class="comment">//property_set("sys.usb.config", "mtp,adb");</span></span><br><span class="line"><span class="keyword">if</span> (mtppid) &#123;</span><br><span class="line">    close(mtppipe[<span class="number">0</span>]); <span class="comment">// Host closes read side</span></span><br><span class="line">    mtp_write_fd = mtppipe[<span class="number">1</span>];</span><br><span class="line">    <span class="comment">//DataManager::SetValue("tw_mtp_enabled", 1);</span></span><br><span class="line">    <span class="comment">//Add_All_MTP_Storage();</span></span><br><span class="line">    Add_Remove_MTP_Storage(MTP_MESSAGE_ADD_STORAGE);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    close(mtppipe[<span class="number">0</span>]);</span><br><span class="line">    close(mtppipe[<span class="number">1</span>]);</span><br><span class="line">    <span class="comment">//gui_err("mtp_fail=Failed to enable MTP");</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>首先 fork 了进程，通过管道进行通信。那先来看一下父进程做了什么？很简单，初始化了 mtp_message 这个结构体，然后写进 mtp_write_fd ，供子进程读取。该结构体便是控制设备在 PC 端的显示 storage_id 表示该 MTP 设备的 ID 号，path 表示挂载的目录，maxFileSize 表示文件挂载的大小，该值为0表示挂载的大小不做限制，display 是该设备在 PC 端显示的名称<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">LOGI(<span class="string">"a[] = %s\n"</span>,a);</span><br><span class="line">LOGI(<span class="string">"mtp_display = %s\n"</span>,mtp_display);</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">char</span> *mtp_test=a;</span><br><span class="line">mtp_message.message_type = MTP_MESSAGE_ADD_STORAGE;</span><br><span class="line">mtp_message.storage_id = <span class="number">1</span>;</span><br><span class="line">mtp_message.path = <span class="string">"/data/media/0"</span>;</span><br><span class="line">mtp_message.maxFileSize = <span class="number">0</span>;</span><br><span class="line">mtp_message.display = PROJECT_NAME;</span><br><span class="line">LOGI(<span class="string">"TEST MTP_DISPLAy\n"</span>);</span><br><span class="line">LOGI(<span class="string">"sending message to add %i '%s' '%s'\n"</span>, mtp_message.storage_id, mtp_message.path, mtp_message.display);</span><br><span class="line"><span class="keyword">if</span> (write(mtp_write_fd, &amp;mtp_message, <span class="keyword">sizeof</span>(mtp_message)) &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">    LOGI(<span class="string">"error sending message to add storage %i\n"</span>, mtp_message.storage_id);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    LOGI(<span class="string">"Message sent, add storage ID: %i\n"</span>,mtp_message.storage_id);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>分析了父进程的流程，再来分析一下子进程所做的事情，MTP 的整个流程都在这了，很简单，主要就几句代码，可是就这几句代码，揭示了 MTP 的大致思想。首先实例化了一个 twmtp_MtpServer，这里的 twmtp_MtpServer 是个性化制定的设备信息（mtp_MtpServer.cpp 和 MtpServer.cpp 的区别）。之后 set_storages，注意了，就是这里，父进程中的写进去的 mtp_message 就是从这里开始读了，上文我们说道了 MtpStorage 对应一个”存储单元”就是在这里体现了,之后会调用 add_storage 函数将父进程读到的信息写入，这样子一个 MtpStorage 就创建。set_read_pipe 指定了读取的管道，这样子就和父进程建立起了链接，之后 mtp-&gt;start，开始启动 MTP 服务了<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">twrpMtp::start</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    MTPI(<span class="string">"Starting MTP\n"</span>);</span><br><span class="line">    twmtp_MtpServer *mtp = <span class="keyword">new</span> twmtp_MtpServer();</span><br><span class="line">    mtp-&gt;set_storages(mtpstorages);</span><br><span class="line">    mtp-&gt;set_read_pipe(mtp_read_pipe);</span><br><span class="line">    mtp-&gt;start();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>来看一下 start 函数，是否使用 PTP（英语“图片传输协议(picture transfer protocol)”的缩写，手机连接之后可选，用于传输图片），实例化一个 MtpDatabase ，MtpDatabase 在 MTP 中，充当着数据库的功能。但它本身并没有数据库对数据进行保存，本质上是通过 MediaProvider 数据库获取所需要的数据。例如，当在 PC 上，需要读取某个文件时，MtpDatabase 会在 MediaProvider 数据库中查询出文件的相关信息(包括文件名、大小、扩展名等)；然后将这些信息交给 MtpServer，MtpServer 将消息传递给 JNI，在 JNI 中会通过文件名打开，然后再文件句柄等信息传递给 Kernel；Kernel 根据文件句柄读取文件信息，并传给 PC。</p>
+<p>之后打开 mtp 驱动创建的设备节点 /dev/mtp_usb ，底层驱动我们待会分析。</p>
+<p>然后<code>server = new MtpServer(mtpdb, usePtp, 0, 0664, 0775);</code>到这里，终于看到 MTP 协议相关的 server 了，整个 MTP 定义的协议都在这个 class 当中了，这个是 MTP 最核心的东西了。</p>
+<p>add_storage();前文提到，就是在这里将我们初始化的 MtpStorage 加入咯</p>
+<p><code>ThreadPtr mtpptr = &amp;twmtp_MtpServer::mtppipe_thread;</code>喏，这里就是读取那个 mtp_message 了，通过创建了一个线程，用于不断读取管道的数据来添加 mtp 设备<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">twmtp_MtpServer::start</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    usePtp =  <span class="literal">false</span>;</span><br><span class="line">    MyMtpDatabase* mtpdb = <span class="keyword">new</span> MyMtpDatabase();</span><br><span class="line">    <span class="comment">/* Sleep for a bit before we open the MTP USB device because some</span></span><br><span class="line"><span class="comment">     * devices are not ready due to the kernel not responding to our</span></span><br><span class="line"><span class="comment">     * sysfs requests right away.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    usleep(<span class="number">800000</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> USB_MTP_DEVICE</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> STRINGIFY(x) #x </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EXPAND(x) STRINGIFY(x)</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* mtp_device = EXPAND(USB_MTP_DEVICE);</span><br><span class="line">    MTPI(<span class="string">"Using '%s' for MTP device.\n"</span>, EXPAND(USB_MTP_DEVICE));</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span>   </span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>* mtp_device = <span class="string">"/dev/mtp_usb"</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">    <span class="comment">//fp_mtp =fopen( "/recovery/mtp.log", "a+" );</span></span><br><span class="line">    <span class="keyword">int</span> fd = open(mtp_device, O_RDWR);</span><br><span class="line">    <span class="keyword">if</span> (fd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        MTPE(<span class="string">"could not open MTP driver, errno: %d\n"</span>, errno);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125; </span><br><span class="line">    MTPD(<span class="string">"fd: %d\n"</span>, fd);</span><br><span class="line">    server = <span class="keyword">new</span> MtpServer(mtpdb, usePtp, <span class="number">0</span>, <span class="number">0664</span>, <span class="number">0775</span>);</span><br><span class="line">    refserver = server;</span><br><span class="line">    MTPI(<span class="string">"created new mtpserver object\n"</span>);</span><br><span class="line">    add_storage();</span><br><span class="line">    MTPD(<span class="string">"Starting add / remove mtppipe monitor thread\n"</span>);</span><br><span class="line">    <span class="keyword">pthread_t</span> thread;</span><br><span class="line">    ThreadPtr mtpptr = &amp;twmtp_MtpServer::mtppipe_thread;</span><br><span class="line">    PThreadPtr p = *(PThreadPtr*)&amp;mtpptr;</span><br><span class="line">    pthread_create(&amp;thread, <span class="literal">NULL</span>, p, <span class="keyword">this</span>);</span><br><span class="line">    <span class="comment">// This loop restarts the MTP process if the device is unplugged and replugged in</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        server-&gt;run(fd);</span><br><span class="line">        fd = open(mtp_device, O_RDWR);</span><br><span class="line">        usleep(<span class="number">800000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>再来看看 run(fd);函数中的上半段，首先调用 read 函数从 /dev/mtp_usb 中读取数据存入到 mBuffer（实际调用的是 MtpDataPacket::read 函数，该函数还初始化了 mPacketSize，mOffset 两个变量），之后调用了<code>mRequest.getOperationCode</code> <code>mRequest.getTransactionID()</code>两个函数，打开看一下，其实就是对 mBuffer 里面的数据进行处理，要分析为什么这么来的，那就得看 MTP 数据包协议了。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">MtpServer::run</span><span class="params">(<span class="keyword">int</span> fd)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (fd &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    mFD = fd;</span><br><span class="line">    MTPI(<span class="string">"MtpServer::run fd: %d\n"</span>, fd);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        MTPD(<span class="string">"About to read device...\n"</span>);</span><br><span class="line">        <span class="keyword">int</span> ret = mRequest.read(fd);</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (errno == ECANCELED) &#123;</span><br><span class="line">                <span class="comment">// return to top of loop and wait for next command</span></span><br><span class="line">                MTPD(<span class="string">"request read returned %d ECANCELED, starting over\n"</span>, ret);</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            MTPE(<span class="string">"request read returned %d, errno: %d, exiting MtpServer::run loop\n"</span>, ret, errno);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        MtpOperationCode operation = mRequest.getOperationCode();</span><br><span class="line">        MtpTransactionID transaction = mRequest.getTransactionID();</span><br><span class="line"></span><br><span class="line">        MTPD(<span class="string">"operation: %s"</span>, MtpDebug::getOperationCodeName(operation));</span><br><span class="line">        mRequest.dump();</span><br><span class="line">    </span><br><span class="line">        <span class="comment">// FIXME need to generalize this</span></span><br><span class="line">        <span class="keyword">bool</span> dataIn = (operation == MTP_OPERATION_SEND_OBJECT_INFO</span><br><span class="line">                    || operation == MTP_OPERATION_SET_OBJECT_REFERENCES</span><br><span class="line">                    || operation == MTP_OPERATION_SET_OBJECT_PROP_VALUE</span><br><span class="line">                    || operation == MTP_OPERATION_SET_DEVICE_PROP_VALUE);</span><br><span class="line">        <span class="keyword">if</span> (dataIn) &#123;</span><br><span class="line">            <span class="keyword">int</span> ret = mData.read(fd);</span><br><span class="line">            <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (errno == ECANCELED) &#123;</span><br><span class="line">                    <span class="comment">// return to top of loop and wait for next command</span></span><br><span class="line">                    MTPD(<span class="string">"data read returned %d ECANCELED, starting over\n"</span>, ret);</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                MTPD(<span class="string">"data read returned %d, errno: %d, exiting MtpServer::run loop\n"</span>, ret, errno);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            MTPD(<span class="string">"received data:"</span>);</span><br><span class="line">            mData.dump();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mData.reset();</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<p>之后 handleRequest 函数用于处理读到的不同的操作进行不同的操作，每个函数内容都比较多，这里就分析一下从 PC 端拷贝一个数据到手机上的操作，主要做了以下操作,打开看一下，其实都是一些用于解析数据头，之后解析数据的问题了，有兴趣去了解 MTP 协议相关的东西，可以参考去查看一下<a href="https://en.wikipedia.org/wiki/Media_Transfer_Protocol" target="_blank" rel="noopener">mtp wiki</a><br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> MTP_OPERATION_SEND_OBJECT_INFO:</span><br><span class="line">    MTPE(<span class="string">"about to call doSendObjectInfo()\n"</span>);</span><br><span class="line">    <span class="comment">//response = MTP_RESPONSE_OBJECT_WRITE_PROTECTED;</span></span><br><span class="line">    response = doSendObjectInfo();</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"><span class="keyword">case</span> MTP_OPERATION_SEND_OBJECT:</span><br><span class="line">    MTPE(<span class="string">"about to call doSendObject()\n"</span>);</span><br><span class="line">    <span class="comment">//response = MTP_RESPONSE_OBJECT_WRITE_PROTECTED;</span></span><br><span class="line">    response = doSendObject();</span><br><span class="line">    <span class="keyword">break</span>;</span><br></pre></td></tr></table></figure></p>
+<h2 id="mtp-与-kernel-层通信"><a href="#mtp-与-kernel-层通信" class="headerlink" title="mtp 与 kernel 层通信"></a>mtp 与 kernel 层通信</h2><p>kernel 层 MTP 相关的代码在<code>drivers/usb/gadget/function/f_mtp.c</code>中，通过这部分代码，成功创建了 /dev/mtp_usb 节点<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* file operations for /dev/mtp_usb */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">mtp_fops</span> = &#123;</span></span><br><span class="line">    .owner = THIS_MODULE,</span><br><span class="line">    .read = mtp_read,</span><br><span class="line">    .write = mtp_write,</span><br><span class="line">    .unlocked_ioctl = mtp_ioctl,</span><br><span class="line">#ifdef CONFIG_COMPAT</span><br><span class="line">    .compat_ioctl = compat_mtp_ioctl,</span><br><span class="line">#endif</span><br><span class="line">    .open = mtp_open,</span><br><span class="line">    .release = mtp_release,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">miscdevice</span> <span class="title">mtp_device</span> = &#123;</span></span><br><span class="line">    .minor = MISC_DYNAMIC_MINOR,</span><br><span class="line">    .name = mtp_shortname,</span><br><span class="line">    .fops = &amp;mtp_fops,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __mtp_setup(struct mtp_instance *fi_mtp)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    ret = misc_register(&amp;mtp_device);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>从 file_operations 可以知道，上层调用的 write 函数在 kernel 层实则调用的是 mtp_write 函数。现在我们主要来关注一下 mtp_read、mtp_write 这两个函数的实现。</p>
+<ul>
+<li>先来看一下 mtp_write()，主要的几个处理 copy_from_user(req-&gt;buf, buf, xfer) 首先会将用户空间的请求传入到 req-&gt;buf 中，之后通过 usb_ep_queue 函数将 req 中的消息传入到 USB 消息队列中，由 USB 驱动进行之后的数据传送，至于 mtp_write 函数的其他部分都是些对数据处理的过程。总的来说，mtp_write 会将”用户空间”发来的消息拷贝到”内核空间”，并将该消息打包；然后，将打包好的消息添加到 USB 消息队列中。USB 驱动负责将消息队列中的消息传递给 PC<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">mtp_write</span><span class="params">(struct file *fp, <span class="keyword">const</span> <span class="keyword">char</span> __user *buf,</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">size_t</span> count, <span class="keyword">loff_t</span> *pos)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">while</span> (count &gt; <span class="number">0</span> || sendZLP) &#123;</span><br><span class="line">	<span class="keyword">if</span> (xfer &amp;&amp; copy_from_user(req-&gt;buf, buf, xfer)) &#123;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">	ret = usb_ep_queue(dev-&gt;ep_in, req, GFP_KERNEL);</span><br><span class="line">	...</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>再来看一下 mtp_read() 函数,其实就是 mtp_write() 的逆过程，先从 usb 消息队列中读取 pc 发送给 Android 设备的请求并保存在 req 中，之后等待 read_wq 工作队列将已有的消息处理完毕，最后将 pc 的请求数据通过 copy_to_user 拷贝到用户空间。<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">mtp_read</span><span class="params">(struct file *fp, <span class="keyword">char</span> __user *buf,</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">size_t</span> count, <span class="keyword">loff_t</span> *pos)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">...</span><br><span class="line">ret = usb_ep_queue(dev-&gt;ep_out, req, GFP_KERNEL);</span><br><span class="line">...</span><br><span class="line">ret = wait_event_interruptible(dev-&gt;read_wq,</span><br><span class="line">                dev-&gt;rx_done || dev-&gt;state != STATE_BUSY);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span> (copy_to_user(buf, req-&gt;buf, xfer))</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2>其实通过全文的分析，MTP 协议并没有想象中那么复杂，只是对数据进行了封装，整个数据的传送过程实质还是通过 USB 协议进行的。至于在开发中碰到的数据处理问题，需要的是多去了解 MTP 协议的具体内容而已。</li>
+</ul>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/11/17//memory management - ion.html/" data-toggle="tooltip" data-placement="top" title="内存管理 —— ION">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/09/06//samsun-uboot-fastboot-command.html/" data-toggle="tooltip" data-placement="top" title="samsung uboot fastboot command">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

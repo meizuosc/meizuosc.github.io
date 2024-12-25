@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Android Verified Boot 2.0 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2023/07/04/Android-R-AVB2-0/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#AVB" title="AVB">AVB</a>
+                            
+                              <a class="tag" href="/tags/#Security" title="Security">Security</a>
+                            
+                              <a class="tag" href="/tags/#Safe" title="Safe">Safe</a>
+                            
+                              <a class="tag" href="/tags/#Bootloader" title="Bootloader">Bootloader</a>
+                            
+                        </div>
+                        <h1>Android Verified Boot 2.0</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Luo Yongjie on
+                            2023-07-04
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="Android-Verified-Boot-2-0流程"><a href="#Android-Verified-Boot-2-0流程" class="headerlink" title="Android Verified Boot 2.0流程"></a>Android Verified Boot 2.0流程</h1><p>Android Verified Boot(AVB)的作用是校验各个镜像，确保各个镜像没有被篡改过的。如果镜像被篡改过，设备将会报启动异常。</p>
+<p>概览：</p>
+<ul>
+<li><p>设备上电最早启动pbl(primary bootloader)，进行secboot(secure boot)工作，secboot主要工作是校验bootloader的合法性，校验没问题才启动bootloader。</p>
+</li>
+<li><p>bootloader 需要校验下一启动阶段需要用到的镜像，如boot.img, dtbo.img 等镜像，这里就开始Android Verified Boot(AVB)，校验没问题才启动到kernel。</p>
+</li>
+<li><p>到kernel 和 init 阶段则开始新一轮校验，如system.img vendor.img 等镜像，校验过了之后才对分区进行挂载。</p>
+</li>
+</ul>
+<p>说白了，每一个启动阶段，用到什么就校验什么。确保分区读出来的内容，都是没有被篡改过。</p>
+<p><img src="./all-verify.png" alt="all-verify"></p>
+<h2 id="Secboot-boot"><a href="#Secboot-boot" class="headerlink" title="Secboot boot"></a>Secboot boot</h2><p>secboot: bootloader 可信的根本。</p>
+<p>secboot的工作原理：每一个SoC只能写一次根证书，叫root of trust。</p>
+<p>可以简单理解 root of trust 的用途是校验bootloader是否被篡改。</p>
+<p>secure boot 校验流程可以总结下图。</p>
+<p><img src="./secure-boot.png" alt="secure-boot.drawio"></p>
+<h2 id="Bootloader-AVB-Android-Verified-Boot-2-0"><a href="#Bootloader-AVB-Android-Verified-Boot-2-0" class="headerlink" title="Bootloader AVB(Android Verified Boot 2.0)"></a>Bootloader AVB(Android Verified Boot 2.0)</h2><h3 id="bootloader需要校验什么？"><a href="#bootloader需要校验什么？" class="headerlink" title="bootloader需要校验什么？"></a>bootloader需要校验什么？</h3><p>在bootloader中，需要校验分区的变量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Library/avb/VerifiedBoot.c</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> CHAR8 *avb_verify_partition_name[] = &#123;</span><br><span class="line">     <span class="string">"boot"</span>,</span><br><span class="line">     <span class="string">"dtbo"</span>,</span><br><span class="line">     <span class="string">"vbmeta"</span>,</span><br><span class="line">     <span class="string">"recovery"</span>,</span><br><span class="line">     <span class="string">"vendor_boot"</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>从上面的变量可以知道，在bootloader中，可能需要校验上面的5个镜像。</p>
+<p>为什么说是可能？因为最终的校验是需要和vbmeta镜像来决定的。</p>
+<p>通过avbtool工具，解析vbmeta镜像：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">avbtool info_image --image vbmeta.img &gt; vbmeta.img.info</span><br></pre></td></tr></table></figure>
+<p>vbmeta.img.info 内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">Minimum libavb version:   1.0</span><br><span class="line">Header Block:             256 bytes</span><br><span class="line">Authentication Block:     576 bytes</span><br><span class="line">Auxiliary Block:          4032 bytes</span><br><span class="line">Public key (sha1):        2e22ae4a46cf9db9c24ab74cee91fa005ccb30e4</span><br><span class="line">Algorithm:                SHA256_RSA4096</span><br><span class="line">Rollback Index:           0</span><br><span class="line">Flags:                    0</span><br><span class="line">Release String:           'avbtool 1.1.0'</span><br><span class="line">Descriptors:</span><br><span class="line">    Chain Partition descriptor:</span><br><span class="line">      Partition Name:          vbmeta_system</span><br><span class="line">      Rollback Index Location: 2</span><br><span class="line">      Public key (sha1):       fc92d9cba0628858d846fb9a18a7af72b05d7dc8</span><br><span class="line">    ...</span><br><span class="line">    Hash descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        boot</span><br><span class="line">      Salt:                  e691366c1c43ee5e23b342d65555ad8cfbadf77118dceb77e240c8e7d3e63ea6</span><br><span class="line">      Digest:                239648eb41f5a491c7c4d6b51b52a533bd9da98ba8800f58a0957f7341dd1686</span><br><span class="line">      Flags:                 0</span><br><span class="line">    Hash descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        dtbo</span><br><span class="line">      Salt:                  d445a36d8154a774589dd51c49029ee388ecaac28212c8c6899f45dc5a51dbcf</span><br><span class="line">      Digest:                cac0bd59091464292bc83d6f1193afb1520c12a3849f2673ad3160bb951acf6d</span><br><span class="line">      Flags:                 0</span><br><span class="line">    Hash descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        vendor_boot</span><br><span class="line">      Salt:                  5f7b7c3592142d4f3645d7e675fb7865915e52e8b361ba330fccf00aeb1c4028</span><br><span class="line">      Digest:                cf153ab9df9a5c34024417ea2b0b4dfd716d01ba9cd2d5bcf964fe7e25cdd802</span><br><span class="line">      Flags:                 0</span><br><span class="line">    Hashtree descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        odm</span><br><span class="line">      Salt:                  b6e1f57ae6939659355e83ad7fa57feb6b5eb15a3d16b96752f43cdc14918708</span><br><span class="line">      Root Digest:           da99875b16661e72eec81d05d58dffdf09fe228d</span><br><span class="line">      Flags:                 0</span><br><span class="line">    Hashtree descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        vendor</span><br><span class="line">      Salt:                  b6e1f57ae6939659355e83ad7fa57feb6b5eb15a3d16b96752f43cdc14918708</span><br><span class="line">      Root Digest:           336bd4885da274ae0de38b32b899f7b6169e676f</span><br><span class="line">      Flags:                 0</span><br></pre></td></tr></table></figure>
+<p>通过<code>vbmeta.img.info</code>以及<code>avb_verify_partition_name</code>数组组成集合知道</p>
+<p>bootloader中需要校验 <code>vbmeta、boot 、dtbo、vendor_boot</code>四个镜像，这4个镜像也是下一个启动阶段需要用到的。</p>
+<p>如下图，蓝色代表bootloader需要校验的镜像。</p>
+<p><img src="./bootload-avb.png" alt="bootload-avb"></p>
+<h3 id="UEFI-bootloader-AVB2-0代码校验流程"><a href="#UEFI-bootloader-AVB2-0代码校验流程" class="headerlink" title="UEFI(bootloader) AVB2.0代码校验流程"></a>UEFI(bootloader) AVB2.0代码校验流程</h3><p>简单的校验流程图：</p>
+<p><img src="./boot_avb.png" alt="boot_avb"></p>
+<p>核心函数<code>load_and_verify_vbmeta</code>校验<code>vbmeta</code>，确保vbmeta是可信的。如何做到可信？</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> AvbSlotVerifyResult <span class="title">load_and_verify_vbmeta</span><span class="params">(...)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">/* Check if the image is properly signed and get the public key used</span></span><br><span class="line"><span class="comment">   * to sign the image.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="comment">// 获取vbmeta的pk_data(public key) 和 pk_len，为 OEMPublicKey 校验进行准备</span></span><br><span class="line">  vbmeta_ret =</span><br><span class="line">     avb_vbmeta_image_verify(vbmeta_buf, vbmeta_num_read, &amp;pk_data, &amp;pk_len);</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">// ops-&gt;validate_vbmeta_public_key 该函数最终</span></span><br><span class="line">   <span class="comment">// 与 OEMPublicKey.h 文件的 OEMPublicKey 进行校验比对</span></span><br><span class="line">   <span class="comment">// 而 OEMPublicKey 是硬编码直接写在代码里面。</span></span><br><span class="line">   io_ret = ops-&gt;validate_vbmeta_public_key(ops,</span><br><span class="line">                                         pk_data,</span><br><span class="line">                                         pk_len,</span><br><span class="line">                                         pk_metadata,</span><br><span class="line">                                         pk_metadata_len,</span><br><span class="line">                                         &amp;key_is_trusted);</span><br><span class="line">   ...</span><br><span class="line">   <span class="comment">// 获取vbmeta中，需要校验的镜像信息，高通888平台上，涉及到 boot dtbo vendor_boot 三个镜像</span></span><br><span class="line">   descriptors =</span><br><span class="line">      avb_descriptor_get_all(vbmeta_buf, vbmeta_num_read, &amp;num_descriptors);</span><br><span class="line">   ...</span><br><span class="line">    <span class="comment">// vbmeta中的 （boot dtbo vendor_boot）descriptors 轮询进行 hash（Digest）比对校验</span></span><br><span class="line">   <span class="keyword">for</span> (n = <span class="number">0</span>; n &lt; num_descriptors; n++) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 获取 vbmeta中的 （boot dtbo vendor_boot）descriptors 信息</span></span><br><span class="line">    <span class="keyword">if</span> (!avb_descriptor_validate_and_byteswap(descriptors[n], &amp;desc)) &#123;</span><br><span class="line">      avb_errorv(full_partition_name, <span class="string">": Descriptor is invalid.\n"</span>, <span class="literal">NULL</span>);</span><br><span class="line">      ret = AVB_SLOT_VERIFY_RESULT_ERROR_INVALID_METADATA;</span><br><span class="line">      <span class="keyword">goto</span> out;</span><br><span class="line">    &#125;</span><br><span class="line">   ...</span><br><span class="line">    <span class="keyword">switch</span> (desc.tag) &#123;</span><br><span class="line">      <span class="keyword">case</span> AVB_DESCRIPTOR_TAG_HASH: &#123;</span><br><span class="line">        AvbSlotVerifyResult sub_ret;</span><br><span class="line">        <span class="comment">// 对 vbmeta中的 （boot dtbo vendor_boot）Digest 和 镜像boot,dtbo,vendor_boot的Digest 进行比较</span></span><br><span class="line">        <span class="comment">// 两个 Digest 的值比较相同，则AVB校验通过</span></span><br><span class="line">        sub_ret = load_and_verify_hash_partition(ops,</span><br><span class="line">                                                 requested_partitions,</span><br><span class="line">                                                 ab_suffix,</span><br><span class="line">                                                 allow_verification_error,</span><br><span class="line">                                                 descriptors[n],</span><br><span class="line">                                                 slot_data);</span><br><span class="line">        <span class="keyword">if</span> (sub_ret != AVB_SLOT_VERIFY_RESULT_OK) &#123;</span><br><span class="line">          ret = sub_ret;</span><br><span class="line">          <span class="keyword">if</span> (!allow_verification_error || !result_should_continue(ret)) &#123;</span><br><span class="line">            <span class="keyword">goto</span> out;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">   ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以boot镜像为例，对<code>load_and_verify_hash_partition</code>函数说明</p>
+<p>1、获取vbmeta中需要检验boot镜像的信息（salt 和 digest），命名为<code>salt1</code>和 <code>digest1</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!avb_hash_descriptor_validate_and_byteswap(</span><br><span class="line">          (<span class="keyword">const</span> AvbHashDescriptor*)descriptor, &amp;hash_desc)) &#123;  <span class="comment">//descriptor 是vbmeta中获取的</span></span><br><span class="line">    ret = AVB_SLOT_VERIFY_RESULT_ERROR_INVALID_METADATA;</span><br><span class="line">    <span class="keyword">goto</span> out;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  desc_partition_name =</span><br><span class="line">      ((<span class="keyword">const</span> <span class="keyword">uint8_t</span>*)descriptor) + <span class="keyword">sizeof</span>(AvbHashDescriptor); <span class="comment">// 需要校验的镜像 boot</span></span><br><span class="line">  desc_salt = desc_partition_name + hash_desc.partition_name_len; <span class="comment">// salt1 值</span></span><br><span class="line">  desc_digest = desc_salt + hash_desc.salt_len; <span class="comment">// digest1 值</span></span><br></pre></td></tr></table></figure>
+<p>2、获取boot分区的<code>image_buf</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">io_ret = ops-&gt;read_from_partition(</span><br><span class="line">      ops, part_name, <span class="number">0</span> <span class="comment">/* offset */</span>, image_size, image_buf, &amp;part_num_read); <span class="comment">//part_name是boot</span></span><br></pre></td></tr></table></figure>
+<p>3、通过分区<code>image_buf</code> 和<code>salt1</code>计算出boot分区的 <code>digest2</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">avb_sha256_init(&amp;sha256_ctx);</span><br><span class="line">    avb_sha256_update(&amp;sha256_ctx, desc_salt, hash_desc.salt_len);</span><br><span class="line">    avb_sha256_update(&amp;sha256_ctx, image_buf, hash_desc.image_size);</span><br><span class="line">    digest = avb_sha256_final(&amp;sha256_ctx); <span class="comment">// digest2的值</span></span><br></pre></td></tr></table></figure>
+<p>4、最后对比 <code>digest1</code>和 <code>digest2</code>的值是否相同</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (avb_safe_memcmp(digest, desc_digest, digest_len) != <span class="number">0</span>) &#123;</span><br><span class="line">    avb_errorv(part_name,</span><br><span class="line">               <span class="string">": Hash of data does not match digest in descriptor.\n"</span>,</span><br><span class="line">               <span class="literal">NULL</span>);</span><br><span class="line">    ret = AVB_SLOT_VERIFY_RESULT_ERROR_VERIFICATION;</span><br><span class="line">    <span class="keyword">goto</span> out;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    avb_debugv (part_name, <span class="string">": success: Image verification completed\n"</span>, <span class="literal">NULL</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  ret = AVB_SLOT_VERIFY_RESULT_OK;</span><br></pre></td></tr></table></figure>
+<p>从第3和4点看出，如果<strong>你篡改一下boot.img的一个比特位，都导致boot.img计算出来的digest值不对。</strong></p>
+<p>而如果要篡改vbmeta.img，这个也不可能，因为vbmeta.img在编译时，根据私钥与各个校验镜像（boot.img, dto.img …）计算hash才生成的vbmeta.img。</p>
+<h2 id="kernel-init-AVB-2-0"><a href="#kernel-init-AVB-2-0" class="headerlink" title="kernel/init AVB 2.0"></a>kernel/init AVB 2.0</h2><p>init阶段的avb校验，可以通过dts和fstab确定需要校验的镜像。</p>
+<ul>
+<li>dts</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">		compatible = <span class="string">"android,firmware"</span>;</span><br><span class="line">		vbmeta &#123;</span><br><span class="line">			compatible = <span class="string">"android,vbmeta"</span>;</span><br><span class="line">			parts = <span class="string">"vbmeta,boot,system,vendor,dtbo"</span>;</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		fstab &#123;</span><br><span class="line">			compatible = <span class="string">"android,fstab"</span>;</span><br><span class="line">			vendor &#123;</span><br><span class="line">				compatible = <span class="string">"android,vendor"</span>;</span><br><span class="line">				dev = <span class="string">"/dev/block/platform/soc/1d84000.ufshc/by-name/vendor"</span>;</span><br><span class="line">				type = <span class="string">"ext4"</span>;</span><br><span class="line">				mnt_flags = <span class="string">"ro,barrier=1,discard"</span>;</span><br><span class="line">				fsmgr_flags = <span class="string">"wait,slotselect,avb"</span>;</span><br><span class="line">				status = <span class="string">"ok"</span>;</span><br><span class="line">			&#125;;</span><br><span class="line">		&#125;;</span><br><span class="line">	&#125;;</span><br></pre></td></tr></table></figure>
+<p>dts中的 <code>compatible = &quot;android,fstab&quot;;</code>目的是告诉<code>init</code>进程，vendor分区需要早点挂载。</p>
+<p>其中 <code>fsmgr_flags = &quot;... avb&quot;</code> 告诉<code>init</code>进程，vendor分区需要avb校验。</p>
+<p>但在888高通平台上采用动态分区的策略，无法找到vendor实体分区镜像，估计这一步是没有生效的。</p>
+<ul>
+<li>fstab.qcom</li>
+</ul>
+<p>我们只需要关注fstab中的<code>avb=</code>挂载参数。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">system      /system  ext4    ro,barrier=1,discard    wait,slotselect,avb=vbmeta_system,logical,first_stage_mount,avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey</span><br><span class="line">system_ext  /system_ext   ext4    ro,barrier=1,discard         wait,slotselect,avb=vbmeta_system,logical,first_stage_mount</span><br><span class="line">product     /product      ext4    ro,barrier=1,discard         wait,slotselect,avb=vbmeta_system,logical,first_stage_mount</span><br><span class="line">vendor      /vendor       ext4    ro,barrier=1,discard         wait,slotselect,avb,logical,first_stage_mount</span><br><span class="line">odm         /odm          ext4    ro,barrier=1,discard         wait,slotselect,avb,logical,first_stage_mount</span><br></pre></td></tr></table></figure>
+<p>其中 <code>avb=vbmeta_system</code>涉及的<code>system、system_ext、product</code>三个镜像需要跟vbmeta_system镜像进行校验。</p>
+<p>而<code>avb</code>没有<code>vbmeta_system</code>参数的，则跟vbmeta镜像进行校验，可以参考上面解析的vbmeta.img.info。</p>
+<p>解析vbmeta_system镜像以求证<code>avb=vbmeta_system</code>涉及的三个分区:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">avbtool info_image --image vbmeta_system.img &gt; vbmeta_system.img.info</span><br></pre></td></tr></table></figure>
+<p>vbmeta_system.img.info内容</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Minimum libavb version:   <span class="number">1.0</span></span><br><span class="line">Header Block:             <span class="number">256</span> bytes</span><br><span class="line">Authentication Block:     <span class="number">320</span> bytes</span><br><span class="line">Auxiliary Block:          <span class="number">2368</span> bytes</span><br><span class="line"><span class="function">Public <span class="title">key</span> <span class="params">(sha1)</span>:        fc92d9cba0628858d846fb9a18a7af72b05d7dc8</span></span><br><span class="line"><span class="function">Algorithm:                SHA256_RSA2048</span></span><br><span class="line"><span class="function">Rollback Index:           1598918400</span></span><br><span class="line"><span class="function">Flags:                    0</span></span><br><span class="line">Release String:           'avbtool 1.1.0'</span><br><span class="line">Descriptors:</span><br><span class="line">    ...</span><br><span class="line">    Hashtree descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        product</span><br><span class="line">      Salt:                  b6e1f57ae6939659355e83ad7fa57feb6b5eb15a3d16b96752f43cdc14918708</span><br><span class="line">      Root Digest:           <span class="number">8747</span>dcab121c9cf740b106dc4b5545d685ee148f</span><br><span class="line">      Flags:                 <span class="number">0</span></span><br><span class="line">    Hashtree descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        system</span><br><span class="line">      Salt:                  b6e1f57ae6939659355e83ad7fa57feb6b5eb15a3d16b96752f43cdc14918708</span><br><span class="line">      Root Digest:           <span class="number">489</span>a406f49dd15c6c4ab3f86ae8c490837602f81</span><br><span class="line">      Flags:                 <span class="number">0</span></span><br><span class="line">    Hashtree descriptor:</span><br><span class="line">    ...</span><br><span class="line">      Partition Name:        system_ext</span><br><span class="line">      Salt:                  b6e1f57ae6939659355e83ad7fa57feb6b5eb15a3d16b96752f43cdc14918708</span><br><span class="line">      Root Digest:           <span class="number">3</span>eabb06d98d7e4639fbca3fd21806ef36332f1d3</span><br><span class="line">      Flags:                 <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>可以看到vbmeta_system.img.info中包含<code>product system system_ext</code>三个镜像校验信息。</p>
+<p>前面提到，高通888平台采用动态分区，没有vendor，system等镜像的实体分区，fstab该如何挂载这些镜像呢？</p>
+<p>答案是通过<code>logical</code>挂载参数，告诉init进程，该分区是逻辑分区（虚拟分区），从super这一实体分区中划分出来。</p>
+<ul>
+<li>init 阶段 AVB 校验以下镜像</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vbmeta_system.img  vbmeta.img vendor.img product.img odm.img system_ext.img system.img</span><br></pre></td></tr></table></figure>
+<p><img src="./init-avb.png" alt="init-avb"></p>
+<p>如果校验失败，日志会报<code>dm-verity device corrupted</code>重启进入fastboot模式。</p>
+<p>校验失败还要继续启动，则需要<code>disable-verity</code>关闭init阶段AVB。</p>
+<h3 id="关闭init阶段AVB"><a href="#关闭init阶段AVB" class="headerlink" title="关闭init阶段AVB"></a>关闭init阶段AVB</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fastboot --<span class="built_in">disable</span>-verification flash vbmeta vbmeta.img</span><br><span class="line">fastboot --<span class="built_in">disable</span>-verity flash vbmeta vbmeta.img</span><br><span class="line">adb <span class="built_in">disable</span>-verity</span><br></pre></td></tr></table></figure>
+<p>以上三个命令，本质上都是修改vbmeta对应的一个数据位，对应标志位说明：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Flags for the vbmeta image.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * AVB_VBMETA_IMAGE_FLAGS_HASHTREE_DISABLED: If this flag is set,</span></span><br><span class="line"><span class="comment"> * hashtree image verification will be disabled.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * AVB_VBMETA_IMAGE_FLAGS_VERIFICATION_DISABLED: If this flag is set,</span></span><br><span class="line"><span class="comment"> * verification will be disabled and descriptors will not be parsed.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> &#123;</span><br><span class="line">  AVB_VBMETA_IMAGE_FLAGS_HASHTREE_DISABLED = (<span class="number">1</span> &lt;&lt; <span class="number">0</span>),</span><br><span class="line">  AVB_VBMETA_IMAGE_FLAGS_VERIFICATION_DISABLED = (<span class="number">1</span> &lt;&lt; <span class="number">1</span>)</span><br><span class="line">&#125; AvbVBMetaImageFlags;</span><br></pre></td></tr></table></figure>
+<p><code>disable-verification</code>和<code>disable-verity</code>看着有差异，但是在源码上看到有意思的地方。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// system/core/fs_mgr/libfs_avb/fs_avb.cpp</span></span><br><span class="line"><span class="function">AvbHashtreeResult <span class="title">AvbHandle::SetUpAvbHashtree</span><span class="params">(FstabEntry* fstab_entry, <span class="keyword">bool</span> wait_for_verity_dev)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// kHashtreeDisabled 和 kVerificationDisabled 分别对应 disable-verity 和 disable-verification</span></span><br><span class="line">    <span class="keyword">if</span> (status_ == AvbHandleStatus::kHashtreeDisabled ||</span><br><span class="line">        status_ == AvbHandleStatus::kVerificationDisabled) &#123;</span><br><span class="line">        LINFO &lt;&lt; <span class="string">"AVB HASHTREE disabled on: "</span> &lt;&lt; fstab_entry-&gt;mount_point;</span><br><span class="line">        <span class="keyword">return</span> AvbHashtreeResult::kDisabled;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// system/core/init/first_stage_mount.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">FirstStageMountVBootV2::SetUpDmVerity</span><span class="params">(FstabEntry* fstab_entry)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// kHashtreeDisabled 和 kVerificationDisabled 分别对应 disable-verity 和 disable-verification</span></span><br><span class="line">    <span class="keyword">if</span> (avb_handle_-&gt;status() == AvbHandleStatus::kHashtreeDisabled ||</span><br><span class="line">    	avb_handle_-&gt;status() == AvbHandleStatus::kVerificationDisabled) &#123;</span><br><span class="line">    	LOG(ERROR) &lt;&lt; <span class="string">"Top-level vbmeta is disabled, skip Hashtree setup for </span></span><br><span class="line"><span class="string">               	&lt;&lt; fstab_entry-&gt;mount_point;</span></span><br><span class="line"><span class="string">    	return true;  // Returns true to mount the partition directly.</span></span><br><span class="line"><span class="string">    &#125; else &#123;</span></span><br><span class="line"><span class="string">        ...</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    ...</span></span><br><span class="line"><span class="string">    switch (hashtree_result) &#123;</span></span><br><span class="line"><span class="string">            case AvbHashtreeResult::kDisabled: // 与SetUpAvbHashtree函数的返回值是一样的</span></span><br><span class="line"><span class="string">            	return true;  // Returns true to mount the partition.</span></span><br><span class="line"><span class="string">            ...</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>因此，从这里看，无论是<code>disable-verification</code>还是<code>disable-verity</code>最终都是殊途同归。</p>
+<h3 id="浅谈device-mapper-verity-dm-verity"><a href="#浅谈device-mapper-verity-dm-verity" class="headerlink" title="浅谈device-mapper-verity(dm-verity)"></a>浅谈device-mapper-verity(dm-verity)</h3><p>启动到init之后，system vendor 之类的镜像都是几个G的文件大小。如果真要整个镜像进行hash校验，对启动速度将会有极大的影响。</p>
+<p>因此，才有了dm-verity这一策略。遵守上面介绍的，用到什么就校验什么的思路，来简单说一下dm-verity的工作原理。</p>
+<p><img src="./dm-verity.png" alt="dm-verity"></p>
+<p>图片来源：<a href="https://source.android.com/security/verifiedboot/dm-verity" target="_blank" rel="noopener">https://source.android.com/security/verifiedboot/dm-verity</a></p>
+<p>在编译阶段，首先会对系统镜像（比如system.img、vendor.img）按照每4k大小计算对应hash，将这些hash信息存起来，形成上面图中的layer 0层，紧接着会对 layer 0 层同样按照每4k大小计算hash，并将这层的hash信息存起来，形成layer 1层，以此类推，直至最后的hash信息存放在一个4k大小的块中(未填满使用0填充)，这里边存储的hash信息称为 root hash。</p>
+<p>在运行阶段，对于镜像里的文件进行访问时，操作对应所在块设备的存储区域时，会计算当前存储块(按4k大小)的hash值，然后会跟存储在哈希树上对应块的hash值进行比较，如果匹配不上，则认为当前该文件在底层存储被篡改或是损坏了。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li>Google Android Verified Boot 2.0: <a href="https://android.googlesource.com/platform/external/avb/+/master/README.md" target="_blank" rel="noopener">https://android.googlesource.com/platform/external/avb/+/master/README.md</a></li>
+<li>Google dm-verity: <a href="https://source.android.com/docs/security/features/verifiedboot/dm-verity" target="_blank" rel="noopener">https://source.android.com/docs/security/features/verifiedboot/dm-verity</a></li>
+<li>内核工匠 dm-verity原理剖析：<a href="https://blog.csdn.net/feelabclihu/article/details/120232172" target="_blank" rel="noopener">https://blog.csdn.net/feelabclihu/article/details/120232172</a></li>
+</ul>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2023/07/07/Face-recognition-block-analysis/" data-toggle="tooltip" data-placement="top" title="人脸解锁带来的安卓系统崩溃之谜！">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2019/01/01//android-binder.html/" data-toggle="tooltip" data-placement="top" title="Android Binder">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#Android-Verified-Boot-2-0流程"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">Android Verified Boot 2.0流程</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#Secboot-boot"><span class="toc-nav-number">1.1.</span> <span class="toc-nav-text">Secboot boot</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#Bootloader-AVB-Android-Verified-Boot-2-0"><span class="toc-nav-number">1.2.</span> <span class="toc-nav-text">Bootloader AVB(Android Verified Boot 2.0)</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#bootloader需要校验什么？"><span class="toc-nav-number">1.2.1.</span> <span class="toc-nav-text">bootloader需要校验什么？</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#UEFI-bootloader-AVB2-0代码校验流程"><span class="toc-nav-number">1.2.2.</span> <span class="toc-nav-text">UEFI(bootloader) AVB2.0代码校验流程</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#kernel-init-AVB-2-0"><span class="toc-nav-number">1.3.</span> <span class="toc-nav-text">kernel&#x2F;init AVB 2.0</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#关闭init阶段AVB"><span class="toc-nav-number">1.3.1.</span> <span class="toc-nav-text">关闭init阶段AVB</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#浅谈device-mapper-verity-dm-verity"><span class="toc-nav-number">1.3.2.</span> <span class="toc-nav-text">浅谈device-mapper-verity(dm-verity)</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#参考资料"><span class="toc-nav-number">1.4.</span> <span class="toc-nav-text">参考资料</span></a></li></ol></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#AVB" title="AVB">AVB</a>
+                        
+                          <a class="tag" href="/tags/#Security" title="Security">Security</a>
+                        
+                          <a class="tag" href="/tags/#Safe" title="Safe">Safe</a>
+                        
+                          <a class="tag" href="/tags/#Bootloader" title="Bootloader">Bootloader</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

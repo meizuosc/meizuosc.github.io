@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          从硬件到软件，Linux 时间子系统全栈解析 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2023/12/13/Full-stack-resolution-of-the-Linux-time-subsystem/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#hrtimer" title="hrtimer">hrtimer</a>
+                            
+                              <a class="tag" href="/tags/#定时器" title="定时器">定时器</a>
+                            
+                              <a class="tag" href="/tags/#monotonic time" title="monotonic time">monotonic time</a>
+                            
+                              <a class="tag" href="/tags/#timekeeper" title="timekeeper">timekeeper</a>
+                            
+                              <a class="tag" href="/tags/#clocksource" title="clocksource">clocksource</a>
+                            
+                        </div>
+                        <h1>从硬件到软件，Linux 时间子系统全栈解析</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Haibo.Chen on
+                            2023-12-13
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>Linux 时间子系统为构建分时多任务操作系统提供了基础设施，使得系统能够准确地管理和处理与时间相关的任务，为任务调度、资源管理、驱动开发和应用程序开发等等都提供了强大的支撑。魅族博客之前也介绍过时间相关的文章：<a href="https://kernel.meizu.com/2018/07/12//linux-time.html/">《Linux Time》</a>、<a href="https://kernel.meizu.com/2016/07/20//linux-tick-and-tickless.html/">《Linux Tick 和 Tickless》</a>、<a href="https://kernel.meizu.com/2016/05/28//cpuidle.html/">《CPUIDLE 之低功耗定时器》</a>，温故而知新，我们再来一篇从入门到放弃。</p>
+<h1 id="1-整体软件架构"><a href="#1-整体软件架构" class="headerlink" title="1. 整体软件架构"></a>1. 整体软件架构</h1><p>linux时间子系统从功能上分为定时和计时，定时用于定时触发中断事件，计时则用于记录现实世界的时间线。其软件架构示意图如下：</p>
+<p><img src="1.PNG" alt=""></p>
+<p>定时部分，系统有一个全局计数器counter，每个cpu核心有一个硬件定时器timer。定时器内部有比较器，当设定值达到全局计数器值就触发中断。每cpu定时器timer在软件上被抽象成时钟事件设备(Clock event device)，在高精度版本，每个Clock event device创建一个本地高精度定时器hrtimer管理结构。hrtimer基于事件触发，通过红黑树来管理该cpu上的各种类型软件定时任务，每次执行完超期任务，都会选取超期时间最近的定时任务来设定下次超期值。基于hrtimer还封装了各种类型和精度的软件定时器，为了方便内核使用，定义了节拍定时器(sched_timer)作为系统心跳来驱动任务调度、负载计算、以及其他基于timer wheel的低精度定时器。为了方便用户空间使用，定义了posix-timer、alarm、timer_fd、nanosleep、itimer等定时器接口。</p>
+<p>计时部分，全局计数器counter在软件上被抽象成时钟源设备ClockSource device，其特点是计数频率高精度高，而且不休眠，通过寄存器可以高效地读出其计数值。timekeeping作为linux计时维护的核心，由counter提供持续不断的高精度计时，由RTC或者网络NTP提供真实世界时间基准，来维护各种系统时间的精准可靠。timekeeping除了给内核模块提供丰富的获取时间接口，也封装了很多系统调用给用户空间使用，特别地还通过VDSO技术绕过系统调用使用户空间高效地获取系统时间。另外任务调度模块(sched)，printk/ftrace时间戳等也依赖计数器counter提供高精度计时。</p>
+<h1 id="2-定时器和时钟源初始化"><a href="#2-定时器和时钟源初始化" class="headerlink" title="2 定时器和时钟源初始化"></a>2 定时器和时钟源初始化</h1><p>  armv8文档《Architecture Reference Manual ARMv8, for ARMv8-A architecture profile》描述了关于定时器和时钟源的示例结构图如下。其中System counter是全局计数器，位于Always-powered域，保证系统休眠期也能正确计数。Timer_x是cpu本地定时器，每个执行单元(PE)至少有一个专属定时器。所有本地定时器都以System counter作为时钟源，共享全局计数器的计数值，以保证时间同步。本地定时器通过中断控制器，向cpu发起PPI私有中断。</p>
+<p><img src="2.PNG" alt=""></p>
+<h2 id="2-1-解析dts"><a href="#2-1-解析dts" class="headerlink" title="2.1 解析dts"></a>2.1 解析dts</h2><p>以qcom 8核armv8的SOC为例，把cpu本地定时器称为arch_timer，全局计数器System counter不需要专门的dts节点，配置如下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">arch_timer: timer &#123;</span><br><span class="line">    compatible = "arm,armv8-timer";</span><br><span class="line">    interrupts = &lt;GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)&gt;,</span><br><span class="line">                 &lt;GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)&gt;,</span><br><span class="line">                 &lt;GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)&gt;,</span><br><span class="line">                 &lt;GIC_PPI 12 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)&gt;;</span><br><span class="line">    clock-frequency = &lt;19200000&gt;;</span><br><span class="line">    always-on；</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>匹配字符串：”arm,armv8-timer”</li>
+<li>interrupts：4组PPI私有外设中断，对应4个软件中断号，实际只会选择其一。8个cpu共用同一个中断号，但会各自产生中断。</li>
+<li>clock-frequency： 时钟源计数频率19200000Hz = 19.2MHz</li>
+<li>always-on：计数器常开不休眠</li>
+</ul>
+<p>出于虚拟化及安全执行等级考虑，armv8为每个cpu核心提供至少下面4种定时器用于不同的执行环境</p>
+<p><img src="3.png" alt=""></p>
+<p>4种定时器与dts中的对应关系如下：</p>
+<p>  软件中断号13： ARCH_TIMER_PHYS_SECURE_PPI，安全世界物理定时器私有中断，Secure EL1 physical timer</p>
+<p>  软件中断号14：ARCH_TIMER_PHYS_NONSECURE_PPI，非安全世界物理定时器私有中断，Non-secure EL1 physical timer</p>
+<p>  软件中断号11：ARCH_TIMER_VIRT_PPI，虚拟定时器私有中断，vitual timer</p>
+<p>  软件中断号12：ARCH_TIMER_HYP_PPI，hypervisor定时器私有中断，Non-secure EL2 physical timer</p>
+<p>  虚拟定时器和物理定时器的差别在于，虚拟定时器的System counter计数输入会在实际System counter基础上添加一个偏移量，这个偏移量由host控制，来实现不同guest的无感切换。</p>
+<p>  一般外设中断都是dts配置硬件中断号，然后软件映射到一个软件中断号，最后用软件中断号向系统注册中断，这里dts配置的直接就是软件中断号，因为linux中断系统中为SGI和PPI预留有专用软件中断号。</p>
+<p>  上面配置的定时器，cpu可以通过cp15协处理器来访问定时器寄存器，称为cp15类型定时器。arm还提供一种内存映射方式访问的定时器，称为内存映射定时器(Memory Map Timer)，是将定时器寄存器映射到io区域，注册在系统中的名称为 “arch_mem_timer”，主要为了没有协处理器的版本使用。</p>
+<h2 id="2-2-本地定时器初始化"><a href="#2-2-本地定时器初始化" class="headerlink" title="2.2 本地定时器初始化"></a>2.2 本地定时器初始化</h2><p>初始化代码跟具体的体系架构有关，arm初始化代码在drivers/clocksource/arm_arch_timer.c中，初始化代码中添加下面的声明，通过一个简洁的TIMER_OF_DECLARE()宏，将dts匹配字符串和初始化函数静态绑定到一个表中，</p>
+<p>TIMER_OF_DECLARE(armv8_arch_timer, “arm,armv8-timer”, arch_timer_of_init);</p>
+<p>在内核初始化流中路径如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">start_kernel</span><br><span class="line">|--&gt;time_init()</span><br><span class="line">  |--&gt;timer_probe()//根据定时器列表__timer_of_table[]依次初始化</span><br><span class="line">    |--&gt;arch_timer_of_init() //对应"arm,armv8-timer"的定时器初始化</span><br><span class="line">      |--&gt;arch_timer_populate_kvm_info();//判断kernel是否为hyp模式</span><br><span class="line">      |--&gt;rate = arch_timer_get_cntfrq();//通过寄存器读取计数频率</span><br><span class="line">      |--&gt;arch_timer_of_configure_rate(rate,np);  //通过dts解析时钟源频率</span><br><span class="line">      |--&gt;arch_timer_select_pp();//如果kernel不是hyp模式，ppi中断号选择ARCH_TIMER_VIRT_PPI，否则选择ARCH_TIMER_HYP_PPI</span><br><span class="line">      |--&gt;arch_timer_register();//注册arch_timer定时器中断</span><br><span class="line">         |--&gt;alloc_percpu(struct clock_event_device);  //分配per-cpu定时器结构体</span><br><span class="line">         |--&gt;request_percpu_irq(ppi, arch_timer_handler_virt，"arch_timer", arch_timer_evt);//为每cpu注册名为"arch_timer"的ppi中断</span><br><span class="line">         |--&gt;arch_timer_cpu_pm_init(); //注册pm-notifier</span><br><span class="line">         |--&gt;cpuhp_setup_state(arch_timer_starting_cpu, arch_timer_dying_cpu);//注册cpu热插拔start/dying回调，来注册和注销定时器</span><br><span class="line">             |--&gt;arch_timer_starting_cpu</span><br><span class="line">                 |--&gt;__arch_timer_setup(ARCH_TIMER_TYPE_CP15, clk);//注册CP15寄存器类型的定时器。</span><br><span class="line">                     |--&gt;dev-&gt;name = "arch_sys_timer";</span><br><span class="line">                     |--&gt;clockevents_config_and_register(dev, freq)</span><br><span class="line">                         |--&gt;clockevents_register_device(dev); //向系统注册clockevents设备</span><br></pre></td></tr></table></figure>
+<p>总结起来就是根据dts配置和linux运行模式，来选择注册对应中断和选择寄存器，来初始化arch_timer的一些功能函数指针，并最终向系统注册ClockEvent device。</p>
+<p>从开机0s的log中看到arch_timer的初始化情况，初始化了cp15和mmio 2种定时器，时钟频率都是19.2MHz，都是虚拟的timer。系统启动早期只初始化cpu0的arch_timer，然后通过cpuhp_setup_state()设置了热插拔cpu时的注册和注销定时器函数，随着后续多核的启动以及下线，其他cpu的arch_timer也会陆续初始化注册或注销。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[    0.000000] arch_timer: cp15 and mmio timer(s) running at 19.20MHz (virt/virt).</span><br></pre></td></tr></table></figure>
+<p>运行时查看当前系统的ClockEvent device，一个内存映射定时器arch_mem_timer和8个本地定时器arch_sys_timer</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">adb shell head /sys/devices/system/clockevents<span class="comment">/*/current_device                                                                                                              </span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/broadcast/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_mem_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent0/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent1/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent2/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent3/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent4/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent5/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent6/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br><span class="line"><span class="comment">==&gt; /sys/devices/system/clockevents/clockevent7/current_device &lt;==</span></span><br><span class="line"><span class="comment">arch_sys_timer</span></span><br></pre></td></tr></table></figure>
+<p>通过cat /proc/interrupts查看中断计数，arch_timer中断触发频率非常高，仅次于2个高频的IPI中断，可见其重要性。软件IRQ号11，对应dts中的第3个ARCH_TIMER_VIRT_PPI，硬件中断号27。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">IRQ      CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7</span><br><span class="line"> 11:      74138      12926       5138       5122      23732       7418       6985      11742     GICv3  27 Level     arch_timer</span><br><span class="line">IPI0:     28488      14481      30406      29440      32710      20024      23508      30199       Rescheduling interrupts</span><br><span class="line">IPI1:      5789      17668       3344       1752       1605       1609       1665       1262       Function <span class="keyword">call</span> interrupts</span><br><span class="line">IPI2:         <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>       CPU <span class="keyword">stop</span> interrupts</span><br><span class="line">IPI3:         <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>       CPU <span class="keyword">stop</span> (<span class="keyword">for</span> crash dump) interrupts</span><br><span class="line">IPI4:         <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>       Timer broadcast interrupts</span><br><span class="line">IPI5:     <span class="number">36289</span>       <span class="number">9561</span>      <span class="number">13993</span>      <span class="number">13809</span>      <span class="number">19441</span>      <span class="number">14737</span>      <span class="number">15691</span>      <span class="number">17867</span>       IRQ <span class="keyword">work</span> interrupts</span><br><span class="line">IPI6:         <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>          <span class="number">0</span>       CPU wake-up interrupts</span><br></pre></td></tr></table></figure>
+<h2 id="2-3-时钟源clockSource初始化"><a href="#2-3-时钟源clockSource初始化" class="headerlink" title="2.3 时钟源clockSource初始化"></a>2.3 时钟源clockSource初始化</h2><p>初始化完定时器arch_timer，接下来就会初始化时钟源，arm上称为arch_counter，通过clocksource结构体描述，成员初值如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static struct clocksource clocksource_counter = &#123;</span><br><span class="line"> .name = "arch_sys_counter",</span><br><span class="line"> .rating = 400,</span><br><span class="line"> .read = arch_counter_read,</span><br><span class="line"> .mask = CLOCKSOURCE_MASK(56),</span><br><span class="line"> .flags = CLOCK_SOURCE_IS_CONTINUOUS,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>  .name = “arch_sys_counter”，时钟源名称为”arch_sys_counter”<br>  .rating = 400表示其精度很高，是理想的时钟源<br>  .mask = CLOCKSOURCE_MASK(56)，56位有效bit<br>  .flags = CLOCK_SOURCE_IS_CONTINUOUS，连续计数</p>
+<p>软件初始化过程如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">arch_timer_of_init()；</span><br><span class="line">|--&gt;arch_timer_common_init()</span><br><span class="line">  |--&gt;  arch_counter_register() <span class="comment">//注册arch_counter</span></span><br><span class="line">  |--&gt;  arch_timer_read_counter <span class="comment">//根据  linux  处在hyp模式还是guest模式，确定通过哪个寄存器读计数值</span></span><br><span class="line">  |--&gt;  clocksource_register_hz() <span class="comment">//向clocksource模块注册名为"arch_sys_counter"的时钟源</span></span><br><span class="line">  |--&gt;  timecounter_init() <span class="comment">//初始化timecounter，比较少用</span></span><br><span class="line">  |--&gt;  sched_clock_register() <span class="comment">//给调度程序注册读cycle函数</span></span><br></pre></td></tr></table></figure>
+<p>arch_counter功能相对简单，只需要一个读寄存器函数arch_timer_read_counter，最终会内嵌汇编语句，读cntvct_el0寄存器来读出计数值。cntvct_el0寄存器命名以el0结尾，表明一定条件下可以用户态也可以访问该寄存器，这一点结合vdso技术可以实现用户空间中高效读取系统时间。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">u64 (*arch_timer_read_counter)(void) __ro_after_init = arch_counter_get_cntvct;</span><br><span class="line">static __always_inline u64 __arch_counter_get_cntvct(void)</span><br><span class="line">&#123;</span><br><span class="line">    u64 cnt;</span><br><span class="line">    asm volatile(ALTERNATIVE("isb\n mrs %0, cntvct_el0",</span><br><span class="line">                 "nop\n" __mrs_s("%0", SYS_CNTVCTSS_EL0),</span><br><span class="line">                 ARM64_HAS_ECV)</span><br><span class="line">             : "=r" (cnt));</span><br><span class="line">    arch_counter_enforce_ordering(cnt);</span><br><span class="line">    return cnt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从开机log看出，创建了一个clocksource，名为arch_sys_counter，mask: 0xffffffffffffff表示56位有效位数，然后注册了sched_clock，56bit有效位，19MHz频率，分辨率52ns。系统还有一个jiffies时钟源，但是精度太低了，最后系统选择arch_sys_counter作为clocksource device</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x46d987e47, max_idle_ns: 440795202767 ns</span><br><span class="line">[    0.000000] sched_clock: 56 bits at 19MHz, resolution 52ns, wraps every 4398046511078ns</span><br><span class="line">[    0.044957] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns</span><br><span class="line">[    0.075704] clocksource: Switched to clocksource arch_sys_counter</span><br></pre></td></tr></table></figure>
+<p>运行时查看当前时钟源为arch_sys_counter</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">adb shell cat /sys/devices/system/clocksource/clocksource0/current_clocksource</span><br><span class="line">arch_sys_counter</span><br></pre></td></tr></table></figure>
+<h1 id="3-timekeeping"><a href="#3-timekeeping" class="headerlink" title="3 timekeeping"></a>3 timekeeping</h1><h2 id="3-1-时间类型及接口"><a href="#3-1-时间类型及接口" class="headerlink" title="3.1 时间类型及接口"></a>3.1 时间类型及接口</h2><p>  timekeeping时间维护层主要负责维护以下几种类型的时间，其中jiffies由节拍定时器累计，本不属于timekeeping模块，也列出来对比：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>时间类型</td>
+<td>宏定义</td>
+<td>时间基准</td>
+<td>特性</td>
+<td>使用场景</td>
+</tr>
+<tr>
+<td>真实时间/<br><br>墙上时间</td>
+<td>CLOCK_REALTIME</td>
+<td>1970年1月1日0时</td>
+<td>世界标准时间(UTC)</td>
+<td>用户时间/安卓log时间戳/网络传输</td>
+</tr>
+<tr>
+<td>单调时间</td>
+<td>CLOCK_MONOTONIC</td>
+<td>系统启动</td>
+<td>系统uptime，单调增加，休眠不会增加，可能受NTP影响</td>
+<td>定时器、内核log时间戳</td>
+</tr>
+<tr>
+<td>原始单调时间</td>
+<td>CLOCK_MONOTONIC_RAW</td>
+<td>系统启动</td>
+<td>系统uptime，单调增加，休眠不会增加，不受NTP影响</td>
+<td>很少用</td>
+</tr>
+<tr>
+<td>启动时间</td>
+<td>CLOCK_BOOTTIME</td>
+<td>系统启动</td>
+<td>系统上电时间，单调增加，休眠也会增加</td>
+<td>ftrace时间戳</td>
+</tr>
+<tr>
+<td>原子时间</td>
+<td>CLOCK_TAI</td>
+<td>1970年1月1日0时</td>
+<td>表示原子国际时间(TAI)</td>
+<td>很少用</td>
+</tr>
+<tr>
+<td>节拍计数</td>
+<td>jiffies</td>
+<td>系统启动</td>
+<td>系统节拍累计计数，休眠不会增加</td>
+<td>低精度时间计时</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>  timekeeping管理的数据结构，变量关系交织比较杂乱，大致整理了如下简化的软件框图。维护主时间基数base，每个节拍定时器周期都会读取全局计数器的值来更新base。各种类型时间有一个相对该base的offset值，其中单调时间offset为0。这里的base并不是上表中的时间基准，而是上一次节拍定时器触发时的时间值。正常情况下只需要更新base，保持offset不变，就能使各种时间齐步走。除非一些修改特定时间的时机，例如RTC驱动或者用户空间通过settimeofday来更新实时时间，此时只需要计算更新真实时间和原子时间的offset。再例如系统休眠后，系统节拍停止，由于单调时间和原始单调时间不包含休眠时间，其他时间都包含休眠时间，所以需要更新部分时间的offset。全局计数器是不休眠的，所以根据唤醒后计数器的值与休眠前的差值，将休眠的时间补偿到offs_real、offs_boot、offs_tai上，以维持其正确性。</p>
+<p>  由于tick节拍触发频率相对较低，如果CONFIG_HZ=250，则每4ms触发一次，也就是base每4ms更新一次。如果获取的系统时间是base+offset，精度也就只有4ms，显然不够。所以在真正获取系统时间时，会重新读取时钟源的counter值，并计算出与base的差值时间ns_delta，补偿上ns_delta来获最终高精度的系统时间。</p>
+<p><img src="4.png" alt=""></p>
+<p>  timekeeping时间格式有3种，timespec64、ktime_t和tm。timespec64用2个64位变量分别记录秒数tv_sec和剩余的纳秒数tv_nsec，ktime_t则是一个有符号的64位变量，记录总的纳秒数。timespec64和ktime_t转换关系很简单，但需要注意的是，这2个时间都表示从某个基准时间开始的累计值。在include/linux/ktime.h中提供了各种转换时间的函数和宏。</p>
+<p>  tm则是我们正常理解的日期时间，是一个包含年月日时分秒的结构体，精度是秒，通过time64_to_tm函数将累计秒数转换成日期时间</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">struct timespec64 &#123;</span><br><span class="line">    time64_t    tv_sec;         <span class="comment">/* seconds */</span></span><br><span class="line">    long        tv_nsec;        <span class="comment">/* nanoseconds */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">typedef s64        ktime_t;</span><br><span class="line"></span><br><span class="line">struct tm &#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * the number of seconds after the minute, normally in the range</span></span><br><span class="line"><span class="comment">     * 0 to 59, but can be up to 60 to allow for leap seconds</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    int tm_sec;</span><br><span class="line">    <span class="comment">/* the number of minutes after the hour, in the range 0 to 59*/</span></span><br><span class="line">    int tm_min;</span><br><span class="line">    <span class="comment">/* the number of hours past midnight, in the range 0 to 23 */</span></span><br><span class="line">    int tm_hour;</span><br><span class="line">    <span class="comment">/* the day of the month, in the range 1 to 31 */</span></span><br><span class="line">    int tm_mday;</span><br><span class="line">    <span class="comment">/* the number of months since January, in the range 0 to 11 */</span></span><br><span class="line">    int tm_mon;</span><br><span class="line">    <span class="comment">/* the number of years since 1900 */</span></span><br><span class="line">    long tm_year;</span><br><span class="line">    <span class="comment">/* the number of days since Sunday, in the range 0 to 6 */</span></span><br><span class="line">    int tm_wday;</span><br><span class="line">    <span class="comment">/* the number of days since January 1, in the range 0 to 365 */</span></span><br><span class="line">    int tm_yday;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>timekeeping提供了各自接口来获取各种类型和格式的时间，主要从精度和速度上分为：</p>
+<p>高精度版本：高精度版本会读取硬件计数器值来保证纳秒级精度，访问临界区时加顺序锁，精度最高，速度相对其他版本较慢；</p>
+<p>低精度版本：低精度版本直接返回上次tick更新的base值，不涉及硬件操作，精度低，速度快；</p>
+<p>高精度快速版本：相对于高精度版本区别在于访问临界区时加顺序锁类型不同，精度和速度都介于上两者。</p>
+<p>下面是提供的内核接口函数，根据函数名和参数类型大致可以顾名思义，函数名以_ts64结尾的表示获取timespec64格式，函数名带_coarse表示低精度版本，带_fast_ns的表示高精度快速版本。</p>
+<p><img src="5.png" alt=""></p>
+<h2 id="3-2-RTC时间管理"><a href="#3-2-RTC时间管理" class="headerlink" title="3.2 RTC时间管理"></a>3.2 RTC时间管理</h2><p>  RTC是实时时钟，在系统下电后依赖CMOS电池保持计时功能，系统上电后再把RTC时间读出来，可以保持开机后时间正确。RTC虽然很重要，但毕竟是外设，timekeeping作为必要内核组件没有将RTC驱动纳入其中，所以开机后需要RTC驱动通过timekeeping提供的do_settimeofday64接口来更新时间。RTC相关开机log如下，rtc-pm8xxx驱动初始化后，设置了系统时间为1970-02-26T17:12:04 UTC (4900324)。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[    0.250020] rtc-pm8xxx c42d000.qcom,spmi:qcom,pmk8550@0:rtc@6100: registered as rtc0</span><br><span class="line">[    0.250064] rtc-pm8xxx c42d000.qcom,spmi:qcom,pmk8550@0:rtc@6100: setting system clock to 1970-02-26T17:12:04 UTC (4900324)</span><br></pre></td></tr></table></figure>
+<p>  不同设备在RTC功能的实现逻辑不同，有的系统会在联网后或设置时间时将新时间回写到RTC中，而有的系统则把RTC当做不断计时的只读设备，然后在系统用户文件中维护一个偏移量，每次更新时间只修改文件中的偏移量。这样的好处一方面是避免对RTC的写操作可能导致的数据破坏，另一方面也是方便对多用户系统差异时间管理，只需要维护各自用户的文件时间偏移量。下图是高通手机设备ATS时间管理机制流程框图，RTC只作为一个只读设备，在其生产出厂后从0秒(1970年1月1日0时)开始计时且不被干扰。开机联网后，安卓侧从互联网更新时间，并通过广播通知TimeService(高通时间服务)，TimeService计算最新时间与RTC的偏移量offset给到time_daemon进程，time_daemon将时间偏移量offset写到用户文件。下次开机time_daemon读出RTC值和文件中的offset，相加后通过settimeofday设置到kernel和其他子系统。</p>
+<p><img src="6.jpg" alt=""></p>
+<h2 id="3-3-内核时间戳"><a href="#3-3-内核时间戳" class="headerlink" title="3.3 内核时间戳"></a>3.3 内核时间戳</h2><p>  内核中依赖时间戳的模块，例如printk、ftrace等，根据各自的需要选择不同的时间获取方式。</p>
+<p>  根据printk的调用路径，printk并没有使用timekeeping的时间接口，而是使用调度模块的接口sched_clock()，sched_clock直接使用时钟源的arch_counter_read()接口读取计数器寄存器值，来转换成时间戳。由此可知，printk的时间戳即使系统休眠也会累计。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">printk()-&gt;</span><span class="bash">_printk()-&gt;vprintk()-&gt; vprintk_default()-&gt;vprintk_emit()-&gt;vprintk_store()-</span></span><br><span class="line">    &gt;local_clock()-&gt;sched_clock()-&gt;read_sched_clock()-&gt;arch_counter_read()</span><br></pre></td></tr></table></figure>
+<p>  ftrace依赖timekeeping，通过sys节点可以看到ftrace可以使用的时间戳类型，默认使用boot开机时间作为时间戳，可以echo修改</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> cat /sys/kernel/tracing/trace_clock</span></span><br><span class="line">local global counter uptime perf mono mono_raw [boot] tai</span><br></pre></td></tr></table></figure>
+<h2 id="3-4-vdso系统调用加速"><a href="#3-4-vdso系统调用加速" class="headerlink" title="3.4 vdso系统调用加速"></a>3.4 vdso系统调用加速</h2><p>用户态有很多进程需要频繁地获取系统高精度时间戳，如日志系统，如果每次都陷入内核通过timekeeping提供的系统调用来获取时间，损耗会非常大。VDSO（Virtual Dynamic Shared Object）是Linux内核提供的一种特殊机制，它可以让用户空间的程序在不切换到内核态的情况下，直接访问一些内核函数和数据，避免高频地系统调用，提高性能。vdso是一个冷门且复杂的技术，涉及内存共享和elf加载原理，这里不做深入讨论，只简单说明其用意。</p>
+<p><img src="7.png" alt=""></p>
+<p>vdso目前主要应用在用户空间获取时间的接口上，将内核timekeeping中维护的一些时间数据，在vdso.so上创建一个vdso_data副本，内核会加载映射这个so，并获取其中的vdso_data指针，每个节拍更新时间也会同步更新这个副本。每个进程加载时也会将vdso.so映射到自己的地址空间，保证内核和所有进程都是用的同一份副本，进程只需要通过libc提供的接口获取vdso_data内存中的数据，而不需要系统调用。但是vdso_data是每次tick更新的，精度不够，用户进程想获取到ns级高精度的时间，还需要时钟源计数器的值，好在用户态也可以读时钟源寄存器值，以此来获取高精度部分。vdso中的代码实质上还是执行用户态，没有进入内核，所以效率高。</p>
+<p>vdso整个执行过程代码调用流程如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">gettimeofday // libc接口</span><br><span class="line">|--&gt;vdso_gettimeofday //通过vdso库</span><br><span class="line">  |--&gt;  __kernel_gettimeofday</span><br><span class="line">    |--&gt;    __cvdso_gettimeofday</span><br><span class="line">    |--&gt;    vdso_data = __arch_get_vdso_data() //获取共享的vdso_data结构体</span><br><span class="line">    |--&gt;    __cvdso_gettimeofday_data(vdso_data）</span><br><span class="line">      |--&gt;      do_hres   //获取高精度的补偿值</span><br><span class="line">        |--&gt;        cycles = __arch_get_hw_counter(vd-&gt;clock_mode, vd); //读时钟源counter计数器，最后转换成ns</span><br></pre></td></tr></table></figure>
+<p>__arch_get_hw_counter同2.3节中内核函数__arch_counter_get_cntvct，都是通过相同汇编语句读cntvct_el0系统计数器值。经过一些配置后，用户态可以直接访问cntvct_el0寄存器，也就保证了获取时间的精度</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">static __always_inline u64 __arch_get_hw_counter(s32 clock_mode,70                                                   const struct vdso_data *vd)</span><br><span class="line">&#123;</span><br><span class="line">        u64 res;</span><br><span class="line">         * If FEAT_ECV is available, use the self-synchronizing counter.</span><br><span class="line">         * Otherwise the isb is required to prevent that the counter value</span><br><span class="line">         * is speculated.</span><br><span class="line">        */</span><br><span class="line">        asm volatile(</span><br><span class="line">        ALTERNATIVE("isb\n"</span><br><span class="line">                    "mrs %0, cntvct_el0",</span><br><span class="line">                    "nop\n"</span><br><span class="line">                    __mrs_s("%0", SYS_CNTVCTSS_EL0),</span><br><span class="line">                    ARM64_HAS_ECV)</span><br><span class="line">        : "=r" (res)</span><br><span class="line">        :</span><br><span class="line">        : "memory");</span><br><span class="line">        arch_counter_enforce_ordering(res);</span><br><span class="line">        return res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>linux-vdso.so.1这个库不依赖其他库，并且会被系统绝大部分so依赖，包括libc.so，非常有牌面。所有用户进程都会映射vdso到自己的地址空间。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">adb shell ldd /system/lib64/libc.so                                           </span><br><span class="line">        linux-vdso.so.1 =&gt; [vdso] (0x731767a000)</span><br><span class="line"></span><br><span class="line">adb shell cat /proc/1/maps</span><br><span class="line">7fa0766000-7fa0767000 r-xp 00000000 00:00 0                          [vdso]</span><br></pre></td></tr></table></figure>
+<h2 id="3-5-NTP对时"><a href="#3-5-NTP对时" class="headerlink" title="3.5 NTP对时"></a>3.5 NTP对时</h2><p>NTP(Network Time Protocol)是一种用于在计算机网络中同步时间的协议，客户端通过NTP报文向服务端发送对时请求，服务端处理完后回应报文，通信过程非常简洁。NTP对时并不是简单的从服务端获得一个时间，然后同步到本地，还要考虑报文传输时间，服务器响应时间。核心原理如下，细节的地方省略掉。</p>
+<p><img src="8.png" alt=""></p>
+<p>客户端发送请求报文D(t1)附带当前本地时间戳t1，服务端在t2时刻收到报文，并记录服务器接收时间戳t2，服务端在t3时刻处理完报文并正式发送回应报文D(t1,t2,t3)，客户端在本地t4时间收到报文D(t1,t2,t3)并添加t4得到D(t1,t2,t3,t4)。一次对时通信过程完毕，接下来需要根据报文D(t1,t2,t3,t4)计算出一个准确时间来更新本地时间。这里有1个假设前提，就是来回报文的传输时间ts相同。所以客户端需要计算的时间其实是t4时刻，服务器的时间t5。t5=t3+ts，t3已知，只需要计算ts。由于t1和t4都是本地时间戳，t2和t3是服务器时间戳，两种时间戳不能直接相减。可以通过下面的公式计算ts，由此可以得到t5</p>
+<script type="math/tex; mode=display">ts = [(t4 - t1) -(t3 - t2)]/2</script><h1 id="4-高精度定时器hrtimer"><a href="#4-高精度定时器hrtimer" class="headerlink" title="4 高精度定时器hrtimer"></a>4 高精度定时器hrtimer</h1><p>从最早的嵌入式设备到大型计算机系统，定时器都是必备的模块。随着各种硬件的升级，linux上的定时器软件也在不断变化，这里不去过多追溯历史版本和兼容情况，以当前linux 6.1版本arm64安卓设备为例做介绍。</p>
+<p>在有高精度计数器的linux设备中，会开启高精度定时器hrtimer。在多核架构中，每个cpu都有一个本地硬件定时器，软件上也会创建对应的ClockEvent device，hrtimer层也会对应绑定一个hrtimer_cpu_base结构，利用对应ClockEvent模块来操控定时器硬件，实现定时功能。出于性能考虑，每个cpu上都会创建自己专属的软件定时任务，最典型的是schedule tick timer等，但是每个cpu定时器硬件只有一个，无法同时设置多个定时值。hrtimer通过红黑树来管理该cpu上所有的定时任务，对任务的超期的时间进行排名，每次选择最左边(最早超期)的任务去设置定时器值，定时器触发后，然后再选择最左边的任务继续设定下次超时值。也就是说hrtimer是一次触发的，对于一些周期性的任务，在触发一次后更新超时值，以改变在红黑树中的位置重新去竞争。</p>
+<h2 id="4-1-hrtimer初始化"><a href="#4-1-hrtimer初始化" class="headerlink" title="4.1 hrtimer初始化"></a>4.1 hrtimer初始化</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">void __init hrtimers_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    hrtimers_prepare_cpu(smp_processor_id());</span><br><span class="line">    open_softirq(HRTIMER_SOFTIRQ, hrtimer_run_softirq);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>hrtimer层初始化在start_kernel() -&gt; hrtimers_init()-&gt;hrtimers_prepare_cpu(0)中，首先初始化了cpu0的每cpu结构体hrtimer_cpu_base，用来管理当cpu0上所有的软件定时器。每个hrtimer_cpu_base根据4种时间类型和2种中断执行环境，分为8种clock_base来分别管理。2种中断执行环境是指定时器任务在硬中断上下文还是软中断上下文执行，可以在创建定时任务时指定。借用<code>https://zhuanlan.zhihu.com/p/450089796</code>中的结构图，每个clock_base对应一棵红黑树，对于8核处理器总共有8*8=64棵hrtimer红黑树</p>
+<p><img src="9.png" alt=""></p>
+<p>在定时器中断到来时进入硬中断处理函数hrtimer_interrupt()，如果最近到期的任务是硬timer，则继续在当前中断环境下处理。如果是软timer，则挂起软中断HRTIMER_SOFTIRQ，软中断在hrtimer_run_softirq()中处理软timer任务。</p>
+<p>hrtimers_init()只初始化cpu0的hrtimer，如cpuhp_hp_states结构体数组中列出的热插拔相关模块，其他cpu会在各自启动时调用hrtimers_prepare_cpu()初始化自己的hrtimer_cpu_base，在cpu下线时调用hrtimers_dead_cpu()将该cpu上的定时任务迁移到别的cpu。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static struct cpuhp_step cpuhp_hp_states[] = &#123;</span><br><span class="line">        [CPUHP_HRTIMERS_PREPARE] = &#123;</span><br><span class="line">                .name                        = "hrtimers:prepare",</span><br><span class="line">                .startup.single                = hrtimers_prepare_cpu,</span><br><span class="line">                .teardown.single        = hrtimers_dead_cpu,</span><br><span class="line">        &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-2-hrtimer的使用"><a href="#4-2-hrtimer的使用" class="headerlink" title="4.2 hrtimer的使用"></a>4.2 hrtimer的使用</h2><p>在内核中直接使用hrtimer示例代码如下，每8.3ms周期性触发并打印log。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">static struct hrtimer timer; //创建hrtimer定时器</span><br><span class="line"></span><br><span class="line">//定时器到期处理函数</span><br><span class="line">static enum hrtimer_restart hrtimer_handler(struct hrtimer *hrt)</span><br><span class="line">&#123;</span><br><span class="line">        printk("hrtimer_handler");</span><br><span class="line">        hrtimer_forward_now(hrt, 8300000);//将超时时间向后移8300000ns=8.3ms</span><br><span class="line">        return HRTIMER_RESTART; //返回重新启动标志，无需再次调用hrtimer_start</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static int __init hrtimer_test_init(void)</span><br><span class="line">&#123;</span><br><span class="line">        //初始化hrtimer，使用CLOCK_MONOTONIC时间，HRTIMER_MODE_REL_HARD表示在硬中断环境下处理</span><br><span class="line">        hrtimer_init(&amp;timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL_HARD);</span><br><span class="line">        timer.function = hrtimer_handler; //设置超时处理函数</span><br><span class="line">        //启动定时器</span><br><span class="line">        hrtimer_start(&amp;timer, 8300000, HRTIMER_MODE_REL_HARD);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static void __exit hrtimer_test_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">        hrtimer_cancel(&amp;timer);  //取消定时器  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-3-sched-timer"><a href="#4-3-sched-timer" class="headerlink" title="4.3 sched_timer"></a>4.3 sched_timer</h2><p>早期linux使用低精度定时器timer，代码位于kernel/time/timer.c中，虽然精度比较低，但是很多内核定时触发代码都是在这个基础上搭建的，例如调度、时间更新、各种低精度定时任务。在高精度时钟模式下，内核仍然需要周期性的tick中断，以便刷新内核的一些任务，所以仍然保留了低精度timer的角色和运作模式，通过hrtimer模拟出原本的timer，称之为sched_timer，将其超时时间设置为一个tick时长，在超时回来后，完成对应的工作，然后再次设置下一个tick的超时时间，以此达到周期性tick中断的需求。</p>
+<p>sched_timer触发频率为CONFIG_HZ，在CONFIG_HZ=250的系统中，每4ms触发一次，也就是一个jiffies时间间隔。虽然触发时间粒度比较大，但是精度仍然是纳秒级，属于高精度定时器。</p>
+<p>其初始化入口为</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">start_kernel()</span><br><span class="line">|--&gt;init_timers()</span><br><span class="line">  |--&gt;  init_timer_cpus()</span><br><span class="line">  |--&gt;  posix_cputimers_init_work()</span><br><span class="line">  |--&gt;  open_softirq(TIMER_SOFTIRQ, run_timer_softirq)</span><br></pre></td></tr></table></figure>
+<p>hrtimer切换到高精度模式时，如下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">hrtimer_switch_to_hres(void)</span><br><span class="line">|--&gt;tick_setup_sched_timer(); //设置sched_timer</span><br><span class="line">|--&gt;hrtimer_init(&amp;ts-&gt;sched_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS_HARD);//创建一个hrtimer任务，使用mono时间，硬中断执行</span><br><span class="line">|--&gt;ts-&gt;sched_timer.function = tick_sched_timer; //设置sched_timer定时器处理函数</span><br><span class="line">|--&gt;hrtimer_set_expires(&amp;ts-&gt;sched_timer, tick_init_jiffy_update()); //设置过期时间为下个jiffies时间</span><br></pre></td></tr></table></figure>
+<p>sched_timer定时器中断处理程序内容如下，sched_timer此时就是系统节拍定时器，不仅给调度程序提供心跳，更新jiffies，还充当了一个管理者，以jiffies时间精度给内核其他程序提供定时服务。原有的timer的功能接口，如timer_setup()、add_timer()以及其经典的time wheel方式被保留，继续给内核中其他程序提供定时服务。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">tick_sched_timer(struct hrtimer *timer）</span><br><span class="line">|--&gt;tick_sched_do_timer(ts, now);</span><br><span class="line">    |--&gt;tick_do_update_jiffies64(now);</span><br><span class="line">      |--&gt;  jiffies_64 += ticks;     //更新jiffies变量</span><br><span class="line">    |--&gt;  calc_global_load();    //每10 jiffies计算1次全局负载</span><br><span class="line">    |--&gt;  update_wall_time();   //更新墙上时间(系统时间)</span><br><span class="line">|--&gt;tick_sched_handle(ts, regs);</span><br><span class="line">  |--&gt;  update_process_times(user_mode(regs)); //更新当前进程时间</span><br><span class="line">  |--&gt;  account_process_tick(p, user_tick); //计算进程运行tick</span><br><span class="line">  |--&gt;  run_local_timers(); //运行自己管理的低精度定时任务</span><br><span class="line">  |--&gt;  rraise_softirq(TIMER_SOFTIRQ); //通过TIMER_SOFTIRQ处理本地定时任务</span><br><span class="line">  |--&gt;  rcu_sched_clock_irq(user_tick);</span><br><span class="line">  |--&gt;  scheduler_tick(); //调度程序tick处理</span><br><span class="line">  |--&gt;  run_posix_cpu_timers(); //处理posix timer与  cpu  运行时间相关的事务</span><br><span class="line">|--&gt;hrtimer_forward(timer, now, TICK_NSEC); //下次超期时间往前推TICK_NSEC</span><br></pre></td></tr></table></figure>
+<h1 id="5-低精度定时器timer"><a href="#5-低精度定时器timer" class="headerlink" title="5 低精度定时器timer"></a>5 低精度定时器timer</h1><h2 id="5-1-timer-wheel"><a href="#5-1-timer-wheel" class="headerlink" title="5.1 timer wheel"></a>5.1 timer wheel</h2><p>系统中可能有成千上万个低精度定时器，为了在tick到来时快速查找超期的timer，以及插入是快速找到正确的插入点，linux设计了时间轮(timer wheel)的管理方式。每个cpu都有至少一个timer_base结构管理当前cpu上的低精度定时器，有BASE_STD和BASE_DEF两种类型，前者是标准定时器必须存在，后者表示可延时定时器，当配置了NO_HZ模式，才会有BASE_DEF。每个timer_base通过64*9=576个桶(bucket)来记录所有定时器，下图中的数字是桶编号，而非时间。这个排列不是线性的，而是每隔64个桶，设定一个等级(level)，随着level升高，相邻2个桶之间的时间差值也越来越大。例如level 0中每个桶之间间隔时间为1个tick，level 1为8个tick，level2为8*8=64个。相邻2桶差值越大，意味着插入定时器时，多个时间将会被折叠到同一个桶中，时间精度也就越低，同一个桶将在同一时间被触发执行。</p>
+<p><img src="10.png" alt=""></p>
+<p>  经过多个版本迭代，在目前6.1版本上，查找和插入的已经达到了O(1)的复杂度，非常高效，但是高效是通过牺牲精度换来的。插入定时器时，timer wheel根据超期时间(expires)距离当前的时间长短，分为不同等级(level)的时间轮中。如下表中HZ=250配置下的粒度(精度的倒数)及定时范围表，距离当前时间越久的任务会被放置到level越高的时间轮，精度牺牲也越大。选择好level后，再根据超期绝对时间expires，将该定时器散列到所选level中的64个桶之一，来确定桶编号。在每tick查找超期定时器时，由于level=0粒度为1 tick，所以在每个tick时都会查找level 0时间轮有没有超期；level 1粒度为8 ticks，每8个tick才会查找level=1有没有超期，以此类推，每64个tick查找level 2。</p>
+<p>  例如想定时在4097个tick(16.388s)后触发，该任务将会被加入到level=3的时间轮中，会在(4097+511)=4608 tick时触发该定时器，这就意味着比原定时时间整整晚了2.044s。牺牲这部分精度，保证了查找的效率，这是权衡的结果，毕竟定时时间越长往往意味着对精度的要求越低。如果定时时间刚好是该level粒度的整数倍，例如4096、4608都为level=3粒度512的整数倍，那么将不会有精度损失。</p>
+<p><img src="11.png" alt=""></p>
+<p>  为了严谨，写一个测试程序定时4097个ticks，然后超时触发时打印当前与上次触发的jiffies时间差，发现log打印时间间隔确实为4608。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">static struct timer_list low_timer;</span><br><span class="line">static unsigned long last_jiffies = 0;</span><br><span class="line">static void low_timer_handler(struct timer_list *low_timer)</span><br><span class="line">&#123;</span><br><span class="line">    low_timer-&gt;expires = jiffies + 4097;</span><br><span class="line">    add_timer(low_timer);</span><br><span class="line">    printk("timer trigger delta jiffies=%lu", jiffies - last_jiffies);</span><br><span class="line">    last_jiffies = jiffies;</span><br><span class="line">&#125;</span><br><span class="line">static void low_timer_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    low_timer.expires = jiffies + 4097;</span><br><span class="line">    last_jiffies = jiffies;</span><br><span class="line">    timer_setup(&amp;low_timer, low_timer_handler, 0);</span><br><span class="line">    add_timer(&amp;low_timer);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">log打印如下</span><br><span class="line">[   41.954607] timer trigger delta jiffies=4608</span><br><span class="line">[   60.386567] timer trigger delta jiffies=4608</span><br><span class="line">[   78.818564] timer trigger delta jiffies=4608</span><br></pre></td></tr></table></figure>
+<p>  首先看插入定时器逻辑，从add_timer开始，假设已经初始化完成了struct timer_list结构体的expires超时时间(绝对jiffies)和处理函数。核心是calc_index函数，根据超期绝对时间expires，当前时间clk，计算出将要插入的桶以及这个桶对应的绝对超时时间bucket_expiry。idx表示将要插入的桶编号，而桶超时时间bucket_expiry，受level精度的影响，是定时器超时时间expires对粒度向上取整对齐。</p>
+<p>  根据相对时间(expires - clk)确定level，然后对expires按照level精度向上取整得到bucket_expiry。idx计算比较难理解，以level=1举例，expires/8得到当前level粒度的倍数，然后对64取余抹除不相关的高位，得到在level 1中的位置偏移量，然后加上level 1的初始偏移64得到最终的idx。之所以这样做是为了查找方便，查找时根据expires可以方便的找出idx。得到idx和bucket_expiry，就将该定时器插入到idx对应的桶链表中，并将桶到期时间更新为bucket_expiry，然后将idx对应的pending_map位置1，完成定时器插入。idx和bucket_expiry计算都是O(1)，链表插入也是O(1)。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">add_timer(struct timer_list *timer)；</span><br><span class="line">|--&gt;__mod_timer(timer, timer-&gt;expires, MOD_TIMER_NOTPENDING);</span><br><span class="line">    |--&gt;internal_add_timer(base, timer);</span><br><span class="line">        |--&gt;idx = calc_wheel_index(timer-&gt;expires, base-&gt;clk, &amp;bucket_expiry)；</span><br><span class="line">            |--&gt;return calc_index(expires, lvl, bucket_expiry);</span><br><span class="line">        |--&gt;enqueue_timer(base, timer, idx, bucket_expiry);</span><br><span class="line">                </span><br><span class="line">static inline unsigned calc_index(unsigned long expires, unsigned lvl,</span><br><span class="line">                  unsigned long *bucket_expiry)</span><br><span class="line">&#123;</span><br><span class="line">    unsigned idx;</span><br><span class="line">    trace_android_vh_timer_calc_index(lvl, &amp;expires); //*expires-=1</span><br><span class="line">    expires = (expires &gt;&gt; LVL_SHIFT(lvl)) + 1;</span><br><span class="line">    *bucket_expiry = expires &lt;&lt; LVL_SHIFT(lvl);</span><br><span class="line">    idx = LVL_OFFS(lvl) + (expires &amp; LVL_MASK);</span><br><span class="line">    return idx;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  下面是定时器查找过程，也就是到达某个tick时，应该如何判断哪些定时器超时。处理流程从run_local_timers开始，也就是sched_timer定时处理事务中的一环。run_local_timers不会直接处理定时器任务，而是发起软中断TIMER_SOFTIRQ，处理函数为run_timer_softirq来处理当前cpu的定时器任务。核心函数是collect_expired_timers，该函数查找出所有超时的定时器。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">run_local_timers</span><br><span class="line">|--&gt;hrtimer_run_queues(); //通知hrtimer，因为在开启高精度模式之前，由timer驱动hrtimer</span><br><span class="line">    |--&gt;if (__hrtimer_hres_active(cpu_base))return; //如果开启了高精度模式，则直接退出</span><br><span class="line">|--&gt;raise_softirq(TIMER_SOFTIRQ); //唤醒TIMER_SOFTIRQ软中断，对应中断函数为run_timer_softirq</span><br><span class="line">//以下为软中断处理</span><br><span class="line">run_timer_softirq</span><br><span class="line">|--&gt;base = this_cpu_ptr(&amp;timer_bases[BASE_STD]); //获取当前cpu的timer_base</span><br><span class="line">|--&gt;__run_timers(base)</span><br><span class="line">    |--&gt;levels = collect_expired_timers(base, heads) //根据pending_map位图获取到期的bucket，并移动到heads中</span><br><span class="line">    |--&gt;base-&gt;next_expiry = __next_timer_interrupt(base)</span><br><span class="line">    |--&gt;while (levels--)expire_timers(base, heads + levels); //依次处理heads中的超期定时器</span><br></pre></td></tr></table></figure>
+<p>  collect_expired_timers会根据当前时间clk从level 0开始逐级查找，是否查找当前level的判断标准是clk是否为8^level的倍数。level 0必然会被查找到，查找的idx为clk对64取余忽略掉高于6bit的所有位，得到0~63的编号，然后看该idx的pending_map是否置位(是否有定时器)，如果有就加入到待处理链表heads。level0处理完后，判断clk如果不是8的倍数，也就更不可能是64等更高的倍数，所以直接退出查找过程；如果clk是8的倍数，则让clk=clk/8，然后按照level 0的方式查找level1，依次类推。每个level最多查找1次，共9个level，时间复杂度O1。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">static int collect_expired_timers(struct timer_base *base,</span><br><span class="line">                  struct hlist_head *heads)</span><br><span class="line">&#123;</span><br><span class="line">    unsigned long clk = base-&gt;clk = base-&gt;next_expiry;</span><br><span class="line">    struct hlist_head *vec;</span><br><span class="line">    int i, levels = 0;</span><br><span class="line">    unsigned int idx;</span><br><span class="line"></span><br><span class="line">    for (i = 0; i &lt; LVL_DEPTH; i++) &#123;</span><br><span class="line">        idx = (clk &amp; LVL_MASK) + i * LVL_SIZE;</span><br><span class="line"></span><br><span class="line">        if (__test_and_clear_bit(idx, base-&gt;pending_map)) &#123;</span><br><span class="line">            vec = base-&gt;vectors + idx;</span><br><span class="line">            hlist_move_list(vec, heads++);</span><br><span class="line">            levels++;</span><br><span class="line">        &#125;</span><br><span class="line">        /* Is it time to look at the next level? */</span><br><span class="line">        if (clk &amp; LVL_CLK_MASK)</span><br><span class="line">            break;</span><br><span class="line">        /* Shift clock for the next level granularity */</span><br><span class="line">        clk &gt;&gt;= LVL_CLK_SHIFT;</span><br><span class="line">    &#125;</span><br><span class="line">    return levels;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下面举一个例子说明timer whell工作过程，假设当前时间clk=100 jiffies。此时添加2个定时器，超时时间分别为162，164，delta分别为62，64，根据add_timer逻辑，2个定时器会被分别添加到level 0和level1对应的桶中。其中162的实际超时时间为162，164的实际超时时间为168。</p>
+<p><img src="12.png" alt=""></p>
+<p>当时间进行到clk=150时，再次添加同样的超时时间为164的定时器，由于此时的delta时间为164-150=14，所以添加到level 0中idx为(164%64)=36桶中，</p>
+<p><img src="13.png" alt=""></p>
+<p>当时间到clk=164时，查找命中level 0中164，所以直接处理。由于level 1中的164实际超时时间为168，并没有得到处理。</p>
+<p><img src="14.png" alt=""></p>
+<p>当时间来到clk=168时，为8的倍数，查找level 1中168桶，其中的定时器全部移除，包括之前插入的164。可见先插入的164实际执行晚于后插入的164，因为其插入是delta较大，被安排到更低精度的level中</p>
+<p><img src="15.png" alt=""></p>
+<h2 id="5-2-使用实例watchdog-timer"><a href="#5-2-使用实例watchdog-timer" class="headerlink" title="5.2 使用实例watchdog timer"></a>5.2 使用实例watchdog timer</h2><p>Watchdog timer分为硬件看门狗和软件喂狗定时器，如果linux运行在虚拟机中，硬件看门狗定时器被host主机管理，linux通过smc调用与host通信来设置硬件看门狗bark/bite时间。linux上创建watchdog线程，并以最高优先级prio=0调度。通过软件sched_timer低精度定时器创建定时任务，每隔pet时间触发一次。当喂狗时间到期(expires)，watchdog线程通过smp_call_function_single ping其他cpu，也就是向其他cpu发送函数调用中断(Function call interrupts，IPI核间中断之一)，并等待其全部返回，如果全部返回，说明所有cpu正常响应中断，于是通过smc调用到host给清除硬件看门狗计数。然后watchdog线程通过软件定时器设置下次喂狗时间，如此往复。另外，喂狗时间配置为15.360s，也就是3840个ticks(HZ=250)，根据时间轮的算法，3840位于level 2且正好是精度64tick的整数倍，这可以将精度损失降到最小。</p>
+<p>但是如果某个cpu长时间关闭中断，无法响应IPI请求，watchdog线程阻塞无法去喂狗，host的看门狗计数超过bark时间，会向linux发送bark中断触发panic。如果到bite时间，host会向TZ发送FIQ中断来拉低PS_HOLD进入ramdump，主要是防止linux上所有cpu都无法响应，无法触发panic的情况。</p>
+<p><img src="16.png" alt=""></p>
+<h1 id="6-用户态定时器API"><a href="#6-用户态定时器API" class="headerlink" title="6 用户态定时器API"></a>6 用户态定时器API</h1><h2 id="6-1-nanosleep"><a href="#6-1-nanosleep" class="headerlink" title="6.1 nanosleep"></a>6.1 nanosleep</h2><p>nanosleep基于hrtimer来实现纳秒级延时，内核中提供hrtimer_nanosleep接口，并且封装成系统调用nanosleep给用户空间使用。其核心是do_nanosleep，会将线程设置为TASK_INTERRUPTIBLE|TASK_FREEZABLE状态，然后调度出去，当定时时间到期后，定时器中断唤醒该task。从2.3时钟源精度52ns就可以看出，在加上这里会有任务调度，和代码执行耗时，真想实现ns级延时是不现实的，微秒级应该是可以的。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">static int __sched do_nanosleep(struct hrtimer_sleeper *t, enum hrtimer_mode mode)</span><br><span class="line">&#123;</span><br><span class="line">    struct restart_block *restart;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        set_current_state(TASK_INTERRUPTIBLE|TASK_FREEZABLE);</span><br><span class="line">        hrtimer_sleeper_start_expires(t, mode);</span><br><span class="line"></span><br><span class="line">        if (likely(t-&gt;task))</span><br><span class="line">            schedule();</span><br><span class="line"></span><br><span class="line">        hrtimer_cancel(&amp;t-&gt;timer);</span><br><span class="line">        mode = HRTIMER_MODE_ABS;</span><br><span class="line"></span><br><span class="line">    &#125; while (t-&gt;task &amp;&amp; !signal_pending(current));</span><br><span class="line"></span><br><span class="line">    __set_current_state(TASK_RUNNING);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="6-2-itimer"><a href="#6-2-itimer" class="headerlink" title="6.2 itimer"></a>6.2 itimer</h2><p>itimer基于hrtimer和信号配合实现，通过hrtimer设置高精度超时时间，到期后通过信号方式通知进程。itimer提供下面三种定时方式，收到的信号也不同。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>定时类型</td>
+<td>含义</td>
+<td>到期信号</td>
+</tr>
+<tr>
+<td>ITIMER_REAL</td>
+<td>真实时间</td>
+<td>SIGALRM</td>
+</tr>
+<tr>
+<td>ITIMER_VIRTUAL</td>
+<td>当前进程在用户态实际执行时间</td>
+<td>SIGVTALRM</td>
+</tr>
+<tr>
+<td>ITIMER_PROF</td>
+<td>当前进程在用户态和内核态实际执行时间</td>
+<td>SIGPROF</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>如下signal_struct结构体定义中包含的定时器相关的成员，与itimer相关的有，real_timer是该线程对应真实时间hrtimer定时器，it[2]是2种cpu执行时间定时的cpu_itimer定时器。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">struct signal_struct &#123;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">ifdef CONFIG_POSIX_TIMERS</span></span><br><span class="line"></span><br><span class="line">        /* POSIX.1b Interval Timers */</span><br><span class="line">        int                        posix_timer_id;</span><br><span class="line">        struct list_head        posix_timers;</span><br><span class="line"></span><br><span class="line">        /* ITIMER_REAL timer for the process */</span><br><span class="line">        struct hrtimer real_timer;</span><br><span class="line">        ktime_t it_real_incr;</span><br><span class="line"></span><br><span class="line">        /*</span><br><span class="line">         * ITIMER_PROF and ITIMER_VIRTUAL timers for the process, we use</span><br><span class="line">         * CPUCLOCK_PROF and CPUCLOCK_VIRT for indexing array as these</span><br><span class="line">         * values are defined to 0 and 1 respectively</span><br><span class="line">         */</span><br><span class="line">        struct cpu_itimer it[2];</span><br><span class="line"></span><br><span class="line">        /*</span><br><span class="line">         * Thread group totals for process CPU timers.</span><br><span class="line">         * See thread_group_cputimer(), et al, for details.</span><br><span class="line">         */</span><br><span class="line">        struct thread_group_cputimer cputimer;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">endif</span></span><br><span class="line">        /* Empty if CONFIG_POSIX_TIMERS=n */</span><br><span class="line">        struct posix_cputimers posix_cputimers;</span><br><span class="line"></span><br><span class="line">&#125; __randomize_layout;</span><br></pre></td></tr></table></figure>
+<p>ITIMER_REAL是真实时间定时，也是最常规的，在线程被fork出来时，会在copy_signal中初始化real_timer，设置超时函数it_real_fn。在超时函数中发送SIGALRM给当前线程所属的进程tgid，所以同一个进程内，同时只能有一个线程使用ITIMER_REAL。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)</span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#</span><span class="bash">ifdef CONFIG_POSIX_TIMERS</span></span><br><span class="line">    INIT_LIST_HEAD(&amp;sig-&gt;posix_timers);</span><br><span class="line">    hrtimer_init(&amp;sig-&gt;real_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);</span><br><span class="line">    sig-&gt;real_timer.function = it_real_fn;</span><br><span class="line"><span class="meta">#</span><span class="bash">endif</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">enum hrtimer_restart it_real_fn(struct hrtimer *timer)</span><br><span class="line">&#123;</span><br><span class="line">    struct signal_struct *sig =</span><br><span class="line">        container_of(timer, struct signal_struct, real_timer);</span><br><span class="line">    struct pid *leader_pid = sig-&gt;pids[PIDTYPE_TGID];</span><br><span class="line"></span><br><span class="line">    trace_itimer_expire(ITIMER_REAL, leader_pid, 0);</span><br><span class="line">    kill_pid_info(SIGALRM, SEND_SIG_PRIV, leader_pid);</span><br><span class="line"></span><br><span class="line">    return HRTIMER_NORESTART;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ITIMER_REAL使用示例</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">include &lt;unistd.h&gt;</span></span><br><span class="line"><span class="meta">#</span><span class="bash">include &lt;signal.h&gt;</span></span><br><span class="line"><span class="meta">#</span><span class="bash">include &lt;sys/time.h&gt;</span></span><br><span class="line"><span class="meta">#</span><span class="bash">include &lt;iostream&gt;</span></span><br><span class="line"></span><br><span class="line">static int itimer_count = 0;</span><br><span class="line">struct itimerval timer_set;</span><br><span class="line">void sig_handler(int signo)</span><br><span class="line">&#123;</span><br><span class="line">    if(++itimer_count&gt;=5)&#123;</span><br><span class="line">        timer_set.it_value.tv_sec = 0;</span><br><span class="line">        timer_set.it_value.tv_usec = 0;</span><br><span class="line">        timer_set.it_interval.tv_sec = 0;</span><br><span class="line">        timer_set.it_interval.tv_usec = 0;</span><br><span class="line">        //5*2=10s后，将timer_set所有成员清0，然后调用setitimer停止定时器</span><br><span class="line">        setitimer(ITIMER_REAL, &amp;timer_set, NULL);</span><br><span class="line">    &#125;</span><br><span class="line">    std::cout&lt;&lt;"recieve sigal: "&lt;&lt;signo&lt;&lt;std::endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    signal(SIGALRM, sig_handler);</span><br><span class="line"></span><br><span class="line">    //2s后启动</span><br><span class="line">    timer_set.it_value.tv_sec = 2;</span><br><span class="line">    timer_set.it_value.tv_usec = 0;</span><br><span class="line"></span><br><span class="line">    //定时器间隔：2s</span><br><span class="line">    timer_set.it_interval.tv_sec = 2;</span><br><span class="line">    timer_set.it_interval.tv_usec = 0;</span><br><span class="line"></span><br><span class="line">    //设置定时器</span><br><span class="line">    if(setitimer(ITIMER_REAL, &amp;timer_set, NULL) &lt; 0)</span><br><span class="line">    &#123;</span><br><span class="line">        std::cout&lt;&lt;"start timer failed..."&lt;&lt;std::endl;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    int temp;</span><br><span class="line">    std::cin&gt;&gt;temp;</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于另外2种cpu运行时间相关定时器，设置接口也是setitimer，但是clock类型选择ITIMER_VIRTUAL或者ITIMER_PROF。cpu timer实现方式比较复杂，流程是在tick事件处理时，通过run_posix_cpu_timers来检查cpu_timer，并向到期的timer发送对应的信号。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">run_posix_cpu_timers</span><br><span class="line">|--&gt;struct task_struct *tsk = current</span><br><span class="line">|--&gt;__run_posix_cpu_timers(tsk)</span><br><span class="line">    |--&gt;handle_posix_cpu_timers(tsk)</span><br><span class="line">        |--&gt;check_thread_timers(tsk, &amp;firing);  //检查线程时间tsk-&gt;cpu_timers[N]</span><br><span class="line">        |--&gt;check_process_timers(tsk, &amp;firing); //检查进程时间tsk-&gt;signal-&gt;cpu_timers[N]</span><br><span class="line">            |--&gt;collect_posix_cputimers(pct, samples, firing);</span><br><span class="line">            |--&gt;check_cpu_itimer(SIGPROF)   //检查用户态和内核态总时间</span><br><span class="line">                |--&gt;send_signal_locked(SIGPROF, SEND_SIG_PRIV, tsk, PIDTYPE_TGID);//如果到期则发送SIGPROF信号</span><br><span class="line">            |--&gt;check_cpu_itimer(SIGVTALRM) //检查用户态时间</span><br><span class="line">                |--&gt;send_signal_locked(SIGVTALRM, SEND_SIG_PRIV, tsk, PIDTYPE_TGID);//如果到期则发送SIGVTALRM信号</span><br></pre></td></tr></table></figure>
+<h2 id="6-3-alarm"><a href="#6-3-alarm" class="headerlink" title="6.3 alarm"></a>6.3 alarm</h2><p>alarm基于itimer实现来定时，并且以秒为单位，时间到内核会给该进程发送SIGALRM信号。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE1(alarm, unsigned int, seconds)</span><br><span class="line">&#123;</span><br><span class="line">    return alarm_setitimer(seconds);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static unsigned int alarm_setitimer(unsigned int seconds)</span><br><span class="line">&#123;</span><br><span class="line">    struct itimerspec64 it_new, it_old;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="keyword">if</span> BITS_PER_LONG &lt; 64</span></span><br><span class="line">    if (seconds &gt; INT_MAX)</span><br><span class="line">        seconds = INT_MAX;</span><br><span class="line"><span class="meta">#</span><span class="bash">endif</span></span><br><span class="line">    it_new.it_value.tv_sec = seconds;</span><br><span class="line">    it_new.it_value.tv_nsec = 0;</span><br><span class="line">    it_new.it_interval.tv_sec = it_new.it_interval.tv_nsec = 0;</span><br><span class="line"></span><br><span class="line">    do_setitimer(ITIMER_REAL, &amp;it_new, &amp;it_old);</span><br><span class="line"></span><br><span class="line">    /*</span><br><span class="line">     * We can't return 0 if we have an alarm pending ...  And we'd</span><br><span class="line">     * better return too much than too little anyway</span><br><span class="line">     */</span><br><span class="line">    if ((!it_old.it_value.tv_sec &amp;&amp; it_old.it_value.tv_nsec) ||</span><br><span class="line">          it_old.it_value.tv_nsec &gt;= (NSEC_PER_SEC / 2))</span><br><span class="line">        it_old.it_value.tv_sec++;</span><br><span class="line"></span><br><span class="line">    return it_old.it_value.tv_sec;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>进程在调用alarm定时之前，需要设置SIGALRM信号的处理函数。参数很简单，只有一个秒，使用代码示例如下</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#include &lt;stdio.h&gt;</span></span><br><span class="line"><span class="comment">#include &lt;unistd.h&gt;</span></span><br><span class="line"><span class="comment">#include &lt;signal.h&gt;</span></span><br><span class="line"></span><br><span class="line">void sig_handler(int signum) &#123;</span><br><span class="line">    printf("Received SIGALRM, timer expired!\n");</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">    signal(SIGALRM, sig_handler);</span><br><span class="line">    alarm(5);</span><br><span class="line">    printf("Waiting for alarm...\n");</span><br><span class="line">    pause(); // Suspend the process until a signal is received</span><br><span class="line">    printf("Exiting...\n");</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="6-4-Posix-timer"><a href="#6-4-Posix-timer" class="headerlink" title="6.4 Posix timer"></a>6.4 Posix timer</h2><p>Posix timer大大扩展了itimer的功能，一个进程可以同时创建任意个timer，并且可以指定到期信号。Posix timer封装了多个syscall接口：</p>
+<p>  创建定时器：timer_create<br>  删除定时器：timer_delete<br>  设置定时器时间：timer_settime<br>  获取定时器剩余：timer_gettime</p>
+<p>通过which_clock参数来区分使用哪种时间类型来计时，下面是支持的时间类型。此外还提供了clock_gettime()、clock_settime()、clock_adjtime()、clock_getres()系统调用来获取和设置各种类型时间信息，属于大一统的接口。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">static const struct k_clock * const posix_clocks[] = &#123;</span><br><span class="line">    [CLOCK_REALTIME]        = &amp;clock_realtime,</span><br><span class="line">    [CLOCK_MONOTONIC]       = &amp;clock_monotonic,</span><br><span class="line">    [CLOCK_PROCESS_CPUTIME_ID]  = &amp;clock_process,</span><br><span class="line">    [CLOCK_THREAD_CPUTIME_ID]   = &amp;clock_thread,</span><br><span class="line">    [CLOCK_MONOTONIC_RAW]       = &amp;clock_monotonic_raw,</span><br><span class="line">    [CLOCK_REALTIME_COARSE]     = &amp;clock_realtime_coarse,</span><br><span class="line">    [CLOCK_MONOTONIC_COARSE]    = &amp;clock_monotonic_coarse,</span><br><span class="line">    [CLOCK_BOOTTIME]        = &amp;clock_boottime,</span><br><span class="line">    [CLOCK_REALTIME_ALARM]      = &amp;alarm_clock,</span><br><span class="line">    [CLOCK_BOOTTIME_ALARM]      = &amp;alarm_clock,</span><br><span class="line">    [CLOCK_TAI]         = &amp;clock_tai,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="6-5-timer-fd"><a href="#6-5-timer-fd" class="headerlink" title="6.5 timer_fd"></a>6.5 timer_fd</h2><p>timer_fd是一个基于文件描述符的定时器接口，精度为纳秒级，直接基于hrtimer实现。提供三个接口函数，通过文件描述符的可读事件进行超时通知。通过timerfd_create在内核创建一个定时器实例，并返回一个文件描述符fd，通过timerfd_settime(fd)设置超时时间。由于不是基于信号通知，进程需要通过select、poll、epoll等io机制，监听fd的事件，来实现异步事件通知。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#include &lt;sys/timerfd.h&gt;</span></span><br><span class="line">int timerfd_create(int clockid, int flags);</span><br><span class="line">int timerfd_settime(int fd, int flags, const struct itimerspec *new_value, struct itimerspec *old_value);</span><br><span class="line">int timerfd_gettime(int fd, struct itimerspec *curr_value);</span><br></pre></td></tr></table></figure>
+<p>以下是timer_fd的使用示例代码，每隔1s触发一次，每次触发都要重新设置，并且设置的时间都是绝对时间：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;utils/Timers.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/timerfd.h&gt;</span></span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> mTimerFd, mEpollFd;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">my_set_timer</span><span class="params">(<span class="keyword">int</span> TimerFd, <span class="keyword">int64_t</span> time)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">itimerspec</span> <span class="title">old_timer</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">itimerspec</span> <span class="title">new_timer</span> &#123;</span></span><br><span class="line">        .it_interval = &#123;.tv_sec = <span class="number">0</span>, .tv_nsec = <span class="number">0</span>&#125;,</span><br><span class="line">        .it_value = &#123;.tv_sec = (<span class="keyword">long</span>)(time / <span class="number">1000000000</span>),</span><br><span class="line">                     .tv_nsec = (<span class="keyword">long</span>)(time % <span class="number">1000000000</span>)&#125;,</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(timerfd_settime(TimerFd, TFD_TIMER_ABSTIME, &amp;new_timer, &amp;old_timer))</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">"Failed to set timerfd %s (%i)"</span>, strerror(errno), errno);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">timer_loop</span><span class="params">(<span class="keyword">int</span> mTimerFd, <span class="keyword">int</span> mEpollFd)</span></span>&#123;</span><br><span class="line">    epoll_event timerEvent;</span><br><span class="line">    timerEvent.events = EPOLLIN;</span><br><span class="line">    <span class="keyword">if</span> (epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mTimerFd, &amp;timerEvent) == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"Error adding timer fd to epoll dispatch loop"</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        epoll_event events;</span><br><span class="line">        <span class="keyword">uint64_t</span> mIgnored = <span class="number">0</span>;</span><br><span class="line">        epoll_wait(mEpollFd, &amp;events, <span class="number">2</span>, <span class="number">-1</span>);</span><br><span class="line">        <span class="built_in">read</span>(mTimerFd, &amp;mIgnored, <span class="keyword">sizeof</span>(mIgnored));</span><br><span class="line"></span><br><span class="line">        my_set_timer(mTimerFd, systemTime(SYSTEM_TIME_MONOTONIC) + <span class="number">1000</span>*<span class="number">1000</span>*<span class="number">1000</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"timer_fd triggerd, do something\n"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> mTimerFd, mEpollFd;</span><br><span class="line">    mTimerFd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);</span><br><span class="line">    mEpollFd = epoll_create1(EPOLL_CLOEXEC);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"create mTimerFd=%d, mEpollFd=%d\n"</span>, mTimerFd, mEpollFd);</span><br><span class="line"></span><br><span class="line">    my_set_timer(mTimerFd, systemTime(SYSTEM_TIME_MONOTONIC) + <span class="number">1000</span>*<span class="number">1000</span>*<span class="number">1000</span>); <span class="comment">//1s</span></span><br><span class="line"></span><br><span class="line">    timer_loop(mTimerFd, mEpollFd);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p>  <a href="https://kernel.meizu.com/2018/07/12//linux-time.html/">https://kernel.meizu.com/2018/07/12//linux-time.html/</a><br>  <a href="https://kernel.meizu.com/2016/07/20//linux-tick-and-tickless.html/">https://kernel.meizu.com/2016/07/20//linux-tick-and-tickless.html/</a><br>  <a href="https://www.zhihu.com/question/271018947/answer/2146053897" target="_blank" rel="noopener">https://www.zhihu.com/question/271018947/answer/2146053897</a><br>  <a href="http://t.csdnimg.cn/2HrYd" target="_blank" rel="noopener">http://t.csdnimg.cn/2HrYd</a><br>  <a href="https://blog.csdn.net/flyingnosky/article/details/126310866" target="_blank" rel="noopener">https://blog.csdn.net/flyingnosky/article/details/126310866</a><br>  <a href="https://zhuanlan.zhihu.com/p/450089796" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/450089796</a><br>  <a href="https://zhuanlan.zhihu.com/p/611286101" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/611286101</a><br>  <a href="https://blog.csdn.net/weixin_43705457/article/details/124393182" target="_blank" rel="noopener">https://blog.csdn.net/weixin_43705457/article/details/124393182</a></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2024/01/12/Qcom-Thermal-Engine-frame-analysis/" data-toggle="tooltip" data-placement="top" title="手机温控中枢：高通 Thermal Engine 框架分析">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2023/11/23/Analysis-of-the-USB-4-0-FBO/" data-toggle="tooltip" data-placement="top" title="焕新存储技术：UFS 4.0 FBO 底层逻辑剖析">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#1-整体软件架构"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">1. 整体软件架构</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#2-定时器和时钟源初始化"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">2 定时器和时钟源初始化</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-1-解析dts"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">2.1 解析dts</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-2-本地定时器初始化"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">2.2 本地定时器初始化</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-3-时钟源clockSource初始化"><span class="toc-nav-number">2.3.</span> <span class="toc-nav-text">2.3 时钟源clockSource初始化</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#3-timekeeping"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">3 timekeeping</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-1-时间类型及接口"><span class="toc-nav-number">3.1.</span> <span class="toc-nav-text">3.1 时间类型及接口</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-2-RTC时间管理"><span class="toc-nav-number">3.2.</span> <span class="toc-nav-text">3.2 RTC时间管理</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-3-内核时间戳"><span class="toc-nav-number">3.3.</span> <span class="toc-nav-text">3.3 内核时间戳</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-4-vdso系统调用加速"><span class="toc-nav-number">3.4.</span> <span class="toc-nav-text">3.4 vdso系统调用加速</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-5-NTP对时"><span class="toc-nav-number">3.5.</span> <span class="toc-nav-text">3.5 NTP对时</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#4-高精度定时器hrtimer"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">4 高精度定时器hrtimer</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-1-hrtimer初始化"><span class="toc-nav-number">4.1.</span> <span class="toc-nav-text">4.1 hrtimer初始化</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-2-hrtimer的使用"><span class="toc-nav-number">4.2.</span> <span class="toc-nav-text">4.2 hrtimer的使用</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-3-sched-timer"><span class="toc-nav-number">4.3.</span> <span class="toc-nav-text">4.3 sched_timer</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#5-低精度定时器timer"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">5 低精度定时器timer</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-1-timer-wheel"><span class="toc-nav-number">5.1.</span> <span class="toc-nav-text">5.1 timer wheel</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-2-使用实例watchdog-timer"><span class="toc-nav-number">5.2.</span> <span class="toc-nav-text">5.2 使用实例watchdog timer</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#6-用户态定时器API"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">6 用户态定时器API</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#6-1-nanosleep"><span class="toc-nav-number">6.1.</span> <span class="toc-nav-text">6.1 nanosleep</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#6-2-itimer"><span class="toc-nav-number">6.2.</span> <span class="toc-nav-text">6.2 itimer</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#6-3-alarm"><span class="toc-nav-number">6.3.</span> <span class="toc-nav-text">6.3 alarm</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#6-4-Posix-timer"><span class="toc-nav-number">6.4.</span> <span class="toc-nav-text">6.4 Posix timer</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#6-5-timer-fd"><span class="toc-nav-number">6.5.</span> <span class="toc-nav-text">6.5 timer_fd</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#参考"><span class="toc-nav-number">7.</span> <span class="toc-nav-text">参考</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#hrtimer" title="hrtimer">hrtimer</a>
+                        
+                          <a class="tag" href="/tags/#定时器" title="定时器">定时器</a>
+                        
+                          <a class="tag" href="/tags/#monotonic time" title="monotonic time">monotonic time</a>
+                        
+                          <a class="tag" href="/tags/#timekeeper" title="timekeeper">timekeeper</a>
+                        
+                          <a class="tag" href="/tags/#clocksource" title="clocksource">clocksource</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

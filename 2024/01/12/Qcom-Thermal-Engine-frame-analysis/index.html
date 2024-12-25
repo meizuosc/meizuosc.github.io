@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          手机温控中枢：高通 Thermal Engine 框架分析 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2024/01/12/Qcom-Thermal-Engine-frame-analysis/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Thermal" title="Thermal">Thermal</a>
+                            
+                        </div>
+                        <h1>手机温控中枢：高通 Thermal Engine 框架分析</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Bo.Chen on
+                            2024-01-12
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h1 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h1><p>在当前移动处理芯片性能过剩的时代，用户对手机的温度要求越来越高，更加苛刻的标准，最好永不发热。在这种背景下，温控领域的工作变得日益重要，众多大厂都在不断魔改和优化他们的温控技术。今天我们也带大家看看温控技术的其中一部分：Thermal Engine。下面，我们将基于 GitHub 上的源代码，对 Thermal Engine 的工作原理进行深入剖析。</p>
+<p>Thermal Engine是高通开发的用于温升控制的native层应用，它是一个守护进程，开机后将由init进程启动，最初在MSM8660 平台引入。Thermal Engine作为高通平台用户空间温控的处理中枢，会根据温度变化，按照预先设定的算法，来调整硬件的工作行为或强度级别，从而达到节能降温的目的。Thermal Engine也提供了对外交互的接口，用于与其它应用或服务进行通信，应用或服务可以通过socket向Thermal Engine注册温控发生时的回调处理，也可以通过socket动态修改温控配置。</p>
+<h1 id="2-总体架构"><a href="#2-总体架构" class="headerlink" title="2. 总体架构"></a>2. 总体架构</h1><p>为了更好的说明Thermal Engine的架构，我们先要了解下Thermal Engine在整个温控架构的位置。</p>
+<p><img src="1.PNG" alt=""></p>
+<p>整个温控架构可以划分为硬件层/kernel层/Native层/System层/App层，如图可见Thermal Engine主要是基于Linux kernel的thermal子系统而构建，它通过socket监听Thermal core上报的温度信息，并通过sysfs完成对温控设备的控温操作。同时其它服务或应用也可以通过socket来与Thermal Engine通信，这主要包含两种情况：一种情况是其它服务向Thermal Engine注册了温度触发回调；另一种情况则是其它服务通过socket对Thermal Engine进行动态配置，修改温控参数，如触发阈值/行为主体/行为主体限制值等。</p>
+<p>下面我们具体看下Thermal Engine的主体架构：</p>
+<p><img src="2.PNG" alt=""></p>
+<p>源码文件位于：vendor/qcom/proprietary/thermal-Engine</p>
+<p>Thermal Engine作为用户空间温控的核心，主要负责对对thermal sensors, thermal algorithms, thermal cooling devices的管理，这些thermal sensors和cooling devices一般来自于对thermal core相关sysfs文件节点的解析；同时thermal Engine也管理着一组温控算法，它根据输入的温度等级，来做出不同的控温操作；thermal Engine支持socket通信，thermal-Engine作为服务端，client可以通过向thermal-Engine注册不同的回调函数，当触发温控时，就可以通过这些回调通知client，或执行相应的回调操作。Thermal Engine的典型目标就是将芯片的目标温度限制在85度~95度以内的范围，金属壳温限制在40度左右，塑料壳温限制在40~45度左右</p>
+<ul>
+<li><p>Thermal sensors：主要来源于内核thermal core创建的thermal zone文件节点，代表各路温度传感器。这些温度包含了SOC内部的Tj温度和位于PCB板的NTC温度，值得一提的是，Thermal Engine的传感器概念已经被泛化，除了监测温度，还监控功率、电流、电压和流量等这些类温度的指标。thermal sensor主要通过uevent接收来自内核thermal core的温度上报，唤醒sensor的线程，再由sensor线程唤醒关联的thermal algorithm线程</p>
+</li>
+<li><p>Thermal cooling devices：主要来源于内核thermal core创建的thermal cooling devices文件节点，可实现对各个cooling device的功率等级控制。</p>
+</li>
+<li><p>Thermal Algorithms：会将thermal sensors和thermal cooling devices联系起来，管理着触发温度/解除触发温度/主体行为/主体行为等级等。它是整个thermal Engine的核心，每个Thermal Algorithm都有一个线程，它被thermal sensor线程唤醒后，根据预设的触发/解除触发温度阈值，对关联的cooling devices进行功率等级控制。目前Algorithms包含了很多种：monitor, ss, pid, virtual sensor等</p>
+</li>
+<li><p>Thermal config：主要用于加载并解析温控配置文件，它会解析温控配置文件中的每一个section(参考温控配置示例一节)，根据section中设定的温控算法，下发给对应的Thermal algorithm</p>
+</li>
+<li><p>Thermal util netlink：主要用于监听内核thermal subsystem上报的uevent事件，这些事件往往是达到了温控的触发点</p>
+</li>
+<li><p>Thermal server：作为socket服务端主要用于接收Service/App发起的请求，这些请求包含对温控配置的查询和更新；client端可以预先向server端注册回调，发生温控时Thermal server会通知给注册的客户端，执行其注册的回调</p>
+</li>
+<li><p>Thermal client：是Thermal Engine对外封装的动态库，主要用于其它Services或App向Thermal server发起请求或接收数据</p>
+</li>
+</ul>
+<h1 id="3-高通温控算法介绍"><a href="#3-高通温控算法介绍" class="headerlink" title="3. 高通温控算法介绍"></a>3. 高通温控算法介绍</h1><h2 id="ss算法"><a href="#ss算法" class="headerlink" title="ss算法"></a>ss算法</h2><p>通过设定一个单个温度作为控温的目标，这个算法会通过动态的对特定的硬件进行降温来维持温度值，如对CPU降频。这个算法适合于PCB温度和SOC片内温度的调节</p>
+<h2 id="monitor算法"><a href="#monitor算法" class="headerlink" title="monitor算法"></a>monitor算法</h2><p>monitor算法会根据温度设定多个阈值，针对每个阈值设定特定的控温操作，适合于LCD, MODEM</p>
+<h2 id="pid算法"><a href="#pid算法" class="headerlink" title="pid算法"></a>pid算法</h2><p>PID 算法基于反馈控制原理，通过不断地调整输出信号来使系统的实际温度尽可能接近目标温度。它由三个组成部分组成：</p>
+<p>比例项（Proportional）：根据实际温度与目标温度之间的差异，产生一个与差异成比例的输出。比例项的作用是使系统快速响应温度变化，但可能会导致温度在目标值附近产生偏差。</p>
+<p>积分项（Integral）：根据时间和温度差异的累积量，产生一个用于消除稳态误差的输出。积分项的作用是消除温度稳态下的偏差，使实际温度更接近目标温度。</p>
+<p>微分项（Derivative）：根据温度变化速率的变化率，产生一个用于抑制温度变化速度的输出。微分项的作用是减小温度的震荡和过冲，提高系统的稳定性。</p>
+<p>计算公式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Output = Kp * Error + Ki * Integral(Error) + Kd * Derivative(Error)</span><br></pre></td></tr></table></figure>
+<p>其中，<code>Kp</code>、<code>Ki</code> 和 <code>Kd</code> 是控制参数，用于调节比例项、积分项和微分项的影响程度。<code>Error</code> 是实际温度与目标温度之间的差异</p>
+<h2 id="virtual算法"><a href="#virtual算法" class="headerlink" title="virtual算法"></a>virtual算法</h2><p>virtual算法就是对一组传感器的运用，这一组传感器被抽象为一个虚拟传感器，虚拟传感器主要用作两种功能使用：</p>
+<ul>
+<li><p>一种功能是用作多传感器触发，就是检查这一组传感器中的每一个传感器是否达到触发阈值，根据设定的逻辑关系 “或” “与” 来决定是否触发温控；</p>
+</li>
+<li><p>另一种是用作算法传感器，支持多种算法，也就是对组内的每个传感器温度值，经过某算法处理（如加权拟合）得到一个处理后的温度值，以此温度值作为触发温控的温度</p>
+</li>
+</ul>
+<h1 id="4-Thermal-Engine-全景图"><a href="#4-Thermal-Engine-全景图" class="headerlink" title="4. Thermal Engine 全景图"></a>4. Thermal Engine 全景图</h1><p><img src="3.png" alt=""></p>
+<blockquote>
+<p>如上框图主要以monitor算法为例进行说明</p>
+</blockquote>
+<p>从前面的介绍，我们了解到Thermal Engine主要分为3个部分，sensor部分主要对各种传感器的管理；cooling device部分主要是对降温设备的管理；algorithm部分主要是提供的各种算法的管理，典型算法：monitor、ss、pid等。Thermal Engine的温控策略主要来自于各个温控配置文件，以及内嵌的温控配置，这些配置以setting section作为一个温控配置单元。温控配置文件和内嵌配置中包含了多个setting section，这里主要以monitor算法为例，展开介绍Thermal Engine各个组件的功能。</p>
+<p>如下是一个温控配置的setting section举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[MONITOR-THERM-GOLD]</span><br><span class="line">algo_type monitor</span><br><span class="line">sampling 500 </span><br><span class="line">sensor skin-msm-therm</span><br><span class="line">thresholds 43500</span><br><span class="line">thresholds_clr  43000</span><br><span class="line">actions  cpu0+cpu3+cpu7</span><br><span class="line">action_info  1555200+1920000+1132800</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>tm_instance_info</strong></li>
+</ul>
+<p>每个setting section都只会创建一个对应的实例，依据不同的算法，创建的实例也不同，如上示例中采用thermal monitor算法，会创建tm_instance_info实例，tm_instance_info代表一个thermal monitor算法的实例。tm_instance_info有两个比较关键的成员：ts_client和dev_client_list。首先来说ts_client，ts_client是一个struct sensor_client_type *指针，主要指明了这个tm_instance_info与哪个sensor关联，从图上可以看到每个tm_instance_info只有一个sensor关联，当然这个sensor可能是virture sensor（多个传感器通过权重拟合）。而这个ts_client也会加入到一个链表，因为对于每个sensor来说，有很多个算法实例会使用到它，这个链表就是方便记录本sensor被哪些实例所使用，ts_client会关联到这个sensor；</p>
+<p>再看另一个成员dev_client_list，它是一个指针数组，主要与具体的cooling设备关联，也就是tm_instance_info会对哪些降温设备进行操作，每个device_clnt_handle就是一个device_clnt指针，与一个devices_manager_dev的device_clnt关联，而devices_manager_dev就是实现对降温设备管理的结构体，目前对每个tm_instance_info实例只支持最多16个设备进行控温</p>
+<ul>
+<li><strong>settings_info</strong></li>
+</ul>
+<p>tm_instance_info实例的信息实际是通过settings_info来记录的,，settings_info中记录了具体的算法、触发sense、触发阈值、发生温控时对哪个设备进行温控操作、执行的操作值actions_info是多少，所有的settings_info组成一个全局链表thermal_setting_t</p>
+<ul>
+<li><strong>sensors_mgr_sensor_info</strong></li>
+</ul>
+<p>sensors_mgr_sensor_info实现对sensor的管理，每个sensor对应一个sensors_mgr_sensor_info，它会链接到全局链表sensor_list</p>
+<ul>
+<li><strong>devices_manager_dev</strong></li>
+</ul>
+<p>devices_manager_dev实现对cooling device的管理，每个cooling device对应一个devices_manager_dev，它会链接到全局链表dev_list, 每个cooling device也会分很多等级，用device_lvl_info来管理。devices_manager_dev在初始化时也会创建device_clnt，所有的device_clnt会链接为一个链表，tm_instance_info的dev_clnt_list数组引用的就是device_clnt链表中的成员。</p>
+<h1 id="5-初始化流程"><a href="#5-初始化流程" class="headerlink" title="5. 初始化流程"></a>5. 初始化流程</h1><p><img src="4.png" alt=""></p>
+<p>当thermal-Engine守护进程运行后，主要完成sensor初始化、cooling device初始化以及各种算法（以monitor为例）的初始化。</p>
+<p>具体包含如下：</p>
+<ol>
+<li>parse_commandline：解析命令行参数</li>
+<li>get_thermal_zone_info：遍历获取所有的sensor信息，保存在全局thermal_zone_info数组中</li>
+<li><strong>devices_init：对所有cooling devcie进行初始化</strong></li>
+<li><strong>sensors_init：对所有的sensor进行初始化</strong></li>
+<li>配置项分为内嵌配置section和配置文件，此处是解析各算法内嵌的配置section，解析所有的配置section保存在全局thermal_settings中</li>
+<li>load_config：解析配置文件的配置section，并保存到全局thermal_settings</li>
+<li>thermal_server_init：thermal_Engine需要接收thermal core上报的sensor信息，也接收其它app或服务的交互信息，此处进行socket相关设置</li>
+<li><strong>对各算法进行初始化，创建每个算法的实例，这个实例会将device和sensor联系起来。每个算法都对应一个线程，启动这个线程</strong></li>
+</ol>
+<p>下面会分别说明上述各个初始化的流程</p>
+<h2 id="5-1-devices-init"><a href="#5-1-devices-init" class="headerlink" title="5.1 devices_init"></a>5.1 devices_init</h2><p>devices_init是对所有cooling devcie进行初始化，Thermal Engine全景图章节的cooling device部分就是通过devcies_init来构建出来的，核心工作包括：</p>
+<ul>
+<li><p>为每个cooling device创建devices_manager_dev</p>
+</li>
+<li><p>初始化devices_manager_dev；</p>
+</li>
+<li><p>为每个devices_manager_dev创建一个client</p>
+</li>
+</ul>
+<p><img src="5.png" alt=""></p>
+<p>具体将cooling device进行了如下类别的划分：</p>
+<ol>
+<li><p>gpu设备初始化<br>主要通过gpufreq_init获取频率表，通过tmd_init_gpu_devs为每个gpu创建devices_manager_dev，并初始化后链入全局dev_list，同时也会为每个gpu会创建一个client</p>
+</li>
+<li><p>cpu设备初始化<br>tmd_init_cpu_devs初始化每个cpu的频率，并为每个cpu创建devices_manager_dev，初始化并炼入全局dev_list，为每个cpu会创建一个client；为每个cpuplug设备创建devices_manager_dev，初始化创建的devices_manager_dev，并炼入全局dev_list，为每个cpuplug device会创建一个client</p>
+</li>
+<li><p>QMI远程设备初始化<br>qmi_communication_init为每个远程client创建线程，用于与远程QMI服务通信，这些远程设备包含了modem、adsp、cdsp等</p>
+</li>
+<li><p>通用设备初始化<br>通用设备是一些通用的降温设备，也可能是一些抽象的设备，不对应具体的硬件，高通给出的通用设备包含了：shutdown, none, report, report_rule, camera, camcorder, lcd等，init_generic_devs为每个通用设备创建devices_manager_dev，初始化创建的devices_manager_dev，并炼入全局dev_list</p>
+</li>
+<li><p>Thermal Engine的tmd设备<br>这里主要添加了除前述4种设备之外的cooling device，从打印上看主要包含了如下的cooling devcie.<br>这里需要注意的是，这些cooling device要排除thermal core中已经使用的cooling device，thermal Engine如果要使用thermal core已经使用的cooling device，需要为cooling device创建不同名的cooling device。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Added cooling device: battery <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">41</span></span><br><span class="line">Added cooling device: mmw2_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">58</span></span><br><span class="line">Added cooling device: sdr0_nr_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">48</span></span><br><span class="line">Added cooling device: ufs <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">28</span></span><br><span class="line">Added cooling device: mmw0_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">56</span></span><br><span class="line">Added cooling device: pause-cpu6 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">18</span></span><br><span class="line">Added cooling device: sdr0_lte_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">46</span></span><br><span class="line">Added cooling device: pause-cpu3 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">6</span></span><br><span class="line">Added cooling device: pa_nr_sdr0_scg_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">54</span></span><br><span class="line">Added cooling device: modem_bw_backoff <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">62</span></span><br><span class="line">Added cooling device: pa_nr_sdr0_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">52</span></span><br><span class="line">Added cooling device: modem_vdd <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">42</span></span><br><span class="line">Added cooling device: mmw_ific_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">60</span></span><br><span class="line">Added cooling device: pa_lte_sdr0_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">50</span></span><br><span class="line">Added cooling device: pause-cpu7 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">12</span></span><br><span class="line">Added cooling device: wsa <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">40</span></span><br><span class="line">Added cooling device: mmw3_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">59</span></span><br><span class="line">Added cooling device: cpufreq-cpu0 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">0</span></span><br><span class="line">Added cooling device: sdr1_nr_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">49</span></span><br><span class="line">Added cooling device: pause-cpu5 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">9</span></span><br><span class="line">Added cooling device: thermal-cluster<span class="number">-3</span><span class="number">-7</span> <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">29</span></span><br><span class="line">Added cooling device: mmw1_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">57</span></span><br><span class="line">Added cooling device: sdr1_lte_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">47</span></span><br><span class="line">Added cooling device: panel0-backlight <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">37</span></span><br><span class="line">Added cooling device: pause-cpu2 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">7</span></span><br><span class="line">Added cooling device: pa_nr_sdr1_scg_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">55</span></span><br><span class="line">Added cooling device: pause-cpu4 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">5</span></span><br><span class="line">Added cooling device: pa_nr_sdr1_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">53</span></span><br><span class="line">Added cooling device: wlan <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">61</span></span><br><span class="line">Added cooling device: pause-cpu1 <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">3</span></span><br><span class="line">Added cooling device: pa_lte_sdr1_dsc <span class="keyword">with</span> cdev <span class="keyword">id</span>:<span class="number">51</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="5-2-sensors-init"><a href="#5-2-sensors-init" class="headerlink" title="5.2 sensors_init"></a>5.2 sensors_init</h2><p>sensors_init主要是对各个sensor传感器进行初始化，核心的工作就是：</p>
+<ul>
+<li><p>为每个sensor创建一个sensors_mgr_sensor_info；</p>
+</li>
+<li><p>初始化sensors_mgr_sensor_info；</p>
+</li>
+<li><p>并为每个sense创建一个线程</p>
+</li>
+</ul>
+<p><img src="6.png" alt=""></p>
+<p>主要包含了三类sensor:</p>
+<ol>
+<li><p>modem的sense<br>首先会通过modem_ts_qmi_init初始化与modem的通信，包含了modem、adsp、cdsp、fusion等, 之后通过add_tgt_sensors_set(mdm_sensors)添加modem的sense，创建sensors_mgr_sensor_info</p>
+</li>
+<li><p>来自thermal zone的sense<br>parse_thermal_zones解析底层thermal core注册的thermal zone，为每个thermal zone创建sensors_mgr_sensor_info。这里的thermal_nl_init，它执行通讯链路的初始化，这个通信链路就是用于与thermal core进行通信</p>
+</li>
+<li><p>band width的sense<br>从代码看主要包含了camera_bw和显示带宽display_bw，创建完每个sensor的sensors_mgr_sensor_info后就会为每个sense创建一个线程，线程处理函数为sensor_monitor;<br>add_tgt_sensor为每个sensor创建sensors_mgr_sensor_info，并创建线程的函数如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">static int add_tgt_sensor(struct sensor_info *sensor)</span><br><span class="line">    |-sensor_mgr = malloc(sizeof(struct sensors_mgr_sensor_info));</span><br><span class="line">    |-sensor_mgr-&gt;get_temperature = generic_read;</span><br><span class="line">    | sensor_mgr-&gt;shutdown = generic_shutdown;</span><br><span class="line">    |-if (sensor-&gt;interrupt_wait)</span><br><span class="line">    |        sensor_mgr-&gt;wait = generic_wait;//sensor_monitor线程将在此wait上阻塞</span><br><span class="line">    | if (sensor-&gt;update_thresholds)</span><br><span class="line">    |        sensor_mgr-&gt;update_thresholds = generic_update_thresholds;</span><br><span class="line">    | if (sensor-&gt;get_trip_temperature)</span><br><span class="line">    |        sensor_mgr-&gt;get_trip_temperature = generic_trip_temp_read;</span><br><span class="line">    \-sensors_manager_add_sensor(sensor_mgr);</span><br><span class="line">        |-sensor_mgr-&gt;default_polling_interval = SENSOR_DEFAULT_POLLING_INTERVAL;</span><br><span class="line">        |-sensor_mgr-&gt;next_sensor = sensor_list;</span><br><span class="line">        | sensor_list = sensor_mgr;</span><br><span class="line">        | sensor_cnt++;</span><br><span class="line">        \-pthread_create(&amp;(sensor_mgr-&gt;monitor_thread), NULL,</span><br><span class="line">                               sensor_monitor, sensor_mgr);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="5-3-thermal-monitor"><a href="#5-3-thermal-monitor" class="headerlink" title="5.3 thermal_monitor"></a>5.3 thermal_monitor</h2><p>初始化过程中会对各种算法进行初始化，此处主要以monitor算法为例。</p>
+<p>thermal monitor初始化的主要工作就是设置tm_instance_info实例的setting信息，它包含了内嵌或配置文件中配置section的主要信息，核心工作包括：</p>
+<ul>
+<li><p>通过devices_manager_get_list就可以获取到使用的cooling device信息；</p>
+</li>
+<li><p>通过sensors_setup用于为thermal_monitor设置sensor信息，并创建必要的sensor client;</p>
+</li>
+<li><p>最后则创建了 monitor算法的处理线程sensor_monitor</p>
+</li>
+</ul>
+<p><img src="7.png" alt=""></p>
+<h2 id="5-4-thermal-nl-init"><a href="#5-4-thermal-nl-init" class="headerlink" title="5.4 thermal_nl_init"></a>5.4 thermal_nl_init</h2><p>前面在介绍sensors_init时，有一个thermal_nl_init函数，通过它建立起与thermal core的通信链路，会创建单独的线程thermal_sensor_netlink和thermal_sensor_netlink_sample来处理，其中thermal_sensor_netlink用于处理thermal core发送的trip事件，用于更新温度触发点；thermal_sensor_netlink_sample主要用于采样thermal core的温度，当thermal core产生温度更新事件就会上报，thermal_sensor_netlink_sample就会去查询。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">int thermal_nl_init(void)</span><br><span class="line">    |//创建nl_socket，用于监控温度触发阈值设置</span><br><span class="line">    |-nl_socket.soc = nl_socket_alloc()</span><br><span class="line">    |-genl_connect(nl_socket.soc)</span><br><span class="line">    |//创建nl_sample_socket，用于监控温度变化</span><br><span class="line">    |-nl_sample_socket.soc = nl_socket_alloc()</span><br><span class="line">    |-genl_connect(nl_sample_socket.soc)</span><br><span class="line">    |-thermal_nl_fetch_id()</span><br><span class="line">    |//创建线程监控温度阈值变化</span><br><span class="line">    |-pthread_create(&amp;thermal_sensor_event_thread, NULL,</span><br><span class="line">    |                            thermal_sensor_netlink, NULL);</span><br><span class="line">    |//创建线程用于监控温度变化</span><br><span class="line">    \-pthread_create(&amp;thermal_sensor_sample_thread, NULL,</span><br><span class="line">                                thermal_sensor_netlink_sample, NULL);</span><br></pre></td></tr></table></figure>
+<p>我们主要看下thermal_sensor_netlink_sample的实现</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">static void *thermal_sensor_netlink_sample(void *data)</span><br><span class="line">    nl_socket_disable_seq_check(nl_sample_socket.soc);</span><br><span class="line">    nl_socket_modify_cb(nl_sample_socket.soc, NL_CB_VALID, NL_CB_CUSTOM,</span><br><span class="line">                                thermal_nl_sample_cb, &amp;nl_sample_socket);</span><br><span class="line">    while (!<span class="keyword">stop</span>)</span><br><span class="line">            nl_recvmsgs_default(nl_sample_socket.soc);</span><br></pre></td></tr></table></figure>
+<p>thermal_nl_sample_cb回调函数如下</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">static int thermal_nl_sample_cb(struct nl_msg *n, void *data)</span><br><span class="line">    |-genlmsg_parse(nl_hdr, 0, attrs, THERMAL_GENL_ATTR_MAX, NULL);</span><br><span class="line">    |-tz_id = nla_get_u32(attrs[THERMAL_GENL_ATTR_TZ_ID]);</span><br><span class="line">    |-temp = nla_get_u32(attrs[THERMAL_GENL_ATTR_TZ_TEMP]);</span><br><span class="line">    \-notify_sample_cb(soc_data, tz_id, temp, THERMAL_NL_TEMP_SAMPLE);</span><br><span class="line">        |-struct thermal_nl_cb_data *ptr = soc_data-&gt;head_ptr;</span><br><span class="line">        |-ptr = soc_data-&gt;head_ptr;</span><br><span class="line">        \-while (ptr)</span><br><span class="line">            |-(ptr-&gt;cb.temp_cb)(tz_id, temp, ptr-&gt;data);</span><br><span class="line">            \-ptr = ptr-&gt;next;</span><br></pre></td></tr></table></figure>
+<p>这里的temp_cb回调是thermal_sensor_temp_sample，当thermal core上报温度时就会执行thermal_sensor_temp_sample回调函数</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">static void thermal_sensor_temp_sample(int tz_id, int temp, void *data)</span><br><span class="line">    |-struct __sensor_list_data *sensor_list =</span><br><span class="line">    |            (struct __sensor_list_data *)data;</span><br><span class="line">    |-struct thermal_sensor_data *sensor_dt = NULL;</span><br><span class="line">    |-sensor_dt = fetch_sensor(sensor_list, tz_id);</span><br><span class="line">    |-sensor_dt-&gt;temperature = temp;</span><br><span class="line">    \-search_and_notify(sensor_list, tz_id);</span><br><span class="line">        \-pthread_cond_broadcast(&amp;(sensor_dt-&gt;thermal_sensor_condition));</span><br></pre></td></tr></table></figure>
+<p>thermal_sensor_temp_sample获取到温度后将通过search_and_notify发出通知, 最终唤醒等待在thermal_sensor_condition上面的线程，这个线程就是sensor的sensor_monitor线程处理函数。</p>
+<p>那么这里的temp_cb回调是在何时初始化的呢？总体流程就是：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">parse_thermal_zones</span><br><span class="line">    \-add_tgt_gen_sensors</span><br><span class="line">        |-sensor-&gt;setup = thermal_sensor_setup;</span><br><span class="line">        \-add_tgt_sensor(sensor);</span><br><span class="line">            \-sensor-&gt;setup(sensor)//以add_tgt_gen_sensors为例，会设置sensor-&gt;setup = thermal_sensor_setup;</span><br><span class="line">                \-thermal_sensor_setup</span><br><span class="line">                    \-thermal_sensor_init()</span><br><span class="line">                        |-thermal_nl_register_trip(thermal_sensor_trip_violation,</span><br><span class="line">                        |                                &amp;sensor_list_ptr);</span><br><span class="line">                        \-thermal_nl_register_temp_sample(thermal_sensor_temp_sample,</span><br><span class="line">                            |                                    &amp;sensor_list_ptr);</span><br><span class="line">                            |-local_cb.temp_cb = cb</span><br><span class="line">                            \-thermal_nl_add_cb(&amp;nl_sample_socket, local_cb, data, THERMAL_NL_TEMP_SAMPLE);</span><br></pre></td></tr></table></figure>
+<p>thermal_sensor_init的函数在thermal_sensor_setup或tsens_sensors_setup都有调用, setup回调初始化如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">static void parse_thermal_zones(void)</span><br><span class="line">.....</span><br><span class="line">    |-for (cnt = 0; cnt &lt; sensor_cnt; cnt++) &#123;</span><br><span class="line">        if (!strncmp(sensors[cnt].type, TSENS_TYPE,strlen(TSENS_TYPE))</span><br><span class="line">                || !strncmp(sensors[cnt].type, LLM_TYPE, strlen(LLM_TYPE))) &#123;</span><br><span class="line">                add_tgt_tsens_sensors(sensors[cnt].name, &amp;sensors[cnt]);</span><br><span class="line">                    |-sensor-&gt;setup = tsens_sensors_setup;</span><br><span class="line">        &#125; else if (!strncmp(sensors[cnt].type, ALARM_TYPE,</span><br><span class="line">                        strlen(ALARM_TYPE)) ||  (!strncmp(sensors[cnt].type, ADC_TYPE,strlen(ADC_TYPE)))) &#123;</span><br><span class="line">                add_tgt_gen_sensors(sensors[cnt].name,&amp;sensors[cnt]);</span><br><span class="line">                    |-sensor-&gt;setup = thermal_sensor_setup;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="5-5-thermal-server-init"><a href="#5-5-thermal-server-init" class="headerlink" title="5.5 thermal_server_init"></a>5.5 thermal_server_init</h2><p>thermal_server_init主要创建了thermal socket，包括发送和接收socket，用于与用户空间的客户端进行socket通信，thermal_server_init创建了单独的线程，监听来自用户空间客户端的请求，并处理</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">thermal_server_init(void)</span><br><span class="line">    |</span><br><span class="line">    |-sockfd_server_send = android_get_control_socket(THERMAL_SEND_SOCKET_NAME)</span><br><span class="line">    |-sockfd_server_recv = android_get_control_socket(THERMAL_RECV_SOCKET_NAME)</span><br><span class="line">    |-sockfd_server_recv_passive = android_get_control_socket(THERMAL_RECV_PASSIVE_SOCKET_NAME)</span><br><span class="line">    |-sockfd_server_rule = android_get_control_socket(THERMAL_SEND_RULE_SOCKET_NAME)</span><br><span class="line">    |//创建socket</span><br><span class="line">    |-sockfd_server_send = socket(AF_LOCAL, SOCK_STREAM, 0)</span><br><span class="line">    |-sockfd_server_recv = socket(AF_LOCAL, SOCK_STREAM, 0)</span><br><span class="line">    |-sockfd_server_recv_passive = socket(AF_LOCAL, SOCK_STREAM, 0)</span><br><span class="line">    |-sockfd_server_rule = socket(AF_LOCAL, SOCK_STREAM, 0)</span><br><span class="line">    |//socket bind</span><br><span class="line">    |-bind(sockfd_server_send,(struct sockaddr  const *)&amp;server_addr_send, sizeof(struct sockaddr_un))</span><br><span class="line">    |-bind(sockfd_server_recv,(struct sockaddr  const *)&amp;server_addr_recv, sizeof(struct sockaddr_un))</span><br><span class="line">    |-bind(sockfd_server_recv_passive,(struct sockaddr  const *)&amp;server_addr_recv_passive, sizeof(struct sockaddr_un))</span><br><span class="line">    |-bind(sockfd_server_rule,(struct sockaddr  const *)&amp;server_addr_rule, sizeof(struct sockaddr_un))</span><br><span class="line">    |//创建server log socket并绑定</span><br><span class="line">    |-sockfd_server_log = socket(AF_LOCAL, SOCK_STREAM, 0)</span><br><span class="line">    |-bind(sockfd_server_log,...)</span><br><span class="line">    |//执行监听</span><br><span class="line">    |-listen(sockfd_server_send, NUM_LISTEN_QUEUE)</span><br><span class="line">    |-listen(sockfd_server_recv, NUM_LISTEN_QUEUE)</span><br><span class="line">    |-listen(sockfd_server_recv_passive, NUM_LISTEN_QUEUE)</span><br><span class="line">    |-listen(sockfd_server_log, NUM_LISTEN_QUEUE)</span><br><span class="line">    |-listen(sockfd_server_rule, NUM_LISTEN_QUEUE)</span><br><span class="line">    |//创建socket监听线程，监听来自client的请求并处理</span><br><span class="line">    \-pthread_create(&amp;listen_client_fd_thread, NULL, do_listen_client_fd, NULL)</span><br></pre></td></tr></table></figure>
+<h1 id="6-sensor传感器处理线程"><a href="#6-sensor传感器处理线程" class="headerlink" title="6. sensor传感器处理线程"></a>6. sensor传感器处理线程</h1><blockquote>
+<p>注：有两个线程处理函数的名字都是sensor_monitor，其中一个是sensor线程的处理函数；另一个是monitor算法的线程处理函数，此处介绍的sensor端的线程处理函数</p>
+</blockquote>
+<p>sensor_monitor线程平时在没有温度触发请求时是处于休眠态，一旦接收到底层thermal core上报的温度信息，就会从睡眠态唤醒，唤醒后的核心工作包括：</p>
+<ul>
+<li><p>唤醒后它会获取温度</p>
+</li>
+<li><p>并会发出通知，通知等待此sensor的线程，而monitor算法线程就是其中一个</p>
+</li>
+</ul>
+<p><img src="8.png" alt=""></p>
+<ol>
+<li><p>第一次休眠<br>sensor_monitor线程在没有激活的请求时，就会阻塞睡眠，此时sensor_mgr-&gt;req_active为0，因此可以看到打印：<br><code>D ThermalEngine: sensor_monitor: skin-msm-therm Wait for client request</code><br>之后monitor算法在update_active_thresh更新有效阈值时会唤醒sensor_monitor线程；</p>
+</li>
+<li><p>第二次休眠<br>第二个发生阻塞睡眠的点是sensor_wait，表示当前没有温度触发请求,打印：<br><code>D ThermalEngine: sensor_monitor: skin-msm-therm Sensor wait</code><br>当底层kernel有发送uevent就会唤醒sensor线程继续执行<br>sensor_wait的实现如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">static void sensor_wait(struct sensors_mgr_sensor_info *sensor_mgr)</span><br><span class="line">&#123;</span><br><span class="line">        if (sensor_mgr-&gt;wait)</span><br><span class="line">                sensor_mgr-&gt;wait(sensor_mgr);</span><br><span class="line">        else &#123;</span><br><span class="line">                uint32_t polling_interval =</span><br><span class="line">                        (sensor_mgr-&gt;active_thresh.polling_interval_valid)?</span><br><span class="line">                        (sensor_mgr-&gt;active_thresh.polling_interval):</span><br><span class="line">                        (sensor_mgr-&gt;default_polling_interval);</span><br><span class="line">                dbgmsg("%s: %s Wait start. %dms\n<span class="string">", __func__, sensor_mgr-&gt;name, polling_interval);</span></span><br><span class="line"><span class="string">                usleep(polling_interval*1000);</span></span><br><span class="line"><span class="string">                dbgmsg("</span>%s: %s <span class="keyword">Wait</span> done.\n<span class="string">", __func__, sensor_mgr-&gt;name);</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>由前述知，在add_tgt_sensor时已经将sensor_mgr-&gt;wait初始化为generic_wait</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sensors.c</span><br><span class="line">static void generic_wait(struct sensors_mgr_sensor_info *sensor_mgr)</span><br><span class="line">&#123;</span><br><span class="line">        struct sensor_info *sensor = (struct sensor_info *)sensor_mgr-&gt;data;</span><br><span class="line">        sensor-&gt;interrupt_wait(sensor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>interrupt_wait初始化如下（以add_tgt_gen_sensors为例）：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">parse_thermal_zones</span><br><span class="line">    |-add_tgt_gen_sensors</span><br><span class="line">        |-sensor-&gt;interrupt_wait = thermal_sensor_interrupt_wait;</span><br></pre></td></tr></table></figure>
+<p>thermal_sensor_interrupt_wait的实现如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void thermal_sensor_interrupt_wait(struct sensor_info *sensor)</span><br><span class="line">    |-while (!sensor_data-&gt;threshold_reached) &#123;</span><br><span class="line">            pthread_cond_wait(&amp;(sensor_data-&gt;thermal_sensor_condition),</span><br><span class="line">                                &amp;(sensor_data-&gt;thermal_sensor_mutex));</span><br></pre></td></tr></table></figure>
+<p>sensor_monitor线程等待在thermal_sensor_condition，以通用sensor为例，这个条件变量的唤醒，是通过底层kernel发送的uevent来唤醒，具体是由thermal_sensor_temp_sample来唤醒（见sensors_init一节），底层一旦触发event上报后，将由之前的中断方式改为轮询方式进行event上报；</p>
+</li>
+<li><p>获取温度信息，通知等待此sensor的所有client，通过调用client-&gt;request.notify_cb_func（thresh_event）来通知，以monitor算法为例，这个notify_cb_func回调在thermal_monitor算法初始化时设置为sensor_thresh_notify函数，它主要的实现就是发出唤醒信号，通知算法线程，对于monitor算法，唤醒的线程就是monitor算法的sensor_monitor线程，从这里我们可以看出，每个温控算法都会给它对应的sensor client rquest设定一个notify，当sensor线程被唤醒后就会通过这个notify去唤醒对应的算法线程，本例唤醒的就是thermal monitor算法的线程，后者会更新阈值，并重新置位sensor_mgr-&gt;req_active，之后sensor的线程会重新进入上述第二次休眠，循环往复。</p>
+</li>
+</ol>
+<h1 id="7-monitor算法处理线程"><a href="#7-monitor算法处理线程" class="headerlink" title="7. monitor算法处理线程"></a>7. monitor算法处理线程</h1><blockquote>
+<p>注：有两个线程处理函数的名字都是sensor_monitor，其中一个是sensor线程的处理函数；另一个是monitor算法的线程处理函数，此处介绍的montior算法端的线程处理函数</p>
+</blockquote>
+<p><img src="9.png" alt=""></p>
+<p>sensor_monitor为monitor算法的处理程序，最初它处于阻塞态，当接收到thermal core的event事件，sensor线程会被唤醒，sensor线程进一步唤醒monitor线程，monitor线程唤醒后的核心工作包括：</p>
+<ul>
+<li><p>monitor线程唤醒后会遍历所有的<strong>tm_instance_info</strong>实例，获取sensor温度，与<strong>tm_instance_info</strong>实例中的每个阈值进行比较，根据比较情况更新新的阈值；</p>
+</li>
+<li><p>唤醒等待的线程，这其中主要包含thermal server线程，用于通知client，发生了温控事件；</p>
+</li>
+<li><p>执行cooling操作；</p>
+</li>
+<li><p>处理完毕之后将再次进入睡眠态，等待sensor线程唤醒</p>
+</li>
+</ul>
+<h1 id="8-Thermal-server-amp-client通信过程"><a href="#8-Thermal-server-amp-client通信过程" class="headerlink" title="8. Thermal server &amp; client通信过程"></a>8. Thermal server &amp; client通信过程</h1><p>Thermal client向Thermal Engine服务端注册回调，服务端监听客户端请求执行回调；除此之外，Thermal客户端还可以向Thermal服务端动态设置温控配置参数或查询温控配置参数。</p>
+<h2 id="8-1-客户端注册回调"><a href="#8-1-客户端注册回调" class="headerlink" title="8.1 客户端注册回调"></a>8.1 客户端注册回调</h2><p>thermal_client_register_callback用于客户端向服务端注册回调，服务端会记录客户端注册的回调，通过name可以查询到对应的回调，这样客户端发送请求时，服务端监听到就可以执行对应的回调，核心工作包括：</p>
+<p>（1）向server端注册回调；</p>
+<p>（2）创建客户端监听线程，监听服务端发送过来的信息</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">thermal_client.c</span><br><span class="line"></span><br><span class="line">int thermal_client_register_callback(char *client_name, int (*callback)(int, void *, void *), void *data)</span><br><span class="line">    |<span class="comment">/* Check for client is supported  or not*/</span></span><br><span class="line">    |-for (i = 0; i &lt; ARRAY_SIZE(notify_clients); i++)</span><br><span class="line">    |            if (0 == strncmp(notify_clients[i].name, client_name, CLIENT_NAME_MAX))</span><br><span class="line">    |                    break;</span><br><span class="line">    |//client端注册回调</span><br><span class="line">    |-client_cb_handle = add_to_list(client_name, callback, data)</span><br><span class="line">    |//创建客户端监听线程</span><br><span class="line">    \-if (first_client == 1) &#123;</span><br><span class="line">                rc = pthread_create(&amp;thermal_client_recv_thread, NULL, do_listen,</span><br><span class="line">                        (void *)THERMAL_SEND_CLIENT_SOCKET);</span><br></pre></td></tr></table></figure>
+<ol>
+<li><p>首先会检测客户端是否是合法的，目前它只支持在notify_clients数组中列出的客户端</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">static struct notify_client notify_clients[] = &#123;</span><br><span class="line">        &#123;</span><br><span class="line">                .name = "camera",</span><br><span class="line">                .min_req_data = 0,</span><br><span class="line">                .max_req_data = MAX_CAMERA_MITIGATION_LEVEL,</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">                .name = "camcorder",</span><br><span class="line">                .min_req_data = 0,</span><br><span class="line">                .max_req_data = MAX_CAMCORDER_MITIGATION_LEVEL,</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">                .name = "spkr",</span><br><span class="line">                .min_req_data = -30,</span><br><span class="line">                .max_req_data = 150,</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">                .name = CONFIG_QUERY_CLIENT,</span><br><span class="line">                .min_req_data = 0,</span><br><span class="line">                .max_req_data = LEVEL_MAX,</span><br><span class="line">        &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过add_to_list将客户端名字和回调记录到server端的list_head全局链表</p>
+</li>
+<li>如果是第一个注册的客户端，则会创建单独的线程thermal_client_recv_thread与服务端进行交互</li>
+</ol>
+<h2 id="8-2-服务端监听并执行回调"><a href="#8-2-服务端监听并执行回调" class="headerlink" title="8.2 服务端监听并执行回调"></a>8.2 服务端监听并执行回调</h2><p>服务端创建专门的线程来监听客户端的注册回调请求，注册了回调的客户端通过向sockfd_server_send socket发送请求将自己加入到thermal_send_fds数组，这样当回调发生后就可以通知到客户端；通过sockfd_server_recv来接收客户端请求，服务端会根据请求执行查询配置或更新配置的回调操作。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">thermal_server.c</span><br><span class="line"></span><br><span class="line">static void *do_listen_client_fd(void *data)</span><br><span class="line">    //初始化监听描述符集合</span><br><span class="line">    FD_ZERO(&amp;t_readfds);</span><br><span class="line">    FD_SET(sockfd_server_send, &amp;t_readfds);</span><br><span class="line">    FD_SET(sockfd_server_recv, &amp;t_readfds);</span><br><span class="line">    FD_SET(sockfd_server_recv_passive, &amp;t_readfds);</span><br><span class="line">    FD_SET(sockfd_server_log, &amp;t_readfds);</span><br><span class="line">    FD_SET(sockfd_server_rule, &amp;t_readfds);</span><br><span class="line">    </span><br><span class="line">    result = <span class="keyword">select</span>(FD_SETSIZE, &amp;testfds, (fd_set *)<span class="number">0</span>,</span><br><span class="line">                               (fd_set *)<span class="number">0</span>, (<span class="keyword">struct</span> timeval *) <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    //注册回调的客户端通过sockfd_server_send接收到当前的thermalcurrent level</span><br><span class="line">    if (fd == sockfd_server_send) &#123;</span><br><span class="line">            FD_SET(client_fd, &amp;t_readfds);</span><br><span class="line">            thermal_send_fds[i] = client_fd;</span><br><span class="line">            notify_client_on_register(client_fd);</span><br><span class="line">    //接收客户端请求执行回调</span><br><span class="line">    &#125; else if (fd == sockfd_server_recv) &#123;</span><br><span class="line">            client_len = sizeof(struct sockaddr_un);</span><br><span class="line">            client_fd = accept(fd,</span><br><span class="line">                              (struct sockaddr *)&amp;client_addr,</span><br><span class="line">                               &amp;client_len);</span><br><span class="line">            thermal_recv_data_from_client(client_fd, fd);</span><br><span class="line">            FD_SET(client_fd, &amp;t_readfds);</span><br><span class="line">            close(client_fd);</span><br><span class="line">    &#125; else if (fd == sockfd_server_recv_passive) &#123;</span><br><span class="line">            client_len = sizeof(struct sockaddr_un);</span><br><span class="line">            client_fd = accept(fd,</span><br><span class="line">                              (struct sockaddr *)&amp;client_addr,</span><br><span class="line">                               &amp;client_len);</span><br><span class="line">            thermal_recv_data_from_client(client_fd, fd)</span><br><span class="line">            FD_SET(client_fd, &amp;t_readfds);</span><br><span class="line">    &#125; else if (fd == sockfd_server_log || fd == sockfd_server_rule) &#123;</span><br><span class="line">            client_len = sizeof(struct sockaddr_un);</span><br><span class="line">            client_fd = accept(fd,</span><br><span class="line">                               (struct sockaddr *)&amp;client_addr,</span><br><span class="line">                                &amp;client_len);</span><br><span class="line">            FD_SET(client_fd, &amp;t_readfds);</span><br><span class="line">            if (fd == sockfd_server_log)</span><br><span class="line">                    add_local_socket_fd(SOCKET_RPT_LOG, client_fd);</span><br><span class="line">            else</span><br><span class="line">                    add_local_socket_fd(SOCKET_RPT_RULE, client_fd);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">            ioctl(fd, FIONREAD, &amp;nread);</span><br><span class="line">            if (nread == 0) &#123;</span><br><span class="line">                    close(fd);</span><br><span class="line">                    FD_CLR(fd, &amp;t_readfds);</span><br><span class="line">                    info("Thermal-Server: removing client on fd %d\n", fd);</span><br><span class="line">                    for (i = 0; i &lt; NUM_LISTEN_QUEUE &amp;&amp; thermal_send_fds[i] != fd; i++)</span><br><span class="line">                            continue;</span><br><span class="line">                    if (i &lt; NUM_LISTEN_QUEUE) &#123;</span><br><span class="line">                            thermal_send_fds[i] = -1;</span><br><span class="line"><span class="comment">#ifdef ENABLE_CAMERA_REG_BW_CALLBACK</span></span><br><span class="line">                            thermal_recv_bw_data("camera", 0);</span><br><span class="line"><span class="comment">#endif</span></span><br><span class="line">                    &#125; else &#123;</span><br><span class="line">                            if (check_for_bw_client_update(fd, 1) == 0)</span><br><span class="line">                                    remove_local_socket_fd(fd);</span><br><span class="line">                    &#125;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                    <span class="comment">/* BW client notification update */</span></span><br><span class="line">                    if (check_for_bw_client_update(fd, 0) == 0)&#123;</span><br><span class="line">                            for (i = 0; i &lt; NUM_LISTEN_QUEUE &amp;&amp; thermal_send_fds[i] != fd; i++)</span><br><span class="line">                                    continue;</span><br><span class="line">                            if (i &lt; NUM_LISTEN_QUEUE) &#123;</span><br><span class="line">                                    thermal_recv_data_from_client(thermal_send_fds[i], sockfd_server_send);</span><br><span class="line">                            &#125;else&#123;</span><br><span class="line">                                    dbg("Thermal-Server: Unknown fd:%d notification\n", fd);</span><br><span class="line">                            &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>thermal_server_init创建了单独的线程，监听来自用户空间客户端的请求，并处理，线程处理函数为do_listen_client_fd，它主要通过select监听的文件描述符集变化，包括：sockfd_server_send，sockfd_server_recv，sockfd_server_recv_passive，sockfd_server_log，sockfd_server_rule。</li>
+<li>sockfd_server_send主要用于监听客户端消息，将接收的fd加入到thermal_send_fds监听列表<blockquote>
+<p>连接到thermal server服务端的客户端可以提前向服务端注册回调，所有客户端的回调通过list_head链表链接</p>
+</blockquote>
+</li>
+<li>sockfd_server_recv是用来监听客户端的查询温控配置或更新温控配置的请求信息，并执行客户端对应的回调，即返回查询配置结果给客户端或更新温控配置</li>
+</ol>
+<h1 id="9-动态配置参数"><a href="#9-动态配置参数" class="headerlink" title="9. 动态配置参数"></a>9. 动态配置参数</h1><p>Thermal Engine对外提供了如下的接口用于不同的Servcie/App与之交互：</p>
+<ol>
+<li><p>如下的接口用于不同的Servcie/App动态查询、清空或更新温控配置参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">//允许外部获取温控配置参数</span><br><span class="line">int thermal_client_config_query(char *algo_type, struct config_instance **configs);</span><br><span class="line">//允许外部清除温控配置参数</span><br><span class="line">void thermal_client_config_cleanup(struct config_instance *configs, unsigned int config_size);</span><br><span class="line">//允许外部更新设置温控配置参数</span><br><span class="line">int thermal_client_config_set(struct config_instance *configs, unsigned int config_size);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如下的接口用于不同的Servcie/App向Thermal Engine注册回调、发送请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">int thermal_client_register_callback(char *client_name, int (*callback)(int , void *, void *), void *data);</span><br><span class="line">int thermal_client_register_report_callback(int (*callback)(char *, void *, void*), void *data);</span><br><span class="line">int thermal_client_request(char *client_name, int req_data);</span><br><span class="line">void thermal_client_unregister_callback(int client_cb_handle);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如下的接口用于向Thermal Engine发送带宽请求：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/* APIs <span class="keyword">for</span> bandwidth clients to send/clear bandwidth perf levels to thermal-Engine */</span><br><span class="line">int thermal_bandwidth_client_request(char *client_name, int req_data);</span><br><span class="line">void thermal_bandwidth_client_cancel_request(char *client_name);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h1 id="10-温控配置示例"><a href="#10-温控配置示例" class="headerlink" title="10. 温控配置示例"></a>10. 温控配置示例</h1><p>Thermal Engine温控的主要思想是监测传感器触发温度，并采用预先设定的算法完成对相应设备的控温操作，这被称之为一条规则，每一条规则是通过一个配置来体现的，我们称之为一个section，如下是一个温控section的格式说明：</p>
+<blockquote>
+<p>注：关于温控配置的说明可参考thermal-Engine目录下的readme.txt文件</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[&lt;Algorithm instance label&gt;]</span><br><span class="line">algo_type      monitor</span><br><span class="line">sensor         &lt;sensor name&gt;</span><br><span class="line">sampling       &lt;sampling rate in ms&gt;</span><br><span class="line">descending     &lt;OPTIONAL threshold trigger direction is falling below value</span><br><span class="line">                as opposed to default behavior rising above.&gt;</span><br><span class="line">thresholds     &lt;threshold values in degree mC or mA&gt; ...</span><br><span class="line">thresholds_clr &lt;temperature value to clear thresholds&gt; ...</span><br><span class="line">actions        &lt;action to perform at threshold;</span><br><span class="line">                multiple actions separated by '+'&gt; ...</span><br><span class="line">action_info    &lt;additional info for action;</span><br><span class="line">                multiple action_info separated by '+'&gt; ...</span><br></pre></td></tr></table></figure>
+<p>如下是一个具体的温控配置section举例：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[MONITOR-THERM-GOLD]</span><br><span class="line">algo_type monitor</span><br><span class="line">sampling 500 </span><br><span class="line">sensor skin-msm-therm</span><br><span class="line">thresholds 43500</span><br><span class="line">thresholds_clr  43000</span><br><span class="line">actions  cpu0+cpu3+cpu7</span><br><span class="line">action_info  1555200+1920000+1132800</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>温控section的名字：MONITOR-THERM-GOLD，这个温控section的名字必须全局唯一</p>
+</li>
+<li><p>温控算法：为monitor算法</p>
+</li>
+<li><p>采样时间：500ms</p>
+</li>
+<li><p>温控传感器：触发温控的传感器名字为skin-msm-therm</p>
+</li>
+<li><p>温控阈值：当达到43.5度时会触发温控操作，可支持多个温控阈值</p>
+</li>
+<li><p>取消温控的阈值：当达到43度时会取消温控操作，可支持多个阈值</p>
+</li>
+<li><p>温控发生时的行为主体：当温控发生时将对cpu0,cpu3,cpu7执行限频</p>
+</li>
+<li><p>温控发生时的行为主体温控值：当温控发生时将对cpu0,cpu3,cpu7执行限频分别为1555200，1920000，1132800</p>
+</li>
+</ul>
+<p>Thermal Engine对传感器进行扩展，实现了虚拟传感器，可以将多个传感器按照一定的权重进行拟合，如下是一个示例：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[<span class="keyword">virtual</span>-sensor<span class="number">-0</span>]</span><br><span class="line">algo_type          <span class="keyword">virtual</span></span><br><span class="line">sensors        skin-msm-therm xo-therm</span><br><span class="line">weights            <span class="number">40</span> <span class="number">60</span></span><br><span class="line">sampling           <span class="number">500</span></span><br><span class="line"></span><br><span class="line">[MONITOR-THERM-GOLD]</span><br><span class="line">algo_type monitor</span><br><span class="line">sampling <span class="number">500</span></span><br><span class="line">sensor <span class="keyword">virtual</span>-sensor<span class="number">-0</span></span><br><span class="line">thresholds  <span class="number">50000</span></span><br><span class="line">thresholds_clr <span class="number">40000</span></span><br><span class="line">actions  cpu0+cpu3+cpu7</span><br><span class="line">action_info  <span class="number">1555200</span>+<span class="number">1920000</span>+<span class="number">1132800</span></span><br></pre></td></tr></table></figure>
+<p>通过对skin-msm-therm和xo-therm传感器按照一定的权重进行累加，得到虚拟传感器的温度值，此处虚拟传感器温度的计算公式为：(skin-msm-therm温度值 <em> 40 + xo-therm温度值 </em> 60) / (40 + 60)。</p>
+<blockquote>
+<p>注：在将虚拟传感器作为触发条件时，与普通传感器没有区别。</p>
+</blockquote>
+<h1 id="11-thermal-Engine调试方法"><a href="#11-thermal-Engine调试方法" class="headerlink" title="11. thermal-Engine调试方法"></a>11. thermal-Engine调试方法</h1><ol>
+<li><p>启动和停止thermal-Engine<br>stop thermal-Engine和start thermal-Engine</p>
+</li>
+<li><p>打印当前温控配置<br>thermal-Engine-v2 -o可打印当前的温控配置</p>
+</li>
+<li><p>开启thermal Engine打印信息<br>thermal-Engine-v2 —debug可开启调试信息</p>
+</li>
+<li><p>查看logcat中的温控打印信息<br>Logcat |grep ThermalEngine，查看thermal Engine的打印信息</p>
+</li>
+<li><p>如何判断何时发生了温控？何时温控取消？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">如下打印表示发生了温控</span><br><span class="line">130| # logcat | grep ThermalEngine | grep "raised"                                                                                                                                            </span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">06.132</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm  raised <span class="number">7</span> at <span class="number">50.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">06.133</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm  raised <span class="number">6</span> at <span class="number">50.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">06.133</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm  raised <span class="number">5</span> at <span class="number">50.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">06.133</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm  raised <span class="number">4</span> at <span class="number">50.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">06.133</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm  raised <span class="number">3</span> at <span class="number">50.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">06.133</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm  raised <span class="number">2</span> at <span class="number">50.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">06.133</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm  raised <span class="number">1</span> at <span class="number">50.0</span> degC</span><br><span class="line">如下打印表示温控触发取消</span><br><span class="line">130|  # logcat | grep ThermalEngine | grep "clear"                                                                                                                                             </span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">30.636</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm cleared <span class="number">7</span> at <span class="number">30.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">30.636</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm cleared <span class="number">6</span> at <span class="number">30.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">30.636</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm cleared <span class="number">5</span> at <span class="number">30.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">30.636</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm cleared <span class="number">4</span> at <span class="number">30.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">30.636</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm cleared <span class="number">3</span> at <span class="number">30.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">30.636</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm cleared <span class="number">2</span> at <span class="number">30.0</span> degC</span><br><span class="line"><span class="number">07</span>-<span class="number">14</span> <span class="number">16</span>:<span class="number">27</span>:<span class="number">30.636</span>  <span class="number">6346</span>  <span class="number">6564</span> I ThermalEngine: TM Id <span class="string">'MONITOR-THERM-GOLD'</span> Sensor <span class="string">'skin-msm-therm'</span> - alarm cleared <span class="number">1</span> at <span class="number">30.0</span> degC</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2024/03/15/Futex机制的内核优化/" data-toggle="tooltip" data-placement="top" title="性能打磨手记：记一段 Futex 机制的内核优化之旅">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2023/12/13/Full-stack-resolution-of-the-Linux-time-subsystem/" data-toggle="tooltip" data-placement="top" title="从硬件到软件，Linux 时间子系统全栈解析">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#1-前言"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">1. 前言</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#2-总体架构"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">2. 总体架构</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#3-高通温控算法介绍"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">3. 高通温控算法介绍</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#ss算法"><span class="toc-nav-number">3.1.</span> <span class="toc-nav-text">ss算法</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#monitor算法"><span class="toc-nav-number">3.2.</span> <span class="toc-nav-text">monitor算法</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#pid算法"><span class="toc-nav-number">3.3.</span> <span class="toc-nav-text">pid算法</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#virtual算法"><span class="toc-nav-number">3.4.</span> <span class="toc-nav-text">virtual算法</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#4-Thermal-Engine-全景图"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">4. Thermal Engine 全景图</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#5-初始化流程"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">5. 初始化流程</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-1-devices-init"><span class="toc-nav-number">5.1.</span> <span class="toc-nav-text">5.1 devices_init</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-2-sensors-init"><span class="toc-nav-number">5.2.</span> <span class="toc-nav-text">5.2 sensors_init</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-3-thermal-monitor"><span class="toc-nav-number">5.3.</span> <span class="toc-nav-text">5.3 thermal_monitor</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-4-thermal-nl-init"><span class="toc-nav-number">5.4.</span> <span class="toc-nav-text">5.4 thermal_nl_init</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-5-thermal-server-init"><span class="toc-nav-number">5.5.</span> <span class="toc-nav-text">5.5 thermal_server_init</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#6-sensor传感器处理线程"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">6. sensor传感器处理线程</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#7-monitor算法处理线程"><span class="toc-nav-number">7.</span> <span class="toc-nav-text">7. monitor算法处理线程</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#8-Thermal-server-amp-client通信过程"><span class="toc-nav-number">8.</span> <span class="toc-nav-text">8. Thermal server &amp; client通信过程</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#8-1-客户端注册回调"><span class="toc-nav-number">8.1.</span> <span class="toc-nav-text">8.1 客户端注册回调</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#8-2-服务端监听并执行回调"><span class="toc-nav-number">8.2.</span> <span class="toc-nav-text">8.2 服务端监听并执行回调</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#9-动态配置参数"><span class="toc-nav-number">9.</span> <span class="toc-nav-text">9. 动态配置参数</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#10-温控配置示例"><span class="toc-nav-number">10.</span> <span class="toc-nav-text">10. 温控配置示例</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#11-thermal-Engine调试方法"><span class="toc-nav-number">11.</span> <span class="toc-nav-text">11. thermal-Engine调试方法</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Thermal" title="Thermal">Thermal</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

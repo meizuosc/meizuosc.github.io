@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          指尖上的科技：智能手机触摸屏技术与功耗优化 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2024/05/16/TouchScreen-Basics/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Thermal" title="Thermal">Thermal</a>
+                            
+                        </div>
+                        <h1>指尖上的科技：智能手机触摸屏技术与功耗优化</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Tao.wang on
+                            2024-05-16
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h2><p>触摸屏作为现代交互设备中重要的输入方式之一，已广泛应用于手机、平板电脑、电脑显示器等设备中。本文档将从基础知识出发，介绍触摸屏的工作原理，包括传感器感知、信号转换、数据处理和触摸事件传递等关键步骤。接着，将介绍触摸屏的分类，包括电容式触摸屏、电阻式触摸屏等不同技术的特点和应用场景。随后，将探讨触摸屏的工作模式：Actvie/Idle/Sleep Mode，也包括单点触控、多点触控、手势识别等常见模式。本文档还将涵盖触摸屏在手机典型应用中的应用案例和特点。此外，还会介绍触摸屏常见的省电策略，功耗相关常见问题和解决方法，如防误触、双击亮屏、手势唤醒待机等。最后，将提供一些常见的调试方法，帮助用户解决触摸屏功耗相关的问题。</p>
+<h2 id="2-触摸屏的分类"><a href="#2-触摸屏的分类" class="headerlink" title="2. 触摸屏的分类"></a>2. 触摸屏的分类</h2><p>  触摸屏根据其实现原理可分为：<strong>红外线触摸屏</strong> 、 <strong>外表声波触摸屏</strong> 、 <strong>电阻式触摸屏</strong> 、 <strong>电容式触摸屏</strong> 。现在市场上的电子产品主要以电容屏为主，接下会简单介绍一下每种触摸屏的实现原理和优缺点</p>
+<table><colgroup><col width="123"><col width="204"><col width="456"></colgroup><tbody><tr height="80"><td>触摸屏</td><td>含义</td><td>基本原理</td></tr><tr height="100"><td>红外线触摸屏</td><td>一种使用红外线传感器来检<br>测触摸操作的触摸屏技术</td><td>在触摸面板的边缘或角落处放置红外线发射器和接收器，通过检<br>测被触摸物体（如手指）引起的红外线被遮挡的情况来确定触摸<br>位置。</td></tr><tr height="100"><td>外表声波触摸屏</td><td>一种利用声波传播的原理来<br>检测触摸操作的触摸屏技术</td><td>使用超声波传感器在触摸屏表面产生一系列不可听见的声波，并<br>通过接收器检测被触摸物体引起的声波变化，从而确定触摸位置。</td></tr><tr height="100"><td>电阻式触摸屏</td><td>一种基于电阻原理的触摸屏<br>技术</td><td>由两层导电膜组成，当触摸屏表面被按压时，上下两层导电膜会<br>接触，形成电阻变化，通过测量电阻变化来确定触摸位置。</td></tr><tr height="100"><td>电容式触摸屏</td><td>一种基于电容效应的触摸屏<br>技术</td><td>由触摸面板上的一层电容传感器阵列组成，当手指或触摸物体接<br>近触摸面板时，会改变电容场分布，通过测量电容变化来确定触<br>摸位置。</td></tr></tbody></table>
+
+<table><colgroup><col width="122"><col width="210"><col width="451"></colgroup><tbody><tr height="80"><td>触摸屏</td><td>适用范围</td><td>优缺点</td></tr><tr height="100"><td>红外线触摸屏</td><td>常见于公共信息查询设备、<br>交互展示屏、ATM机</td><td>优点：较高的精度和可靠性，适应室内和室外环境，不受光照<br>影响。<br>缺点：需要额外的红外线感应器，触摸屏表面容易受到污染，<br>需要定期清洁。</td></tr><tr height="100"><td>外表声波触摸屏</td><td>常见于信息亭、自助点餐机、<br>电子导览屏</td><td>优点：高透明度和可触摸性，对图像质量无损失，适用于大尺寸<br>触摸屏和高分辨率要求的应用。<br>缺点：较高的成本，对声波传播环境有一定要求。</td></tr><tr height="100"><td>电阻式触摸屏</td><td>常见于工业控制设备、POS机<br>、便携式终端</td><td>优点：较低的成本和良好的耐用性，对触控笔和手指均支持。<br>缺点：触摸屏表面需要一层特殊的电阻膜，可能会影响显示<br>质量和触摸感应的精度。</td></tr><tr height="100"><td>电容式触摸屏</td><td>广泛应用于智能手机、平板<br>电脑和其他触摸屏设备</td><td>优点：高灵敏度、高分辨率和多点触控支持，支持手指操作，<br>无需压力。<br>缺点：对外界干扰较敏感，可能会受到电磁干扰的影响，较高<br>的成本。</td></tr></tbody></table>
+
+<p>  前面三种触摸屏的工作原理如图所示：</p>
+<p><img src="1.webp" alt="图片"></p>
+<ul>
+<li><p><strong>电阻式触摸屏（Resistive Touch Screen）</strong>   </p>
+<p>  电阻式触摸屏最早问世，在20世纪70年代开始被广泛应用。它由两层柔性薄膜之间夹层一层透明导电物质组成。当屏幕被按压时，两层薄膜之间的导电物质接触，形成电阻变化，从而检测到触摸位置。</p>
+</li>
+<li><p><strong>电容式触摸屏（Capacitive Touch Screen）</strong>  </p>
+<p>  电容式触摸屏的基本原理早在20世纪就已经被发现，但是由于技术限制和成本问题，直到21世纪才开始流行起来。它利用触摸屏表面的电容变化来检测触摸输入。</p>
+</li>
+<li><p><strong>红外线触摸屏（Infrared Touch Screen）</strong></p>
+<p>  红外线触摸屏在20世纪80年代开始出现。它利用红外线传感器和发射器来创建一个红外线网格，当触摸发生时，被触摸的位置会阻挡红外线，从而被感应器检测到。</p>
+</li>
+<li><p><strong>外表声波触摸屏（Surface Acoustic Wave Touch Screen）</strong></p>
+<p>  外表声波触摸屏在20世纪90年代开始应用。它利用表面声波传输技术，在触摸屏上放置传感器和发射器，通过声波传播检测触摸位置。</p>
+</li>
+</ul>
+<p>现在的智能手机、平板等主要使用的是电容式触摸屏，因此以电容式触摸屏为例来介绍。</p>
+<h2 id="3-电容式触摸屏"><a href="#3-电容式触摸屏" class="headerlink" title="3. 电容式触摸屏"></a>3. 电容式触摸屏</h2><p><img src="2.webp" alt="图片"></p>
+<p>两个带电的导体相互靠近会形成电容。当手指触摸屏幕时，由于人体电场，手指和触摸屏会形成耦合电容，对高频电流来说，电容是直接导体，会影响电路整体的电容特性。手指从接触点吸走一个很小的电流。这个电流分别从触摸屏的四角上的电极中流出，并且流经这四个电极的电流与手指到四角的距离成正比，控制器通过对这四个电流比例的精确计算，得出触摸点的位置。</p>
+<p>电容式触摸屏又分为表面电容式和投射式电容式两种类型。表面电容式触摸屏采用透明导电层覆盖在显示屏表面，通过感应人体电荷来检测触摸。投射式电容式触摸屏则在触摸屏上放置电容传感器，通过电场变化来检测触摸位置。</p>
+<ul>
+<li><strong>表面电容式</strong></li>
+</ul>
+<p><img src="3.webp" alt="图片"></p>
+<table><colgroup><col width="122"><col width="624"></colgroup><tbody><tr height="130"><td>工作原理</td><td>表面电容式触摸屏使用一层透明导电物质（通常是氧化锡或氧化铟锡）覆盖在触摸屏表<br>面。当触摸发生时，人体或其他导电物体接触到触摸屏表面，改变了导电层上的电荷分<br>布。通过检测导电层上电荷分布的变化，触摸屏控制器可以确定触摸的位置。</td></tr><tr height="130"><td>优点</td><td>工作原理简单、价格低廉、设计的电路简单</td></tr><tr height="130"><td>缺点</td><td>透光率不均匀，存在色彩失真；均匀沉积的ITO会导致枕型失真；当温湿度改变时，环境<br>电场发生变化，会引起电容屏的不准确</td></tr></tbody></table>
+
+<ul>
+<li><strong>投射电容式</strong></li>
+</ul>
+<p><img src="4.webp" alt="图片"></p>
+<p>投射电容式触摸屏又分为自感应电容式和互感应电容式两种类型。</p>
+<p><strong>自感应电容式</strong></p>
+<table><colgroup><col width="122"><col width="624"></colgroup><tbody><tr height="130"><td>工作原理</td><td>自感应电容式触摸屏采用一层导电层（例如，ITO）作为触摸屏表面，当手指或其他导电<br>物体接触到触摸屏表面时，导电层上形成一个电容。触摸屏控制器通过测量导电层上的<br>电容变化来确定触摸位置和触摸操作。自感应电容式触摸屏使用一个电路来感应整个导<br>电层上的电容变化。</td></tr><tr height="130"><td>优点</td><td>扫描速度快（每个扫描周期只需要检测X、Y电极，通过X和Y的检测结果定位触摸位置）</td></tr><tr height="130"><td>缺点</td><td>只能实现单点触摸，多点时有鬼点效应，环境变化较大时需要校准，抗干扰性能差</td></tr></tbody></table>
+
+<p><strong>互感应电容式</strong></p>
+<table><colgroup><col width="122"><col width="624"></colgroup><tbody><tr height="130"><td>工作原理</td><td>互感应电容式触摸屏在触摸面板上使用两层交叉的导电层，一层作为发送器（Tx层），<br>另一层作为接收器（Rx层）。当手指或其他导电物体接触到触摸屏表面时，触摸位置<br>处的电容值发生变化。触摸屏控制器通过测量接收器层上的电信号变化来确定触摸位<br>置和触摸操作。互感应电容式触摸屏使用两个电路，一个用于发送信号，另一个用于<br>接收信号。</td></tr><tr height="130"><td>优点</td><td>多点触摸时无鬼点效应，无需校准，抗干扰性能较好，能够减少误触发和漂移问题。</td></tr><tr height="130"><td>缺点</td><td>扫描速度慢，次数高（每次扫描周期都要检测每一个X方向的电极与Y方向的所有电极之<br>间的电容，总共需要扫描X乘以Y次）</td></tr></tbody></table>
+
+<p>现在常用的触摸屏都是自感与互感结合，先进行自感扫描如果需要再进行互感扫描，这样可以减少扫描时间和芯片负担。</p>
+<h2 id="4-基本工作流程"><a href="#4-基本工作流程" class="headerlink" title="4. 基本工作流程"></a>4. 基本工作流程</h2><p>触摸屏的本质是传感器，它由触摸检测部件和控制器组成。检测部分安装在显示屏上面，用于检测用户触摸的位置，然后将触摸信息传给控制器；控制器将其转化为触点坐标传给CPU，同时触摸屏控制器能接收CPU发来的信息，做相应的处理。</p>
+<p>Android触摸屏的工作原理可以简单概括为以下几个步骤：</p>
+<p><img src="5.webp" alt="图片"></p>
+<ol>
+<li><p><strong>传感器感知触摸</strong>：触摸屏通常由一层透明的电容层或压力敏感层组成。当用户触摸屏幕时，这些传感器会感知到触摸输入，并将其转换为电信号。</p>
+</li>
+<li><p><strong>信号转换</strong>：接下来，触摸屏控制器会将感知到的电信号转换为数字信号。这个过程涉及信号放大和模数转换，将连续的电压变化转换为数字值。</p>
+</li>
+<li><p><strong>数据处理</strong>：处理器或控制器会对转换后的数字信号进行处理和解析。它会根据触摸屏的类型和工作原理，确定触摸的位置、压力等信息。</p>
+</li>
+<li><p><strong>触摸事件传递</strong>：处理器将解析后的触摸数据传递给操作系统，通常通过输入子系统。操作系统会根据触摸事件的信息，比如触摸的位置和动作（点击、滑动等），进行相应的处理。</p>
+</li>
+<li><p><strong>应用程序响应</strong>：操作系统将触摸事件传递给当前活动的应用程序。应用程序可以根据触摸事件进行相应的处理，比如触发相应的操作或交互。</p>
+</li>
+</ol>
+<p>需要注意的是，Android触摸屏的具体工作原理会因触摸屏的类型和技术有所不同，常见的触摸屏技术包括电容式触摸屏、电阻式触摸屏、表面声波触摸屏等。不同的技术使用不同的传感器和算法来感知触摸输入，但基本的工作流程是类似的。</p>
+<h2 id="5-工作模式"><a href="#5-工作模式" class="headerlink" title="5. 工作模式"></a>5. 工作模式</h2><h3 id="5-1-触控IC的三种工作模式"><a href="#5-1-触控IC的三种工作模式" class="headerlink" title="5.1 触控IC的三种工作模式"></a>5.1 触控IC的三种工作模式</h3><p>以某款市面常见的触控IC为例，触控IC（GTP）有三种工作模式，分别为 Active mode， Idle mode 以及 Sleep mode。</p>
+<p><img src="6.webp" alt="图片"></p>
+<p><strong>Active Mode</strong></p>
+<p>GTP 在 Active mode 时，会按照已设定的驱动信号频率、刷新率等参数在有触摸或无触摸未超时状态，可进行正常的坐标上报或数据上报。芯片的工作状态完全由软件配置决定。</p>
+<p><strong>Idle Mode</strong></p>
+<p>低功耗模式，在一定的时间没有检测到手之后，通过调整打码方式来降低 IC 功耗。</p>
+<p><strong>Sleep Mode</strong></p>
+<p>Active 模式时，主控通过下发命令使 GTP 进入 Sleep mode。当需要 GTP 退出 Sleep mode 时，</p>
+<p>主控复位唤醒 GTP，唤醒后 GTP 将进入 Active mode。下发 Sleep 命令与唤醒之间的时间间隔要求大于 100ms。</p>
+<p><img src="7.webp" alt="图片"></p>
+<h3 id="5-2-不同工作模式下的功耗"><a href="#5-2-不同工作模式下的功耗" class="headerlink" title="5.2 不同工作模式下的功耗"></a>5.2 不同工作模式下的功耗</h3><p>触控IC的供电主要由两路供电组成：AVDD和DVDD</p>
+<p>工作条件：环境温度为 25℃， AVDD=3.3V， DVDD=1.8V ， VDDIO=1.8V</p>
+<table data-ace-table-col-widths="208;100;100;100;163"><colgroup><col width="208"><col width="100"><col width="100"><col width="100"><col width="163"></colgroup><tbody><tr><td colspan="1" rowspan="1"><p><strong>参数</strong></p></td><td colspan="1" rowspan="1"><p><strong>最小值</strong></p></td><td colspan="1" rowspan="1"><p><strong>典型值</strong></p></td><td colspan="1" rowspan="1"><p><strong>最大值</strong></p></td><td colspan="1" rowspan="1"><p><strong>单位</strong></p></td></tr><tr><td colspan="1" rowspan="1"><p>AVDD</p></td><td colspan="1" rowspan="1"><p>2.7</p></td><td colspan="1" rowspan="1"><p>2.8/3.0/3.3</p></td><td colspan="1" rowspan="1"><p>3.4</p></td><td colspan="1" rowspan="1"><p>V</p></td></tr><tr><td colspan="1" rowspan="1"><p>DVDD</p></td><td colspan="1" rowspan="1"><p>1.65</p></td><td colspan="1" rowspan="1"><p>1.8</p></td><td colspan="1" rowspan="1"><p>1.95</p></td><td colspan="1" rowspan="1"><p>V</p></td></tr><tr><td colspan="1" rowspan="1"><p>VDDIO</p></td><td colspan="1" rowspan="1"><p>-</p></td><td colspan="1" rowspan="1"><p>1.8</p></td><td colspan="1" rowspan="1"><p>-</p></td><td colspan="1" rowspan="1"><p>V</p></td></tr><tr><td colspan="1" rowspan="1"><p>电源纹波</p></td><td colspan="1" rowspan="1"><p>-</p></td><td colspan="1" rowspan="1"><p>-</p></td><td colspan="1" rowspan="1"><p>100</p></td><td colspan="1" rowspan="1"><p>mV（peak-to-peak）</p></td></tr><tr><td colspan="1" rowspan="1"><p>工作温度范围</p></td><td colspan="1" rowspan="1"><p>-20</p></td><td colspan="1" rowspan="1"><p>25</p></td><td colspan="1" rowspan="1"><p>85</p></td><td colspan="1" rowspan="1"><p>℃</p></td></tr></tbody></table>
+
+<p>以下数据是datasheet里面提供的不同工作模式下的功耗典型值。（注：数据仅供参考，只提供了120hz报点率下的功耗参考）</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>最小值</th>
+<th>典型值</th>
+<th>最大值</th>
+<th>单位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Active Mode AVDD 工作电流@120hz</td>
+<td>-</td>
+<td>8</td>
+<td>-</td>
+<td>mA</td>
+</tr>
+<tr>
+<td>Idle Mode AVDD 工作电流@120hz</td>
+<td>-</td>
+<td>1</td>
+<td>-</td>
+<td>mA</td>
+</tr>
+<tr>
+<td>Sleep Mode AVDD 工作电流</td>
+<td>-</td>
+<td>14</td>
+<td>-</td>
+<td>uA</td>
+</tr>
+<tr>
+<td>Normal Mode DVDD 工作电流@120hz</td>
+<td>-</td>
+<td>8</td>
+<td>-</td>
+<td>mA</td>
+</tr>
+<tr>
+<td>Idle Mode DVDD 工作电流@120hz</td>
+<td>-</td>
+<td>1</td>
+<td>-</td>
+<td>mA</td>
+</tr>
+<tr>
+<td>Sleep Mode DVDD 工作电流</td>
+<td>-</td>
+<td>33</td>
+<td>-</td>
+<td>uA</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="6-关键参数"><a href="#6-关键参数" class="headerlink" title="6. 关键参数"></a>6. 关键参数</h2><table data-ace-table-col-widths="216;601"><colgroup><col width="216"><col width="601"></colgroup><tbody><tr><td colspan="1" rowspan="1"><p><strong>参数</strong></p></td><td colspan="1" rowspan="1"><p><strong>含义</strong></p></td></tr><tr><td colspan="1" rowspan="1"><p>Accuracy</p></td><td colspan="1" rowspan="1"><p>各种情况下的精度（手指、薄手套、厚手套模式、触控笔下）</p></td></tr><tr><td colspan="1" rowspan="1"><p>Linearity</p></td><td colspan="1" rowspan="1"><p>横、竖、对角线滑动时的线性情况（特定滑动速度等条件下的）</p></td></tr><tr><td colspan="1" rowspan="1"><p>Jitter</p></td><td colspan="1" rowspan="1"><p>各种情况下的抖动，即滑动偏差</p></td></tr><tr><td colspan="1" rowspan="1"><p>Scan Period</p></td><td colspan="1" rowspan="1"><p>扫描周期</p></td></tr><tr><td colspan="1" rowspan="1"><p>Sampling Rate</p></td><td colspan="1" rowspan="1"><p>采样率</p></td></tr><tr><td colspan="1" rowspan="1"><p>Reporting Rate</p></td><td colspan="1" rowspan="1"><p>报点率</p></td></tr><tr><td colspan="1" rowspan="1"><p>Automatic Calibration</p></td><td colspan="1" rowspan="1"><p>自动校准</p></td></tr><tr><td colspan="1" rowspan="1"><p>Clicking Sensitivity</p></td><td colspan="1" rowspan="1"><p>点击的灵敏度</p></td></tr><tr><td colspan="1" rowspan="1"><p>Drawing Sensitivity</p></td><td colspan="1" rowspan="1"><p>拉伸的灵敏度</p></td></tr><tr><td colspan="1" rowspan="1"><p>Water rejection</p></td><td colspan="1" rowspan="1"><p>水滴对touch电容特性的影响</p></td></tr><tr><td colspan="1" rowspan="1"><p>Noise rejection</p></td><td colspan="1" rowspan="1"><p>充电器（大电流）对touch电容特性的影响</p></td></tr><tr><td colspan="1" rowspan="1"><p>Response time</p></td><td colspan="1" rowspan="1"><p>响应时间，包括从Sleep Mode to Active Mode和从Idle Mode to Active Mode</p></td></tr><tr><td colspan="1" rowspan="1"><p>Tracking finger separation</p></td><td colspan="1" rowspan="1"><p>两个手指滑动时，两个手指之间最小能区分开的距离</p></td></tr></tbody></table>
+
+<p>在触摸屏相关的领域，存在着扫描周期、采样率和报点率这三个概念，它们有一些区别和联系。</p>
+<table><colgroup><col width="80"><col width="248"><col width="488"></colgroup><tbody><tr height="80"><td>参数</td><td>含义</td><td>区别和联系</td></tr><tr height="100"><td>扫描周期</td><td>触摸屏控制器在一个周期内完成<br>对触摸输入的扫描操作的时间间隔。</td><td>扫描周期决定了触摸屏硬件对触摸输入进行采样的频率，而采样率<br>表示在一个扫描周期内进行了多少次采样操作。</td></tr><tr height="100"><td>采样率</td><td>触摸屏控制器在一个扫描周期内对<br>触摸输入进行采样的次数。</td><td>采样率和报点率都对触摸屏的精度和响应性产生影响。较高的采样率<br>和报点率可以提供更准确和实时的触摸输入。</td></tr><tr height="100"><td>报点率</td><td>触摸屏向系统报告触摸事件的频率，<br>即触摸屏将采样到的触摸数据传递<br>给系统的速率。</td><td>报点率是触摸屏向系统报告触摸事件的频率，它受到扫描周期和采样<br>率的影响。较高的扫描周期和采样率通常会导致较高的报点率。</td></tr></tbody></table>
+
+<p><strong>扫描周期（Scan Cycle）</strong></p>
+<p>扫描周期是指触摸屏控制器在一个周期内完成对触摸输入的扫描操作的时间间隔。它表示触摸屏硬件对触摸输入进行采样的频率，通常以赫兹（Hz）为单位表示。较短的扫描周期意味着触摸屏控制器更频繁地扫描触摸输入，可以提供更高的采样率。</p>
+<p><strong>采样率（Sampling Rate）</strong></p>
+<p>采样率是指触摸屏控制器在一个扫描周期内对触摸输入进行采样的次数。它表示触摸屏硬件对触摸输入进行测量的频率，通常以赫兹（Hz）为单位表示。较高的采样率意味着触摸屏硬件更频繁地测量触摸输入，可以提供更高的精度和灵敏度。</p>
+<p><strong>报点率（Reporting Rate）</strong></p>
+<p>报点率是指触摸屏向系统报告触摸事件的频率，即触摸屏将采样到的触摸数据传递给系统的速率。它表示触摸屏硬件向系统发送触摸事件的次数，通常以报告次数（Reports per Second）为单位表示。较高的报点率意味着触摸屏向系统提供更实时和准确的触摸事件信息。</p>
+<h2 id="7-典型应用"><a href="#7-典型应用" class="headerlink" title="7. 典型应用"></a>7. 典型应用</h2><p>常见的触摸屏技术：电阻式、表面电容式(surface capacitive touch panel)、投射电容式(project capacitive touch panel)、电磁式等等，如今应用于手机、平板产品的主要是<strong>投射电容式</strong>、电磁式(主要突出的是手写笔功能,如三星的GalaxyNote系列)。</p>
+<p>目前生产触控IC的厂家有新思、赛普拉斯、ATMEL、敦泰、汇顶、奕力、义隆、晨星、美发思、矽创等。</p>
+<p>国内的模组厂有欧菲、信利、胜华、帝晶、华意、TPK、合力泰、超声、创维等。</p>
+<h3 id="7-1-常见触摸操作"><a href="#7-1-常见触摸操作" class="headerlink" title="7.1 常见触摸操作"></a>7.1 常见触摸操作</h3><table><colgroup><col width="80"><col width="238"><col width="488"></colgroup><tbody><tr height="80"><td>模式</td><td>含义</td><td>适用范围</td></tr><tr height="100"><td>单点触控</td><td>在触摸屏上只能检测到一个触摸<br>点的操作</td><td>适用于简单的操作需求，如选择、点击或滚动等。</td></tr><tr height="100"><td>多点触控</td><td>在触摸屏上可以同时检测到多个<br>触摸点的操作</td><td>用户可以使用多根手指在触摸屏上进行同时触摸、滑动、捏合、<br>旋转等操作</td></tr><tr height="100"><td>手势识别</td><td>通过分析用户在触摸屏上的手势<br>动作来进行识别和响应的技术</td><td>手势可以是单点触摸或多点触摸的组合，如滑动、捏合、<br>旋转、双击等</td></tr></tbody></table>
+
+<p><strong>单点触控（Single Touch）</strong></p>
+<p>单点触控是最基本和最常见的触摸屏工作模式。在单点触控模式下，触摸屏只能感知到单个触点，即一次只能检测到一个位置的触摸。当用户用手指或触控笔接触屏幕时，触摸屏会识别触点的位置，并将其转化为相应的操作，如点击、滑动等。</p>
+<p><strong>多点触控（Multi-Touch）</strong></p>
+<p>多点触控模式允许触摸屏同时感知和跟踪多个触点。这意味着用户可以用多个手指或触控笔在屏幕上进行操作。多点触控模式为更复杂的手势操作提供了支持，如缩放、旋转、双指滑动等。触摸屏会跟踪每个触点的位置和动作，并将其转化为相应的操作指令。</p>
+<p><strong>手势识别（Gesture Recognition）</strong></p>
+<p>手势识别是在多点触控的基础上，通过分析和识别手指或触控笔的运动模式和轨迹来识别特定的手势动作。手势可以是简单的，如单击、双击、长按，也可以是复杂的，如滑动、缩放、旋转等。触摸屏通过算法和模式识别技术，将用户的手势动作转化为相应的操作指令，从而实现更丰富和直观的交互体验。</p>
+<h3 id="7-2-手机常见功能"><a href="#7-2-手机常见功能" class="headerlink" title="7.2 手机常见功能"></a>7.2 手机常见功能</h3><table><colgroup><col width="122"><col width="216"><col width="451"></colgroup><tbody><tr height="80"><td>常见功能</td><td>特点</td><td>区别</td></tr><tr height="100"><td>防误触</td><td>旨在减少意外触摸或误触引起<br>的误操作。</td><td>主要关注的是减少误操作，例如在设备放在口袋中或触摸屏靠近<br>面部时，避免意外触发屏幕上的操作。</td></tr><tr height="100"><td>双击亮屏</td><td>允许用户通过快速双击屏幕来<br>唤醒设备的屏幕或将其从待机<br>状态切换到活动状态</td><td>主要用于快速唤醒屏幕，以便用户能够方便地查看或响应设备上<br>的信息，而不需要按下物理按钮或使用其他手势。</td></tr><tr height="100"><td>手势唤醒</td><td>允许用户使用预定义的手势<br>或动作在设备休眠或屏幕关闭<br>状态下唤醒设备。</td><td>提供了更多的灵活性，用户可以通过特定的手势或动作来自定义<br>唤醒设备的方式，以满足个人偏好或方便操作。</td></tr></tbody></table>
+
+<p><strong>防误触功能</strong></p>
+<p>防误触功能旨在减少或避免在触摸屏上发生意外触摸操作。由于触摸屏可能会被意外的手指接触或其他物体触碰，防误触功能通过一系列算法和策略来识别并区分意外触摸和真实的用户操作。常见的防误触功能包括屏幕灵敏度调节、手掌识别、触摸抑制等，旨在提高用户的操作准确性和体验。</p>
+<p>手机解锁时遮挡屏幕时触发防误触提醒，如下图所示</p>
+<p><img src="8.webp" alt="图片"></p>
+<p><strong>双击亮屏功能</strong></p>
+<p>双击亮屏功能是一种方便的操作方式，允许用户通过在触摸屏上快速连续地双击，将设备的屏幕从休眠状态唤醒。这样用户无需按下物理按键或使用其他复杂的操作来开启设备屏幕，提供了更快速、直观的亮屏体验。双击亮屏功能在许多智能手机和平板电脑等设备中得到广泛支持，并可以在设备设置中进行配置和启用。</p>
+<p>手机双击亮屏功能开关，如下图所示</p>
+<p><img src="9.webp" alt="图片"></p>
+<p><strong>手势唤醒功能</strong></p>
+<p>手势唤醒功能允许用户使用特定的手势动作来唤醒设备屏幕，而无需按下物理按键。用户可以在设备休眠状态下，在触摸屏上执行预定义的手势，如双击、画字母等，以激活设备并亮屏。手势唤醒功能通过使用传感器和模式识别技术，识别和解释用户手势的意图，并触发相应的操作。这种功能提供了更便捷的操作方式，使用户能够快速访问设备功能，如查看通知、启动应用程序等。</p>
+<p>手机手势唤醒功能，如下图所示</p>
+<p><img src="10.webp" alt="图片"></p>
+<h2 id="8-功耗问题及对应策略"><a href="#8-功耗问题及对应策略" class="headerlink" title="8. 功耗问题及对应策略"></a>8. 功耗问题及对应策略</h2><p><strong>常见的功耗问题：</strong></p>
+<ol>
+<li>开启手势功能（双击亮屏/手势唤醒）后待机功耗</li>
+<li>亮屏下单指点击、滑动、长按屏幕的功耗</li>
+<li>亮屏下多指点击、滑动、长按屏幕的功耗</li>
+</ol>
+<p><strong>常见的省电策略：</strong></p>
+<ol>
+<li>针对不同场景需求，适当降低报点率</li>
+<li>缩短TP从active恢复idle时间</li>
+<li>延长TP扫描周期</li>
+<li>限制Touch boost场景下CPU的调度和频率</li>
+<li>提高电源供电效率</li>
+<li>降低active模式下的工作电流</li>
+<li>非用即关，外设器件休眠下电（厂商一般不建议休眠下电）</li>
+</ol>
+<h3 id="8-1-降低TP报点率（采样率）"><a href="#8-1-降低TP报点率（采样率）" class="headerlink" title="8.1 降低TP报点率（采样率）"></a>8.1 降低TP报点率（采样率）</h3><p>亮灭屏下两个参数含义是一样，配置稍有点不一样，报点率（采样率）越高，所需要的功耗代价也越高，和竞品机对比时也可以考虑平衡这个参数配置。</p>
+<p>查看方法：<code>adb shell getevent -lrt</code>,最右侧的就是TP的报点率</p>
+<p><img src="11.webp" alt="图片"></p>
+<p>常见的报点率有这几个挡位：60hz  90hz  120hz  180hz  240hz  480hz，因为游戏场景对于触控体验的实时性要求比较高，所以游戏场景的TP报点率一般是480hz，非游戏场景下的TP报点率一般是120hz或者180hz，开启手势模式的待机场景下一般是90hz或者120hz。一般情况下为了避免卡顿丢帧，触摸屏的报点率都要高于当前屏幕的显示刷新率。</p>
+<p>在有功耗板下可以测试TP不同报点率下的功耗数据，为整机功耗优化提供数据依据和支持。以120hzTP报点率下的功耗测试为例，也可以通过实测各路供电消耗的实际电流和厂商提供的典型值进行对比，检查不同报点率下的功耗数据是否符合要求。</p>
+<table><colgroup><col width="105"><col width="105"><col width="105"><col width="105"><col width="105"><col width="105"><col width="105"><col width="105"></colgroup><tbody><tr height="34"><td colspan="8">触控功耗测试</td></tr><tr height="27"><td rowspan="2">电源</td><td rowspan="2">报点率</td><td rowspan="2">工作状态</td><td colspan="3">工作电流</td><td rowspan="2">实测</td><td rowspan="2">单位</td></tr><tr height="27"><td>Min</td><td>Typ</td><td>Max</td></tr><tr height="27"><td rowspan="3">AVDD</td><td rowspan="3">120Hz</td><td>Active</td><td><br></td><td><br></td><td><br></td><td><br></td><td>mA</td></tr><tr height="27"><td>Idle</td><td><br></td><td><br></td><td><br></td><td><br></td><td>mA</td></tr><tr height="27"><td>Sleep</td><td><br></td><td><br></td><td><br></td><td><br></td><td>uA</td></tr><tr height="27"><td rowspan="3">DVDD</td><td rowspan="3">120Hz</td><td>Active</td><td><br></td><td><br></td><td><br></td><td><br></td><td>mA</td></tr><tr height="27"><td>Idle</td><td><br></td><td><br></td><td><br></td><td><br></td><td>mA</td></tr><tr height="27"><td>Sleep</td><td><br></td><td><br></td><td><br></td><td><br></td><td>uA</td></tr><tr height="27"><td>*参考数据依据不同芯片类型变化</td><td><br></td><td><br></td><td><br></td><td><br></td><td><br></td><td><br></td><td><br></td></tr></tbody></table>
+
+<h3 id="8-2-减少Active持续检测时长"><a href="#8-2-减少Active持续检测时长" class="headerlink" title="8.2 减少Active持续检测时长"></a>8.2 减少Active持续检测时长</h3><p>触摸屏的 Active 持续检测时长是指触摸屏不断地进行触摸检测的能力。这个时长取决于触摸屏的硬件和驱动程序的设计。对于在无触摸或者触摸状态下Active Mode切到Idle Mode的时间，不同触控IC厂商设置的都不太一样，需要兼顾效果体验和功耗，但是理论上TP从active状态恢复到idle状态的时间越快，器件耗电越低。</p>
+<p>以遇到的功耗问题为例：开启手势唤醒功能后待机，长按屏幕测试一段时间的功耗，整机功耗要差于竞品机。</p>
+<p>竞品机的active持续时长（2.5秒）如下图所示：</p>
+<p><img src="12.webp" alt="图片"></p>
+<p>对比机的active持续时长（5秒）如下图所示：</p>
+<p><img src="13.webp" alt="图片"></p>
+<p>解决方法：只修改了灭屏下触摸时TP从active恢复到idle的时间（5秒改成2.5秒），亮屏下体验效果优先还是保持5秒持续active检测时间。还有可以优化的部分是Active Mode下的工作电流。</p>
+<h3 id="8-3-延长TP扫描周期"><a href="#8-3-延长TP扫描周期" class="headerlink" title="8.3 延长TP扫描周期"></a>8.3 延长TP扫描周期</h3><p>在待机休眠时，可以适当延长触摸屏的扫描周期，让触摸屏控制器减少扫描触摸输入的频率，可以节省待机功耗。</p>
+<p>以遇到的功耗问题为例：开启手势唤醒功能后待机，测试一段时间的平均功耗，整机功耗要差于竞品机。</p>
+<p>竞品机的扫描周期（1.5秒）如下图所示：</p>
+<p><img src="14.webp" alt="图片"></p>
+<p>对比机的扫描周期（1秒）如下图所示：</p>
+<p><img src="15.webp" alt="图片"></p>
+<p>解决方法：延长对比机的扫描周期，和竞品机保持一致，并同步评估效果体验影响。</p>
+<h3 id="8-4-降低灵敏度"><a href="#8-4-降低灵敏度" class="headerlink" title="8.4 降低灵敏度"></a>8.4 降低灵敏度</h3><p><strong>初始化校准</strong></p>
+<p>不同的温度、湿度及物理空间结构均会影响到电容传感器在闲置状态的基准值， 触控IC会在初始化的 200ms 内根据环境情况自动获得新的检测基准，完成触摸屏检测的初始化。</p>
+<p><strong>自动温漂补偿</strong>  </p>
+<p>温度、湿度或灰尘等环境因素的缓慢变化，也会影响到电容传感器在闲置状态的基准值。触控IC实时检测各点数据的变化，对历史数据进行统计分析，由此来修正检测基准。从而降低环境变化对触摸屏检测的影响。  </p>
+<p>如果在触摸屏的灵敏度调节过程中，灵敏度设置的越高，TP越容易受到环境干扰。灭屏待机时容易受到微小环境干扰，触控IC做自校准导致功耗增加。</p>
+<p>以遇到的功耗问题为例：在长待机功耗测试中，高概率出现周期为11ms左右，频率90hz左右，峰值为60mA的周期性波形，且波形持续存在，经过较长时间才会消失，目前看到最近一次波形35分钟左右会消失。该周期性波形抬高了长待机的平均电流，导致功耗增加。此时AP和子系统均正常休眠，功耗板复现问题从电流拆解来看该波形来自TP器件。</p>
+<p>如下是待机进入异常的波形图</p>
+<p><img src="16.webp" alt="图片"></p>
+<p>解决方法：略微降低灵敏度值以及在进入Idle Mode前进行校准，避免待机休眠后触摸屏受到微小干扰后一直处于自校准状态。</p>
+<h2 id="9-功耗debug方法"><a href="#9-功耗debug方法" class="headerlink" title="9. 功耗debug方法"></a>9. 功耗debug方法</h2><ol>
+<li>通过分析电流波形图，检查当前TP的工作模式和状态</li>
+<li>通过功耗拆解板对TP器件进行电流拆解</li>
+<li>通过读取TP的状态寄存器信息来确认，TP是否处于正确的工作状态，这里主要包含了报点率、采样率等</li>
+<li>可以通过WiFi adb的方式模拟触摸动作，进行问题拆解</li>
+<li>待机场景下可以动态移除TP驱动，对比移除前后的波形和整机功耗来检查是否有功耗异常</li>
+<li>检查GPIO配置是否合理，防止配置不当导致漏电</li>
+</ol>
+<h2 id="10-参考资料"><a href="#10-参考资料" class="headerlink" title="10. 参考资料"></a>10. 参考资料</h2><ol>
+<li><a href="https://wenku.baidu.com/view/70a45e43f524ccbff02184a4.html" target="_blank" rel="noopener">touch简介</a></li>
+<li><a href="https://wenku.baidu.com/view/8aff98d233d4b14e85246872.html" target="_blank" rel="noopener">电阻式触摸屏工作原理</a></li>
+<li><a href="https://wenku.baidu.com/view/0bb031ebd15abe23482f4d61.html" target="_blank" rel="noopener">电容式触摸屏原理</a></li>
+<li><a href="https://blog.csdn.net/weixin_44904296/article/details/113371087" target="_blank" rel="noopener">Android Touch详解(1)工作原理_android触摸屏工作原理-CSDN博客</a></li>
+</ol>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2024/05/27/Linux-Page-Table-Check/" data-toggle="tooltip" data-placement="top" title="内核内存稳定性新特性：Page Table Check 机制解读">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2024/03/15/Futex机制的内核优化/" data-toggle="tooltip" data-placement="top" title="性能打磨手记：记一段 Futex 机制的内核优化之旅">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-概述"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">1. 概述</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-触摸屏的分类"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">2. 触摸屏的分类</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-电容式触摸屏"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">3. 电容式触摸屏</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-基本工作流程"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">4. 基本工作流程</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-工作模式"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">5. 工作模式</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#5-1-触控IC的三种工作模式"><span class="toc-nav-number">5.1.</span> <span class="toc-nav-text">5.1 触控IC的三种工作模式</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#5-2-不同工作模式下的功耗"><span class="toc-nav-number">5.2.</span> <span class="toc-nav-text">5.2 不同工作模式下的功耗</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#6-关键参数"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">6. 关键参数</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#7-典型应用"><span class="toc-nav-number">7.</span> <span class="toc-nav-text">7. 典型应用</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#7-1-常见触摸操作"><span class="toc-nav-number">7.1.</span> <span class="toc-nav-text">7.1 常见触摸操作</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#7-2-手机常见功能"><span class="toc-nav-number">7.2.</span> <span class="toc-nav-text">7.2 手机常见功能</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#8-功耗问题及对应策略"><span class="toc-nav-number">8.</span> <span class="toc-nav-text">8. 功耗问题及对应策略</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#8-1-降低TP报点率（采样率）"><span class="toc-nav-number">8.1.</span> <span class="toc-nav-text">8.1 降低TP报点率（采样率）</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#8-2-减少Active持续检测时长"><span class="toc-nav-number">8.2.</span> <span class="toc-nav-text">8.2 减少Active持续检测时长</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#8-3-延长TP扫描周期"><span class="toc-nav-number">8.3.</span> <span class="toc-nav-text">8.3 延长TP扫描周期</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#8-4-降低灵敏度"><span class="toc-nav-number">8.4.</span> <span class="toc-nav-text">8.4 降低灵敏度</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#9-功耗debug方法"><span class="toc-nav-number">9.</span> <span class="toc-nav-text">9. 功耗debug方法</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#10-参考资料"><span class="toc-nav-number">10.</span> <span class="toc-nav-text">10. 参考资料</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Thermal" title="Thermal">Thermal</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

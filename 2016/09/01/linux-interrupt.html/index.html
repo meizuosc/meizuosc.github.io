@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Linux Interrupt - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2016/09/01//linux-interrupt.html/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                            
+                              <a class="tag" href="/tags/#gic" title="gic">gic</a>
+                            
+                              <a class="tag" href="/tags/# 中断线程化 " title=" 中断线程化 "> 中断线程化 </a>
+                            
+                              <a class="tag" href="/tags/#softirq" title="softirq">softirq</a>
+                            
+                              <a class="tag" href="/tags/#tasklet" title="tasklet">tasklet</a>
+                            
+                              <a class="tag" href="/tags/#linux 中断 " title="linux 中断 ">linux 中断 </a>
+                            
+                              <a class="tag" href="/tags/#linux interrupt" title="linux interrupt">linux interrupt</a>
+                            
+                        </div>
+                        <h1>Linux Interrupt</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Peng Weilin on
+                            2016-09-01
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>在面试的时候我们常常被问及一个问题：几种中断下半部机制 softirq、tasklet、workqueue 有什么区别？Linux 为什么要设计这几种机制？真正能够回答清楚的人还是少数的。下面我们就详细分析一下这其中的区别。</p>
+<blockquote>
+<p>本文的代码分析基于 Linux kernel 3.18.22 和 arm64 架构，最好的学习方法还是 “RTFSC”</p>
+</blockquote>
+<h2 id="1-Linux-中断"><a href="#1-Linux-中断" class="headerlink" title="1. Linux 中断"></a>1. Linux 中断</h2><p>arm64 和其他所有 CPU 架构的中断处理流程都是一样：正常执行流程被打断进入中断服务程序，保护现场、处理中断、恢复现场：</p>
+<p><img src="int_handler.png" alt=" 中断处理"><sup><a href="#fn_ARMPG" id="reffn_ARMPG">ARMPG</a></sup></p>
+<p>在整个中断处理过程中，arm64 的 CPU 全局中断是自动 disable 的 (PSTATE 寄存器中的 interrupt bit 被 masks)。如果用户想支持 interrupt nested，需要自己在中断服务程序中使能中断。Linux 现在是不使用中断嵌套的。</p>
+<p><img src="int_nested_handler.png" alt=" 中断嵌套处理 "><sup><a href="#fn_ARMPG" id="reffn_ARMPG">ARMPG</a></sup></p>
+<h3 id="1-1-CPU-中断打开-关闭"><a href="#1-1-CPU-中断打开-关闭" class="headerlink" title="1.1 CPU 中断打开 / 关闭"></a>1.1 CPU 中断打开 / 关闭</h3><p>arm64 关闭和打开本地 CPU 的全局中断的方法，是操作 SPSR(Saved Process Status Register) 寄存器 IRQ mask bit。</p>
+<p><img src="int_arm64_spsr.png" alt="Arm64 SPSR"><sup><a href="#fn_ARMPG" id="reffn_ARMPG">ARMPG</a></sup></p>
+<p>Linux 中 arm64 关闭和打开本地 CPU 中断的函数实现。</p>
+<ul>
+<li>arch/arm64/include/asm/irqflags.h:</li>
+<li><code>local_irq_disable()</code> -&gt; <code>raw_local_irq_disable()</code> -&gt; <code>arch_local_irq_disable()</code></li>
+<li><code>local_irq_enable()</code> -&gt; <code>raw_local_irq_enable()</code> -&gt; <code>arch_local_irq_enable()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">arch_local_irq_enable</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="comment">// (1) 清除 DAIF 中的 bit2 I 标志位，打开中断</span></span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="string">"msr	daifclr, #2		// arch_local_irq_enable"</span></span></span></span><br><span class="line"><span class="function"><span class="params">		:</span></span></span><br><span class="line"><span class="function"><span class="params">		:</span></span></span><br><span class="line"><span class="function"><span class="params">		: <span class="string">"memory"</span>)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">arch_local_irq_disable</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="comment">// (2) 设置 DAIF 中的 bit2 I 标志位，关闭中断</span></span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="string">"msr	daifset, #2		// arch_local_irq_disable"</span></span></span></span><br><span class="line"><span class="function"><span class="params">		:</span></span></span><br><span class="line"><span class="function"><span class="params">		:</span></span></span><br><span class="line"><span class="function"><span class="params">		: <span class="string">"memory"</span>)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="title">arch_local_irq_save</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">	<span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="comment">// (3) 备份 DAIF 标志</span></span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="string">"mrs	%0, daif		// arch_local_irq_save\n"</span></span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="string">"msr	daifset, #2"</span></span></span></span><br><span class="line"><span class="function"><span class="params">		: <span class="string">"=r"</span> (flags)</span></span></span><br><span class="line"><span class="function"><span class="params">		:</span></span></span><br><span class="line"><span class="function"><span class="params">		: <span class="string">"memory"</span>)</span></span>;</span><br><span class="line">	<span class="keyword">return</span> flags;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="title">arch_local_save_flags</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">	<span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="comment">// (4) 恢复 DAIF 标志</span></span></span></span><br><span class="line"><span class="function"><span class="params">		<span class="string">"mrs	%0, daif		// arch_local_save_flags"</span></span></span></span><br><span class="line"><span class="function"><span class="params">		: <span class="string">"=r"</span> (flags)</span></span></span><br><span class="line"><span class="function"><span class="params">		:</span></span></span><br><span class="line"><span class="function"><span class="params">		: <span class="string">"memory"</span>)</span></span>;</span><br><span class="line">	<span class="keyword">return</span> flags;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-2-中断控制器-GIC"><a href="#1-2-中断控制器-GIC" class="headerlink" title="1.2 中断控制器 GIC"></a>1.2 中断控制器 GIC</h3><p>上面描述了 CPU 对全局中断的处理，但是还有一个工作需要有人去做：就是把外部中断、内部中断、CPU 间中断等各种中断按照优先级、亲和力、私有性等发送给多个 CPU。负责这个工作的就是中断控制器 GIC(Generic Interrupt Controller)。</p>
+<p><img src="int_gic400.gif" alt="GIC400"><sup><a href="#fn_GICANALY" id="reffn_GICANALY">GICANALY</a></sup></p>
+<p>从软件角度上看，GIC 可以分成两个功能模块：<sup><a href="#fn_ARMPG" id="reffn_ARMPG">ARMPG</a></sup></p>
+<ul>
+<li>Distributor。负责连接系统中所有的中断源，通过寄存器可以独立的配置每个中断的属性：priority、state、security、outing information、enable status。定义哪些中断可以转发到 CPU core。</li>
+<li>CPU Interface。CPU core 用来接收中断，寄存器主要提供的功能：mask、 identify 、control states of interrupts forwarded to that core。每个 CPU core 拥有自己的 CPU interface。</li>
+</ul>
+<p>对 GIC 来说，中断可以分成以下几种类型：<sup><a href="#fn_ARMPG" id="reffn_ARMPG">ARMPG</a></sup></p>
+<ul>
+<li>SGI(Software Generated Interrupt)，Interrupt IDs 0-15。系统一般用其来实现 IPI 中断。</li>
+<li>PPI(Private Peripheral Interrupt)，Interrupt IDs16-31。私有中断，这种中断对每个 CPU 都是独立一份的，比如 per-core timer 中断。</li>
+<li>SPI(Shared Peripheral Interrupt)，Interrupt numbers 32-1020。最常用的外设中断，中断可以发给一个或者多个 CPU。</li>
+<li>LPI(Locality-specific Peripheral Interrupt)。基于 message 的中断，GICv2 和 GICv1 中不支持。</li>
+</ul>
+<p>GIC 从原理上理解并不难，但是如果涉及到级联等技术细节，整个初始化过程还是比较复杂。大家可以自行下载 GIC 手册：<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0471b/index.html" target="_blank" rel="noopener">GIC-400</a>、<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0516e/index.html" target="_blank" rel="noopener">GIC-500</a> 学习，<a href="http://www.wowotech.net/irq_subsystem/gic_driver.html" target="_blank" rel="noopener">GIC 代码分析 </a> 也是一篇很不错的分析文章。</p>
+<p>一款 GIC 相关的操作函数都会集中到 irq_chip 数据结构中，以 GIC-400 为例，它的相关操作函数如下：</p>
+<ul>
+<li>drivers/irqchip/irq-gic.c:</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">irq_chip</span> <span class="title">gic_chip</span> = &#123;</span></span><br><span class="line">	.name			= <span class="string">"GIC"</span>,</span><br><span class="line">	.irq_mask		= gic_mask_irq,</span><br><span class="line">	.irq_unmask		= gic_unmask_irq,</span><br><span class="line">	.irq_eoi		= gic_eoi_irq,</span><br><span class="line">	.irq_set_type		= gic_set_type,</span><br><span class="line">	.irq_retrigger		= gic_retrigger,</span><br><span class="line">#ifdef CONFIG_SMP</span><br><span class="line">	.irq_set_affinity	= gic_set_affinity,</span><br><span class="line">#endif</span><br><span class="line">	.irq_set_wake		= gic_set_wake,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="1-3-Linux-中断处理流程"><a href="#1-3-Linux-中断处理流程" class="headerlink" title="1.3 Linux 中断处理流程"></a>1.3 Linux 中断处理流程</h3><p>从代码上看 Linux 中断的处理流程大概是这样的：</p>
+<p><img src="int_handle_flow.png" alt="Linux 中断处理基本流程 "></p>
+<p>从处理流程上看，对于 gic 的每个中断源，Linux 系统分配一个 irq_desc 数据结构与之对应。irq_desc 结构中有两个中断处理函数 <code>desc-&gt;handle_irq()</code> 和 <code>desc-&gt;action-&gt;handler()</code>，这两个函数代表中断处理的两个层级：</p>
+<ul>
+<li><p><code>desc-&gt;handle_irq()</code>。第一层次的中断处理函数，这个是系统在初始化时根据中断源的特征统一分配的，不同类型的中断源的 gic 操作是不一样的，把这些通用 gic 操作提取出来就是第一层次的操作函数。具体实现包括：</p>
+<ul>
+<li><code>handle_fasteoi_irq()</code></li>
+<li><code>handle_simple_irq()</code></li>
+<li><code>handle_edge_irq()</code></li>
+<li><code>handle_level_irq()</code></li>
+<li><code>handle_percpu_irq()</code></li>
+<li><code>handle_percpu_devid_irq()</code></li>
+</ul>
+</li>
+<li><p><code>desc-&gt;action-&gt;handler()</code> 第二层次的中断处理函数，由用户注册实现具体设备的驱动服务程序，都是和 GIC 操作无关的代码。同时一个中断源可以多个设备共享，所以一个 desc 可以挂载多个 action，由链表结构组织起来。</p>
+</li>
+</ul>
+<p><img src="int_handler_action.png" alt="Linux 中断处理层级 "></p>
+<h3 id="1-4-中断服务注册"><a href="#1-4-中断服务注册" class="headerlink" title="1.4 中断服务注册"></a>1.4 中断服务注册</h3><p>从上一节的中断二层结构中可以看到第二层的中断处理函数 desc-&gt;action-&gt;handler 是由用户来注册的，下面我们来分析具体注册过程：</p>
+<ul>
+<li>kernel/irq/manage.c:</li>
+<li><code>request_irq()</code> -&gt; <code>request_threaded_irq()</code> -&gt; <code>__setup_irq()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br><span class="line">370</span><br><span class="line">371</span><br><span class="line">372</span><br><span class="line">373</span><br><span class="line">374</span><br><span class="line">375</span><br><span class="line">376</span><br><span class="line">377</span><br><span class="line">378</span><br><span class="line">379</span><br><span class="line">380</span><br><span class="line">381</span><br><span class="line">382</span><br><span class="line">383</span><br><span class="line">384</span><br><span class="line">385</span><br><span class="line">386</span><br><span class="line">387</span><br><span class="line">388</span><br><span class="line">389</span><br><span class="line">390</span><br><span class="line">391</span><br><span class="line">392</span><br><span class="line">393</span><br><span class="line">394</span><br><span class="line">395</span><br><span class="line">396</span><br><span class="line">397</span><br><span class="line">398</span><br><span class="line">399</span><br><span class="line">400</span><br><span class="line">401</span><br><span class="line">402</span><br><span class="line">403</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span> __must_check</span><br><span class="line">request_irq(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq, <span class="keyword">irq_handler_t</span> handler, <span class="keyword">unsigned</span> <span class="keyword">long</span> flags,</span><br><span class="line">	    <span class="keyword">const</span> <span class="keyword">char</span> *name, <span class="keyword">void</span> *dev)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> request_threaded_irq(irq, handler, <span class="literal">NULL</span>, flags, name, dev);</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">request_threaded_irq</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq, <span class="keyword">irq_handler_t</span> handler,</span></span></span><br><span class="line"><span class="function"><span class="params">			 <span class="keyword">irq_handler_t</span> thread_fn, <span class="keyword">unsigned</span> <span class="keyword">long</span> irqflags,</span></span></span><br><span class="line"><span class="function"><span class="params">			 <span class="keyword">const</span> <span class="keyword">char</span> *devname, <span class="keyword">void</span> *dev_id)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irqaction</span> *<span class="title">action</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> *<span class="title">desc</span>;</span></span><br><span class="line">	<span class="keyword">int</span> retval;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Sanity-check: shared interrupts must pass in a real dev-ID,</span></span><br><span class="line"><span class="comment">	 * otherwise we'll have trouble later trying to figure out</span></span><br><span class="line"><span class="comment">	 * which interrupt is which (messes up the interrupt freeing</span></span><br><span class="line"><span class="comment">	 * logic etc).</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> ((irqflags &amp; IRQF_SHARED) &amp;&amp; !dev_id)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (1) 根据中断号找到对应的 desc 结构</span></span><br><span class="line">	desc = irq_to_desc(irq);</span><br><span class="line">	<span class="keyword">if</span> (!desc)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!irq_settings_can_request(desc) ||</span><br><span class="line">	    WARN_ON(irq_settings_is_per_cpu_devid(desc)))</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2) 如果 action-&gt;handler 为空，那么用户是想创建一个线程化中断</span></span><br><span class="line">	<span class="comment">// 将线程化中断的 action-&gt;handler 初始化为 irq_default_primary_handler()</span></span><br><span class="line">	<span class="comment">// irq_default_primary_handler() 非常简单，只是返回一个 IRQ_WAKE_THREAD 值</span></span><br><span class="line">	<span class="keyword">if</span> (!handler) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!thread_fn)</span><br><span class="line">			<span class="keyword">return</span> -EINVAL;</span><br><span class="line">		handler = irq_default_primary_handler;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (3) 分配新的 action 数据结构</span></span><br><span class="line">	action = kzalloc(<span class="keyword">sizeof</span>(struct irqaction), GFP_KERNEL);</span><br><span class="line">	<span class="keyword">if</span> (!action)</span><br><span class="line">		<span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">	action-&gt;handler = handler;</span><br><span class="line">	action-&gt;thread_fn = thread_fn;</span><br><span class="line">	action-&gt;flags = irqflags;</span><br><span class="line">	action-&gt;name = devname;</span><br><span class="line">	action-&gt;dev_id = dev_id;</span><br><span class="line"></span><br><span class="line">	chip_bus_lock(desc);</span><br><span class="line">	<span class="comment">// (4) 将新的 action 结构安装到 desc 中</span></span><br><span class="line">	retval = __setup_irq(irq, desc, action);</span><br><span class="line">	chip_bus_sync_unlock(desc);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (retval)</span><br><span class="line">		kfree(action);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_DEBUG_SHIRQ_FIXME</span></span><br><span class="line">	<span class="keyword">if</span> (!retval &amp;&amp; (irqflags &amp; IRQF_SHARED)) &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * It's a shared IRQ -- the driver ought to be prepared for it</span></span><br><span class="line"><span class="comment">		 * to happen immediately, so let's make sure....</span></span><br><span class="line"><span class="comment">		 * We disable the irq to make sure that a 'real' IRQ doesn't</span></span><br><span class="line"><span class="comment">		 * run in parallel with our fake.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line"></span><br><span class="line">		disable_irq(irq);</span><br><span class="line">		local_irq_save(flags);</span><br><span class="line"></span><br><span class="line">		handler(irq, dev_id);</span><br><span class="line"></span><br><span class="line">		local_irq_restore(flags);</span><br><span class="line">		enable_irq(irq);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">return</span> retval;</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">__setup_irq(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq, struct irq_desc *desc, struct irqaction *<span class="keyword">new</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irqaction</span> *<span class="title">old</span>, **<span class="title">old_ptr</span>;</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> flags, thread_mask = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">int</span> ret, nested, shared = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">cpumask_var_t</span> mask;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!desc)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (desc-&gt;irq_data.chip == &amp;no_irq_chip)</span><br><span class="line">		<span class="keyword">return</span> -ENOSYS;</span><br><span class="line">	<span class="keyword">if</span> (!try_module_get(desc-&gt;owner))</span><br><span class="line">		<span class="keyword">return</span> -ENODEV;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Check whether the interrupt nests into another interrupt</span></span><br><span class="line"><span class="comment">	 * thread.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	nested = irq_settings_is_nested_thread(desc);</span><br><span class="line">	<span class="comment">// (4.1) 判断中断是否是支持嵌套</span></span><br><span class="line">	<span class="keyword">if</span> (nested) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">new</span>-&gt;thread_fn) &#123;</span><br><span class="line">			ret = -EINVAL;</span><br><span class="line">			<span class="keyword">goto</span> out_mput;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Replace the primary handler which was provided from</span></span><br><span class="line"><span class="comment">		 * the driver for non nested interrupt handling by the</span></span><br><span class="line"><span class="comment">		 * dummy function which warns when called.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">new</span>-&gt;handler = irq_nested_primary_handler;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">// (4.2) 判断中断是否可以被线程化</span></span><br><span class="line">		<span class="comment">// 如果中断没有设置 _IRQ_NOTHREAD 标志 &amp; 强制中断线程化标志被设置 (force_irqthreads=1)</span></span><br><span class="line">		<span class="comment">// 强制把中断线程化：</span></span><br><span class="line">		<span class="comment">// new-&gt;thread_fn = new-&gt;handler;new-&gt;handler = irq_default_primary_handler;</span></span><br><span class="line">		<span class="keyword">if</span> (irq_settings_can_thread(desc))</span><br><span class="line">			irq_setup_forced_threading(<span class="keyword">new</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Create a handler thread when a thread function is supplied</span></span><br><span class="line"><span class="comment">	 * and the interrupt does not nest into another interrupt</span></span><br><span class="line"><span class="comment">	 * thread.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (4.3) 如果是线程化中断，创建线程化中断对应的线程</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;thread_fn &amp;&amp; !nested) &#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">t</span>;</span></span><br><span class="line">		<span class="keyword">static</span> <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">sched_param</span> <span class="title">param</span> = &#123;</span></span><br><span class="line">			.sched_priority = MAX_USER_RT_PRIO/<span class="number">2</span>,</span><br><span class="line">		&#125;;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 创建线程</span></span><br><span class="line">		t = kthread_create(irq_thread, <span class="keyword">new</span>, <span class="string">"irq/%d-%s"</span>, irq,</span><br><span class="line">				   <span class="keyword">new</span>-&gt;name);</span><br><span class="line">		<span class="keyword">if</span> (IS_ERR(t)) &#123;</span><br><span class="line">			ret = PTR_ERR(t);</span><br><span class="line">			<span class="keyword">goto</span> out_mput;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		sched_setscheduler_nocheck(t, SCHED_FIFO, &amp;param);</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * We keep the reference to the task struct even if</span></span><br><span class="line"><span class="comment">		 * the thread dies to avoid that the interrupt code</span></span><br><span class="line"><span class="comment">		 * references an already freed task_struct.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		get_task_struct(t);</span><br><span class="line">		<span class="comment">// 赋值给 -&gt;thread 成员</span></span><br><span class="line">		<span class="keyword">new</span>-&gt;thread = t;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Tell the thread to set its affinity. This is</span></span><br><span class="line"><span class="comment">		 * important for shared interrupt handlers as we do</span></span><br><span class="line"><span class="comment">		 * not invoke setup_affinity() for the secondary</span></span><br><span class="line"><span class="comment">		 * handlers as everything is already set up. Even for</span></span><br><span class="line"><span class="comment">		 * interrupts marked with IRQF_NO_BALANCE this is</span></span><br><span class="line"><span class="comment">		 * correct as we want the thread to move to the cpu(s)</span></span><br><span class="line"><span class="comment">		 * on which the requesting code placed the interrupt.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		set_bit(IRQTF_AFFINITY, &amp;<span class="keyword">new</span>-&gt;thread_flags);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!alloc_cpumask_var(&amp;mask, GFP_KERNEL)) &#123;</span><br><span class="line">		ret = -ENOMEM;</span><br><span class="line">		<span class="keyword">goto</span> out_thread;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Drivers are often written to work w/o knowledge about the</span></span><br><span class="line"><span class="comment">	 * underlying irq chip implementation, so a request for a</span></span><br><span class="line"><span class="comment">	 * threaded irq without a primary hard irq context handler</span></span><br><span class="line"><span class="comment">	 * requires the ONESHOT flag to be set. Some irq chips like</span></span><br><span class="line"><span class="comment">	 * MSI based interrupts are per se one shot safe. Check the</span></span><br><span class="line"><span class="comment">	 * chip flags, so we can avoid the unmask dance at the end of</span></span><br><span class="line"><span class="comment">	 * the threaded handler for those.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (desc-&gt;irq_data.chip-&gt;flags &amp; IRQCHIP_ONESHOT_SAFE)</span><br><span class="line">		<span class="keyword">new</span>-&gt;flags &amp;= ~IRQF_ONESHOT;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * The following block of code has to be executed atomically</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (4.4) 找到最后一个 action 结构</span></span><br><span class="line">	raw_spin_lock_irqsave(&amp;desc-&gt;lock, flags);</span><br><span class="line">	old_ptr = &amp;desc-&gt;action;</span><br><span class="line">	old = *old_ptr;</span><br><span class="line">	<span class="keyword">if</span> (old) &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Can't share interrupts unless both agree to and are</span></span><br><span class="line"><span class="comment">		 * the same type (level, edge, polarity). So both flag</span></span><br><span class="line"><span class="comment">		 * fields must have IRQF_SHARED set and the bits which</span></span><br><span class="line"><span class="comment">		 * set the trigger type must match. Also all must</span></span><br><span class="line"><span class="comment">		 * agree on ONESHOT.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">if</span> (!((old-&gt;flags &amp; <span class="keyword">new</span>-&gt;flags) &amp; IRQF_SHARED) ||</span><br><span class="line">		    ((old-&gt;flags ^ <span class="keyword">new</span>-&gt;flags) &amp; IRQF_TRIGGER_MASK) ||</span><br><span class="line">		    ((old-&gt;flags ^ <span class="keyword">new</span>-&gt;flags) &amp; IRQF_ONESHOT))</span><br><span class="line">			<span class="keyword">goto</span> mismatch;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* All handlers must agree on per-cpuness */</span></span><br><span class="line">		<span class="keyword">if</span> ((old-&gt;flags &amp; IRQF_PERCPU) !=</span><br><span class="line">		    (<span class="keyword">new</span>-&gt;flags &amp; IRQF_PERCPU))</span><br><span class="line">			<span class="keyword">goto</span> mismatch;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* add new interrupt at end of irq queue */</span></span><br><span class="line">		<span class="keyword">do</span> &#123;</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * Or all existing action-&gt;thread_mask bits,</span></span><br><span class="line"><span class="comment">			 * so we can find the next zero bit for this</span></span><br><span class="line"><span class="comment">			 * new action.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			thread_mask |= old-&gt;thread_mask;</span><br><span class="line">			old_ptr = &amp;old-&gt;next;</span><br><span class="line">			old = *old_ptr;</span><br><span class="line">		&#125; <span class="keyword">while</span> (old);</span><br><span class="line">		<span class="comment">// 如果有多个 action，共享标志设为 1</span></span><br><span class="line">		shared = <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Setup the thread mask for this irqaction for ONESHOT. For</span></span><br><span class="line"><span class="comment">	 * !ONESHOT irqs the thread mask is 0 so we can avoid a</span></span><br><span class="line"><span class="comment">	 * conditional in irq_wake_thread().</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;flags &amp; IRQF_ONESHOT) &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Unlikely to have 32 resp 64 irqs sharing one line,</span></span><br><span class="line"><span class="comment">		 * but who knows.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">if</span> (thread_mask == ~<span class="number">0U</span>L) &#123;</span><br><span class="line">			ret = -EBUSY;</span><br><span class="line">			<span class="keyword">goto</span> out_mask;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * The thread_mask for the action is or'ed to</span></span><br><span class="line"><span class="comment">		 * desc-&gt;thread_active to indicate that the</span></span><br><span class="line"><span class="comment">		 * IRQF_ONESHOT thread handler has been woken, but not</span></span><br><span class="line"><span class="comment">		 * yet finished. The bit is cleared when a thread</span></span><br><span class="line"><span class="comment">		 * completes. When all threads of a shared interrupt</span></span><br><span class="line"><span class="comment">		 * line have completed desc-&gt;threads_active becomes</span></span><br><span class="line"><span class="comment">		 * zero and the interrupt line is unmasked. See</span></span><br><span class="line"><span class="comment">		 * handle.c:irq_wake_thread() for further information.</span></span><br><span class="line"><span class="comment">		 *</span></span><br><span class="line"><span class="comment">		 * If no thread is woken by primary (hard irq context)</span></span><br><span class="line"><span class="comment">		 * interrupt handlers, then desc-&gt;threads_active is</span></span><br><span class="line"><span class="comment">		 * also checked for zero to unmask the irq line in the</span></span><br><span class="line"><span class="comment">		 * affected hard irq flow handlers</span></span><br><span class="line"><span class="comment">		 * (handle_[fasteoi|level]_irq).</span></span><br><span class="line"><span class="comment">		 *</span></span><br><span class="line"><span class="comment">		 * The new action gets the first zero bit of</span></span><br><span class="line"><span class="comment">		 * thread_mask assigned. See the loop above which or's</span></span><br><span class="line"><span class="comment">		 * all existing action-&gt;thread_mask bits.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">new</span>-&gt;thread_mask = <span class="number">1</span> &lt;&lt; ffz(thread_mask);</span><br><span class="line"></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">new</span>-&gt;handler == irq_default_primary_handler &amp;&amp;</span><br><span class="line">		   !(desc-&gt;irq_data.chip-&gt;flags &amp; IRQCHIP_ONESHOT_SAFE)) &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * The interrupt was requested with handler = NULL, so</span></span><br><span class="line"><span class="comment">		 * we use the default primary handler for it. But it</span></span><br><span class="line"><span class="comment">		 * does not have the oneshot flag set. In combination</span></span><br><span class="line"><span class="comment">		 * with level interrupts this is deadly, because the</span></span><br><span class="line"><span class="comment">		 * default primary handler just wakes the thread, then</span></span><br><span class="line"><span class="comment">		 * the irq lines is reenabled, but the device still</span></span><br><span class="line"><span class="comment">		 * has the level irq asserted. Rinse and repeat....</span></span><br><span class="line"><span class="comment">		 *</span></span><br><span class="line"><span class="comment">		 * While this works for edge type interrupts, we play</span></span><br><span class="line"><span class="comment">		 * it safe and reject unconditionally because we can't</span></span><br><span class="line"><span class="comment">		 * say for sure which type this interrupt really</span></span><br><span class="line"><span class="comment">		 * has. The type flags are unreliable as the</span></span><br><span class="line"><span class="comment">		 * underlying chip implementation can override them.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		pr_err(<span class="string">"Threaded irq requested with handler=NULL and !ONESHOT for irq %d\n"</span>,</span><br><span class="line">		       irq);</span><br><span class="line">		ret = -EINVAL;</span><br><span class="line">		<span class="keyword">goto</span> out_mask;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (4.5) 如果是第一个 action，做一些初始化工作</span></span><br><span class="line">	<span class="keyword">if</span> (!shared) &#123;</span><br><span class="line">		ret = irq_request_resources(desc);</span><br><span class="line">		<span class="keyword">if</span> (ret) &#123;</span><br><span class="line">			pr_err(<span class="string">"Failed to request resources for %s (irq %d) on irqchip %s\n"</span>,</span><br><span class="line">			       <span class="keyword">new</span>-&gt;name, irq, desc-&gt;irq_data.chip-&gt;name);</span><br><span class="line">			<span class="keyword">goto</span> out_mask;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		init_waitqueue_head(&amp;desc-&gt;wait_for_threads);</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* Setup the type (level, edge polarity) if configured: */</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;flags &amp; IRQF_TRIGGER_MASK) &#123;</span><br><span class="line">			ret = __irq_set_trigger(desc, irq,</span><br><span class="line">					<span class="keyword">new</span>-&gt;flags &amp; IRQF_TRIGGER_MASK);</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (ret)</span><br><span class="line">				<span class="keyword">goto</span> out_mask;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		desc-&gt;istate &amp;= ~(IRQS_AUTODETECT | IRQS_SPURIOUS_DISABLED | \</span><br><span class="line">				  IRQS_ONESHOT | IRQS_WAITING);</span><br><span class="line">		irqd_clear(&amp;desc-&gt;irq_data, IRQD_IRQ_INPROGRESS);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;flags &amp; IRQF_PERCPU) &#123;</span><br><span class="line">			irqd_set(&amp;desc-&gt;irq_data, IRQD_PER_CPU);</span><br><span class="line">			irq_settings_set_per_cpu(desc);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;flags &amp; IRQF_ONESHOT)</span><br><span class="line">			desc-&gt;istate |= IRQS_ONESHOT;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (irq_settings_can_autoenable(desc))</span><br><span class="line">			irq_startup(desc, <span class="literal">true</span>);</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">			<span class="comment">/* Undo nested disables: */</span></span><br><span class="line">			desc-&gt;depth = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* Exclude IRQ from balancing if requested */</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;flags &amp; IRQF_NOBALANCING) &#123;</span><br><span class="line">			irq_settings_set_no_balancing(desc);</span><br><span class="line">			irqd_set(&amp;desc-&gt;irq_data, IRQD_NO_BALANCING);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 设置中断亲和力</span></span><br><span class="line">		<span class="comment">/* Set default affinity mask once everything is setup */</span></span><br><span class="line">		setup_affinity(irq, desc, mask);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">new</span>-&gt;flags &amp; IRQF_TRIGGER_MASK) &#123;</span><br><span class="line">		<span class="keyword">unsigned</span> <span class="keyword">int</span> nmsk = <span class="keyword">new</span>-&gt;flags &amp; IRQF_TRIGGER_MASK;</span><br><span class="line">		<span class="keyword">unsigned</span> <span class="keyword">int</span> omsk = irq_settings_get_trigger_mask(desc);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (nmsk != omsk)</span><br><span class="line">			<span class="comment">/* hope the handler works with current  trigger mode */</span></span><br><span class="line">			pr_warning(<span class="string">"irq %d uses trigger mode %u; requested %u\n"</span>,</span><br><span class="line">				   irq, nmsk, omsk);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (4.6) 将新的 action 插入到 desc 链表中</span></span><br><span class="line">	<span class="keyword">new</span>-&gt;irq = irq;</span><br><span class="line">	*old_ptr = <span class="keyword">new</span>;</span><br><span class="line"></span><br><span class="line">	irq_pm_install_action(desc, <span class="keyword">new</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Reset broken irq detection when installing new handler */</span></span><br><span class="line">	desc-&gt;irq_count = <span class="number">0</span>;</span><br><span class="line">	desc-&gt;irqs_unhandled = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Check whether we disabled the irq via the spurious handler</span></span><br><span class="line"><span class="comment">	 * before. Reenable it and give it another chance.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (4.7) 如果中断之前被虚假 disable 了，重新 enable 中断</span></span><br><span class="line">	<span class="keyword">if</span> (shared &amp;&amp; (desc-&gt;istate &amp; IRQS_SPURIOUS_DISABLED)) &#123;</span><br><span class="line">		desc-&gt;istate &amp;= ~IRQS_SPURIOUS_DISABLED;</span><br><span class="line">		__enable_irq(desc, irq);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	raw_spin_unlock_irqrestore(&amp;desc-&gt;lock, flags);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Strictly no need to wake it up, but hung_task complains</span></span><br><span class="line"><span class="comment">	 * when no hard interrupt wakes the thread up.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (4.8) 唤醒线程化中断对应的线程</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;thread)</span><br><span class="line">		wake_up_process(<span class="keyword">new</span>-&gt;thread);</span><br><span class="line"></span><br><span class="line">	register_irq_proc(irq, desc);</span><br><span class="line">	<span class="keyword">new</span>-&gt;dir = <span class="literal">NULL</span>;</span><br><span class="line">	register_handler_proc(irq, <span class="keyword">new</span>);</span><br><span class="line">	free_cpumask_var(mask);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">mismatch:</span><br><span class="line">	<span class="keyword">if</span> (!(<span class="keyword">new</span>-&gt;flags &amp; IRQF_PROBE_SHARED)) &#123;</span><br><span class="line">		pr_err(<span class="string">"Flags mismatch irq %d. %08x (%s) vs. %08x (%s)\n"</span>,</span><br><span class="line">		       irq, <span class="keyword">new</span>-&gt;flags, <span class="keyword">new</span>-&gt;name, old-&gt;flags, old-&gt;name);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_DEBUG_SHIRQ</span></span><br><span class="line">		dump_stack();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	&#125;</span><br><span class="line">	ret = -EBUSY;</span><br><span class="line"></span><br><span class="line">out_mask:</span><br><span class="line">	raw_spin_unlock_irqrestore(&amp;desc-&gt;lock, flags);</span><br><span class="line">	free_cpumask_var(mask);</span><br><span class="line"></span><br><span class="line">out_thread:</span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">new</span>-&gt;thread) &#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">t</span> = <span class="title">new</span>-&gt;<span class="title">thread</span>;</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">new</span>-&gt;thread = <span class="literal">NULL</span>;</span><br><span class="line">		kthread_stop(t);</span><br><span class="line">		put_task_struct(t);</span><br><span class="line">	&#125;</span><br><span class="line">out_mput:</span><br><span class="line">	module_put(desc-&gt;owner);</span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-5-中断线程化"><a href="#1-5-中断线程化" class="headerlink" title="1.5 中断线程化"></a>1.5 中断线程化</h3><p>从上一节可以看到，使用 <code>request_irq()</code> 注册的是传统中断，而直接使用 <code>request_threaded_irq()</code> 注册的是线程化中断。线程化中断的主要目的是把中断上下文的任务迁移到线程中，减少系统关中断的时间，增强系统的实时性。</p>
+<p>中断对应的线程命名规则为：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">t = kthread_create(irq_thread, <span class="keyword">new</span>, <span class="string">"irq/%d-%s"</span>, irq, <span class="keyword">new</span>-&gt;name);</span><br></pre></td></tr></table></figure>
+<p>我们通过 ps 命令查看系统中的中断线程，注意这些线程是实时线程 SCHED_FIFO：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">root@:/ <span class="meta"># ps | grep <span class="meta-string">"irq/"</span></span></span><br><span class="line">root      <span class="number">171</span>   <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     irq_thread <span class="number">0000000000</span> S irq/<span class="number">389</span>-charger</span><br><span class="line">root      <span class="number">239</span>   <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     irq_thread <span class="number">0000000000</span> S irq/<span class="number">296</span>-PS_int-</span><br><span class="line">root      <span class="number">247</span>   <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     irq_thread <span class="number">0000000000</span> S irq/<span class="number">297</span><span class="number">-1124000</span></span><br><span class="line">root      <span class="number">1415</span>  <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     irq_thread <span class="number">0000000000</span> S irq/<span class="number">293</span>-goodix_</span><br><span class="line">root@a0255:/ #</span><br></pre></td></tr></table></figure>
+<p>线程化中断的创建和处理任务流程如下：</p>
+<p><img src="int_thread_irq.png" alt="Linux 线程化中断 "></p>
+<p>线程和 action 是一一对应的，即用户注册一个中断处理程序对应一个中断线程。</p>
+<h3 id="1-6-外设中断打开-关闭"><a href="#1-6-外设中断打开-关闭" class="headerlink" title="1.6 外设中断打开 / 关闭"></a>1.6 外设中断打开 / 关闭</h3><p>前面的章节讲述了本地 CPU 全局中断的 enable/disable。如果要操作单个中断源的 enable/disable，使用 <code>enable_irq()</code>/<code>disable_irq()</code> 函数。最后调用主要是 GIC chip 相关的函数：</p>
+<ul>
+<li>kernel/irq/manage.c:</li>
+<li><code>enable_irq()</code> -&gt; <code>__enable_irq()</code> -&gt; <code>irq_enable()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">enable_irq</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> *<span class="title">desc</span> = <span class="title">irq_get_desc_buslock</span>(<span class="title">irq</span>, &amp;<span class="title">flags</span>, <span class="title">IRQ_GET_DESC_CHECK_GLOBAL</span>);</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!desc)</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	<span class="keyword">if</span> (WARN(!desc-&gt;irq_data.chip,</span><br><span class="line">		 KERN_ERR <span class="string">"enable_irq before setup/request_irq: irq %u\n"</span>, irq))</span><br><span class="line">		<span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">	__enable_irq(desc, irq);</span><br><span class="line">out:</span><br><span class="line">	irq_put_desc_busunlock(desc, flags);</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="keyword">void</span> __enable_irq(struct irq_desc *desc, <span class="keyword">unsigned</span> <span class="keyword">int</span> irq)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">switch</span> (desc-&gt;depth) &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line"> err_out:</span><br><span class="line">		WARN(<span class="number">1</span>, KERN_WARNING <span class="string">"Unbalanced enable for IRQ %d\n"</span>, irq);</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> <span class="number">1</span>: &#123;</span><br><span class="line">		<span class="keyword">if</span> (desc-&gt;istate &amp; IRQS_SUSPENDED)</span><br><span class="line">			<span class="keyword">goto</span> err_out;</span><br><span class="line">		<span class="comment">/* Prevent probing on this irq: */</span></span><br><span class="line">		irq_settings_set_noprobe(desc);</span><br><span class="line">		irq_enable(desc);</span><br><span class="line">		check_irq_resend(desc, irq);</span><br><span class="line">		<span class="comment">/* fall-through */</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		desc-&gt;depth--;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">irq_enable</span><span class="params">(struct irq_desc *desc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// 操作 GIC chip 对应的函数</span></span><br><span class="line">	irq_state_clr_disabled(desc);</span><br><span class="line">	<span class="keyword">if</span> (desc-&gt;irq_data.chip-&gt;irq_enable)</span><br><span class="line">		desc-&gt;irq_data.chip-&gt;irq_enable(&amp;desc-&gt;irq_data);</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		desc-&gt;irq_data.chip-&gt;irq_unmask(&amp;desc-&gt;irq_data);</span><br><span class="line">	irq_state_clr_masked(desc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>kernel/irq/manage.c:</li>
+<li><code>enable_irq()</code> -&gt; <code>__enable_irq()</code> -&gt; <code>irq_enable()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">disable_irq</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!__disable_irq_nosync(irq))</span><br><span class="line">		synchronize_irq(irq);</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __disable_irq_nosync(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> *<span class="title">desc</span> = <span class="title">irq_get_desc_buslock</span>(<span class="title">irq</span>, &amp;<span class="title">flags</span>, <span class="title">IRQ_GET_DESC_CHECK_GLOBAL</span>);</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!desc)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line">	__disable_irq(desc, irq);</span><br><span class="line">	irq_put_desc_busunlock(desc, flags);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="keyword">void</span> __disable_irq(struct irq_desc *desc, <span class="keyword">unsigned</span> <span class="keyword">int</span> irq)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span> (!desc-&gt;depth++)</span><br><span class="line">		irq_disable(desc);</span><br><span class="line">&#125;</span><br><span class="line">||| →</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">irq_disable</span><span class="params">(struct irq_desc *desc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// 操作 GIC chip 对应的函数</span></span><br><span class="line">	irq_state_set_disabled(desc);</span><br><span class="line">	<span class="keyword">if</span> (desc-&gt;irq_data.chip-&gt;irq_disable) &#123;</span><br><span class="line">		desc-&gt;irq_data.chip-&gt;irq_disable(&amp;desc-&gt;irq_data);</span><br><span class="line">		irq_state_set_masked(desc);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">synchronize_irq</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> *<span class="title">desc</span> = <span class="title">irq_to_desc</span>(<span class="title">irq</span>);</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (desc) &#123;</span><br><span class="line">		__synchronize_hardirq(desc);</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * We made sure that no hardirq handler is</span></span><br><span class="line"><span class="comment">		 * running. Now verify that no threaded handlers are</span></span><br><span class="line"><span class="comment">		 * active.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="comment">// 如果是线程化中断，需要等到线程执行完成</span></span><br><span class="line">		wait_event(desc-&gt;wait_for_threads,</span><br><span class="line">			   !atomic_read(&amp;desc-&gt;threads_active));</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-7-中断亲和力"><a href="#1-7-中断亲和力" class="headerlink" title="1.7 中断亲和力"></a>1.7 中断亲和力</h3><p>同样基于 GIC chip 提供的能力，我们能配置中断源对 CPU 的亲和力。</p>
+<ul>
+<li>kernel/irq/manage.c:</li>
+<li><code>enable_irq()</code> -&gt; <code>__enable_irq()</code> -&gt; <code>irq_enable()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span></span><br><span class="line">irq_set_affinity(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq, <span class="keyword">const</span> struct cpumask *cpumask)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> __irq_set_affinity(irq, cpumask, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="keyword">int</span> __irq_set_affinity(<span class="keyword">unsigned</span> <span class="keyword">int</span> irq, <span class="keyword">const</span> struct cpumask *mask, <span class="keyword">bool</span> force)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> *<span class="title">desc</span> = <span class="title">irq_to_desc</span>(<span class="title">irq</span>);</span></span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!desc)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	raw_spin_lock_irqsave(&amp;desc-&gt;lock, flags);</span><br><span class="line">	ret = irq_set_affinity_locked(irq_desc_get_irq_data(desc), mask, force);</span><br><span class="line">	raw_spin_unlock_irqrestore(&amp;desc-&gt;lock, flags);</span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">irq_set_affinity_locked</span><span class="params">(struct irq_data *data, <span class="keyword">const</span> struct cpumask *mask,</span></span></span><br><span class="line"><span class="function"><span class="params">			    <span class="keyword">bool</span> force)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_chip</span> *<span class="title">chip</span> = <span class="title">irq_data_get_irq_chip</span>(<span class="title">data</span>);</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> *<span class="title">desc</span> = <span class="title">irq_data_to_desc</span>(<span class="title">data</span>);</span></span><br><span class="line">	<span class="keyword">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!chip || !chip-&gt;irq_set_affinity)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (irq_can_move_pcntxt(data)) &#123;</span><br><span class="line">		ret = irq_do_set_affinity(data, mask, force);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		irqd_set_move_pending(data);</span><br><span class="line">		irq_copy_pending(desc, mask);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (desc-&gt;affinity_notify) &#123;</span><br><span class="line">		kref_get(&amp;desc-&gt;affinity_notify-&gt;kref);</span><br><span class="line">		schedule_work(&amp;desc-&gt;affinity_notify-&gt;work);</span><br><span class="line">	&#125;</span><br><span class="line">	irqd_set(data, IRQD_AFFINITY_SET);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line">||| →</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">irq_do_set_affinity</span><span class="params">(struct irq_data *data, <span class="keyword">const</span> struct cpumask *mask,</span></span></span><br><span class="line"><span class="function"><span class="params">			<span class="keyword">bool</span> force)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_desc</span> *<span class="title">desc</span> = <span class="title">irq_data_to_desc</span>(<span class="title">data</span>);</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">irq_chip</span> *<span class="title">chip</span> = <span class="title">irq_data_get_irq_chip</span>(<span class="title">data</span>);</span></span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 操作 GIC chip 对应的函数</span></span><br><span class="line">	ret = chip-&gt;irq_set_affinity(data, mask, force);</span><br><span class="line">	<span class="keyword">switch</span> (ret) &#123;</span><br><span class="line">	<span class="keyword">case</span> IRQ_SET_MASK_OK:</span><br><span class="line">	<span class="keyword">case</span> IRQ_SET_MASK_OK_DONE:</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_MTK_IRQ_NEW_DESIGN</span></span><br><span class="line">		update_affinity_settings(desc, mask, <span class="literal">true</span>);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">		cpumask_copy(data-&gt;affinity, mask);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	<span class="keyword">case</span> IRQ_SET_MASK_OK_NOCOPY:</span><br><span class="line">		irq_set_thread_affinity(desc);</span><br><span class="line">		ret = <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-Linux-中断下半部"><a href="#2-Linux-中断下半部" class="headerlink" title="2. Linux 中断下半部"></a>2. Linux 中断下半部</h2><p>接下来就是大名鼎鼎的中断下半部了，包括：softirq、tasklet、workqueue。中断下半部的主要目的就是减少系统关中断的时间，把关键代码放在中断中做，大部分处理代码放到不用关中断的空间去做。</p>
+<p>上面有最激进的方法中断线程化，但是大部分时候还是需要用到中断上、下半部的方法。</p>
+<p>workqueue 在另外文章中已经有详细解析，本处只解析 softirq、tasklet。</p>
+<h3 id="2-1-preempt-count"><a href="#2-1-preempt-count" class="headerlink" title="2.1 preempt_count"></a>2.1 preempt_count</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> __always_inline <span class="keyword">int</span> <span class="title">preempt_count</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> current_thread_info()-&gt;preempt_count;	<span class="comment">/* 0 =&gt; preemptable, &lt;0 =&gt; bug */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>开始之前先了解一下 preempt_count 这个背景知识，preempt_count 是 thread_info 结构中的一个字段，用来表示当前进程能否被抢占。</p>
+<p>所谓的抢占：是指在进程在内核空间运行，如果主动不释放 CPU，在时间片用完或者高优先级任务就绪的情况下，会被强行剥夺掉 CPU 的使用权。</p>
+<p>但是进程可能在做一些关键操作，不能被抢占，被抢占后系统会出错。所以 Linux 设计了 preempt_count 字段，=0 可以被抢占，&gt;0 不能被抢占。</p>
+<p>进程在中断返回内核态时，做是否可抢占的检查：</p>
+<ul>
+<li>arch/arm64/kernel/entry.s:</li>
+<li><code>el1_irq()</code> -&gt; <code>__enable_irq()</code> -&gt; <code>irq_enable()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line">	.align	<span class="number">6</span></span><br><span class="line">el1_irq:</span><br><span class="line">	kernel_entry <span class="number">1</span></span><br><span class="line">	enable_dbg</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_TRACE_IRQFLAGS</span></span><br><span class="line">	bl	trace_hardirqs_off</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_MTPROF</span></span><br><span class="line">	bl  MT_trace_hardirqs_off</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	irq_handler</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_PREEMPT</span></span><br><span class="line">	get_thread_info tsk</span><br><span class="line">	ldr	w24, [tsk, #TI_PREEMPT]		<span class="comment">// get preempt count</span></span><br><span class="line">	<span class="comment">// (1) 如果 preempt_count!=0，不进行可抢占判断</span></span><br><span class="line">	cbnz	w24, <span class="number">1f</span>				<span class="comment">// preempt count != 0</span></span><br><span class="line">	ldr	x0, [tsk, #TI_FLAGS]		<span class="comment">// get flags</span></span><br><span class="line">	<span class="comment">// (2) 如果 preempt_count==0 &amp; TIF_NEED_RESCHED 被置位</span></span><br><span class="line">	<span class="comment">// 进行调度</span></span><br><span class="line">	tbz	x0, #TIF_NEED_RESCHED, <span class="number">1f</span>	<span class="comment">// needs rescheduling?</span></span><br><span class="line">	bl	el1_preempt</span><br><span class="line"><span class="number">1</span>:</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_MTPROF</span></span><br><span class="line">	bl  MT_trace_hardirqs_on</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_TRACE_IRQFLAGS</span></span><br><span class="line">	bl	trace_hardirqs_on</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	kernel_exit <span class="number">1</span></span><br><span class="line">ENDPROC(el1_irq)</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_PREEMPT</span></span><br><span class="line">el1_preempt:</span><br><span class="line">	mov	x24, lr</span><br><span class="line">	<span class="comment">// (3) 抢占调度</span></span><br><span class="line"><span class="number">1</span>:	bl	preempt_schedule_irq		<span class="comment">// irq en/disable is done inside</span></span><br><span class="line">	ldr	x0, [tsk, #TI_FLAGS]		<span class="comment">// get new tasks TI_FLAGS</span></span><br><span class="line">	tbnz	x0, #TIF_NEED_RESCHED, <span class="number">1b</span>	<span class="comment">// needs rescheduling?</span></span><br><span class="line">	ret	x24</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">| →</span><br><span class="line"></span><br><span class="line"><span class="function">asmlinkage __visible <span class="keyword">void</span> __sched <span class="title">preempt_schedule_irq</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">enum</span> ctx_state prev_state;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Catch callers which need to be fixed */</span></span><br><span class="line">	BUG_ON(preempt_count() || !irqs_disabled());</span><br><span class="line"></span><br><span class="line">	prev_state = exception_enter();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">do</span> &#123;</span><br><span class="line">		__preempt_count_add(PREEMPT_ACTIVE);</span><br><span class="line">		local_irq_enable();</span><br><span class="line">		__schedule();</span><br><span class="line">		local_irq_disable();</span><br><span class="line">		__preempt_count_sub(PREEMPT_ACTIVE);</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Check again in case we missed a preemption opportunity</span></span><br><span class="line"><span class="comment">		 * between schedule and now.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		barrier();</span><br><span class="line">	&#125; <span class="keyword">while</span> (need_resched());</span><br><span class="line"></span><br><span class="line">	exception_exit(prev_state);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>虽然 preempt_count&gt;0 就是禁止抢占，Linux 进一步按照各种场景对 preempt_count bit 进行了资源划分：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>reserved bits</th>
+<th style="text-align:center">bit21</th>
+<th style="text-align:center">bit20</th>
+<th style="text-align:center">bit19-bit16</th>
+<th style="text-align:center">bit15-bit8</th>
+<th style="text-align:center">bit7-bit0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td style="text-align:center">PREEMPT_ACTIVE</td>
+<td style="text-align:center">NMI</td>
+<td style="text-align:center">HARDIRQ</td>
+<td style="text-align:center">SOFTIRQ</td>
+<td style="text-align:center">PREEMPT</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">/*</span></span><br><span class="line"> <span class="string">*</span> <span class="attr">PREEMPT_MASK:</span>	<span class="number">0x000000ff</span></span><br><span class="line"> <span class="string">*</span> <span class="attr">SOFTIRQ_MASK:</span>	<span class="number">0x0000ff00</span></span><br><span class="line"> <span class="string">*</span> <span class="attr">HARDIRQ_MASK:</span>	<span class="number">0x000f0000</span></span><br><span class="line"> <span class="string">*</span>     <span class="attr">NMI_MASK:</span>	<span class="number">0x00100000</span></span><br><span class="line"> <span class="string">*</span> <span class="attr">PREEMPT_ACTIVE:</span>	<span class="number">0x00200000</span></span><br><span class="line"> <span class="string">*/</span></span><br><span class="line"><span class="comment">#define PREEMPT_BITS	8</span></span><br><span class="line"><span class="comment">#define SOFTIRQ_BITS	8</span></span><br><span class="line"><span class="comment">#define HARDIRQ_BITS	4</span></span><br><span class="line"><span class="comment">#define NMI_BITS	1</span></span><br></pre></td></tr></table></figure>
+<p>各场景分别利用各自的 bit 来 disable/enable 抢占：</p>
+<ul>
+<li>普通场景 (PREEMPT_MASK)。对应函数 <code>preempt_disable()</code>、<code>preempt_enable()</code>。</li>
+<li>软中断场景 (SOFTIRQ_MASK)。对应函数 <code>local_bh_disable()</code>、<code>local_bh_enable()</code>。</li>
+<li>普通中断场景 (HARDIRQ_MASK)。对应函数 <code>__irq_enter()</code>、<code>__irq_exit()</code>。</li>
+<li>NMI 中断场景 (NMI_MASK)。对应函数 <code>nmi_enter()</code>、<code>nmi_exit()</code>。</li>
+</ul>
+<p>所以反过来，我们也可以通过 preempt_count 的值来判断当前在什么场景：</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">#define in_irq()		(<span class="name">hardirq_count</span>())</span><br><span class="line">#define in_softirq()		(<span class="name">softirq_count</span>())</span><br><span class="line">#define in_interrupt()		(<span class="name">irq_count</span>())</span><br><span class="line">#define in_serving_softirq()	(<span class="name">softirq_count</span>() &amp; SOFTIRQ_OFFSET)</span><br><span class="line">#define in_nmi()	(<span class="name">preempt_count</span>() &amp; NMI_MASK)</span><br><span class="line"></span><br><span class="line">#define hardirq_count()	(<span class="name">preempt_count</span>() &amp; HARDIRQ_MASK)</span><br><span class="line">#define softirq_count()	(<span class="name">preempt_count</span>() &amp; SOFTIRQ_MASK)</span><br><span class="line">#define irq_count()	(<span class="name">preempt_count</span>() &amp; (<span class="name">HARDIRQ_MASK</span> | SOFTIRQ_MASK \</span><br><span class="line">				 | NMI_MASK))</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-softirq"><a href="#2-2-softirq" class="headerlink" title="2.2 softirq"></a>2.2 softirq</h3><p>回到中断上下半部的架构，linux 系统虽然将大部分工作移出了中断上下文，不关闭中断。但是它也希望移出的工作能够很快的得到执行，软中断为了保证自己能很快执行，使用 <code>__local_bh_disable_ip()</code> 禁止抢占。</p>
+<p>softirq 的具体实现机制如下：</p>
+<ul>
+<li>系统支持固定的几种软中断，softirq_vec 数组用来记录这些软中断执行函数：</li>
+</ul>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">enum</span><br><span class="line">&#123;</span><br><span class="line">	HI_SOFTIRQ=<span class="number">0</span>,</span><br><span class="line">	TIMER_SOFTIRQ,</span><br><span class="line">	NET_TX_SOFTIRQ,</span><br><span class="line">	NET_RX_SOFTIRQ,</span><br><span class="line">	BLOCK_SOFTIRQ,</span><br><span class="line">	BLOCK_IOPOLL_SOFTIRQ,</span><br><span class="line">	TASKLET_SOFTIRQ,</span><br><span class="line">	SCHED_SOFTIRQ,</span><br><span class="line">	HRTIMER_SOFTIRQ,</span><br><span class="line">	RCU_SOFTIRQ,    <span class="comment">/* Preferable RCU should always be the last softirq */</span></span><br><span class="line"></span><br><span class="line">	NR_SOFTIRQS</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注册软中断的服务程序</span></span><br><span class="line">void <span class="keyword">open</span><span class="constructor">_softirq(<span class="params">int</span> <span class="params">nr</span>, <span class="params">void</span> (<span class="operator">*</span><span class="params">action</span>)</span>(<span class="keyword">struct</span> softirq_action *))</span><br><span class="line">&#123;</span><br><span class="line">	softirq_vec<span class="literal">[<span class="identifier">nr</span>]</span>.action = action;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//TASKLET_SOFTIRQ、HI_SOFTIRQ 两个软中断用来给 tasklet 服务。</span></span><br><span class="line">	<span class="keyword">open</span><span class="constructor">_softirq(TASKLET_SOFTIRQ, <span class="params">tasklet_action</span>)</span>;</span><br><span class="line">	<span class="keyword">open</span><span class="constructor">_softirq(HI_SOFTIRQ, <span class="params">tasklet_hi_action</span>)</span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>使用 irq_stat[cpu].__softirq_pending 来记录每个 cpu 上所有 softirq 的 pending 状态，<code>raise_softirq()</code> 用来置位一个 softirq pending：</li>
+</ul>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">void raise<span class="constructor">_softirq(<span class="params">unsigned</span> <span class="params">int</span> <span class="params">nr</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	unsigned long flags;</span><br><span class="line"></span><br><span class="line">	local<span class="constructor">_irq_save(<span class="params">flags</span>)</span>;</span><br><span class="line">	raise<span class="constructor">_softirq_irqoff(<span class="params">nr</span>)</span>;</span><br><span class="line">	local<span class="constructor">_irq_restore(<span class="params">flags</span>)</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="pattern-match">| →</span></span><br><span class="line"><span class="pattern-match">inline void raise<span class="constructor">_softirq_irqoff(<span class="params">unsigned</span> <span class="params">int</span> <span class="params">nr</span>)</span></span></span><br><span class="line"><span class="pattern-match">&#123;</span></span><br><span class="line"><span class="pattern-match">	<span class="constructor">__raise_softirq_irqoff(<span class="params">nr</span>)</span>;</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">	<span class="keyword">if</span> (!<span class="keyword">in</span><span class="constructor">_interrupt()</span>)</span></span><br><span class="line"><span class="pattern-match">		wakeup<span class="constructor">_softirqd()</span>;</span></span><br><span class="line"><span class="pattern-match">&#125;</span></span><br><span class="line"><span class="pattern-match"><span class="operator">||</span> →</span></span><br><span class="line"><span class="pattern-match">void <span class="constructor">__raise_softirq_irqoff(<span class="params">unsigned</span> <span class="params">int</span> <span class="params">nr</span>)</span></span></span><br><span class="line"><span class="pattern-match">&#123;</span></span><br><span class="line"><span class="pattern-match">	trace<span class="constructor">_softirq_raise(<span class="params">nr</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">	<span class="keyword">or</span><span class="constructor">_softirq_pending(1UL &lt;&lt; <span class="params">nr</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">&#125;</span></span><br><span class="line"><span class="pattern-match"><span class="operator">||</span>| →</span></span><br><span class="line"><span class="pattern-match">#define <span class="keyword">or</span><span class="constructor">_softirq_pending(<span class="params">x</span>)</span>  (local<span class="constructor">_softirq_pending()</span> |= (x))</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">#ifndef <span class="constructor">__ARCH_IRQ_STAT</span></span></span><br><span class="line"><span class="pattern-match">extern irq<span class="constructor">_cpustat_t</span> irq<span class="constructor">_stat</span>[];		<span class="operator">/</span><span class="operator">*</span> defined <span class="keyword">in</span> asm<span class="operator">/</span>hardirq.h <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">#define <span class="constructor">__IRQ_STAT(<span class="params">cpu</span>, <span class="params">member</span>)</span>	(irq<span class="constructor">_stat</span>[cpu].member)</span></span><br><span class="line"><span class="pattern-match">#endif</span></span><br><span class="line"><span class="pattern-match"></span></span><br><span class="line"><span class="pattern-match">  <span class="operator">/</span><span class="operator">*</span> arch independent irq<span class="constructor">_stat</span> fields <span class="operator">*</span><span class="operator">/</span></span></span><br><span class="line"><span class="pattern-match">#define local<span class="constructor">_softirq_pending()</span> \</span></span><br><span class="line"><span class="pattern-match">	<span class="constructor">__IRQ_STAT(<span class="params">smp_processor_id</span>()</span>, <span class="constructor">__softirq_pending</span>)</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>softirq 的执行有两个时刻：在退出中断 <code>irq_exit()</code> 时或者在 softirqd 线程当中：</li>
+</ul>
+<p><img src="int_softirq_flow.png" alt="linux 软中断流程 "></p>
+<p>软中断使用 <code>smpboot_register_percpu_thread()</code> 函数，给每个 cpu 上创建了对应的 softirqd 线程：</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">root@</span>:/ # ps | grep softirq</span><br><span class="line">root      <span class="number">3</span>     <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     smpboot_th <span class="number">0000000000</span> S ksoftirqd/<span class="number">0</span></span><br><span class="line">root      <span class="number">12</span>    <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     __kthread_ <span class="number">0000000000</span> R ksoftirqd/<span class="number">1</span></span><br><span class="line">root      <span class="number">16</span>    <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     __kthread_ <span class="number">0000000000</span> R ksoftirqd/<span class="number">2</span></span><br><span class="line">root      <span class="number">20</span>    <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     __kthread_ <span class="number">0000000000</span> R ksoftirqd/<span class="number">3</span></span><br><span class="line">root      <span class="number">24</span>    <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     __kthread_ <span class="number">0000000000</span> R ksoftirqd/<span class="number">4</span></span><br><span class="line">root      <span class="number">28</span>    <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     __kthread_ <span class="number">0000000000</span> R ksoftirqd/<span class="number">5</span></span><br><span class="line">root      <span class="number">32</span>    <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     __kthread_ <span class="number">0000000000</span> R ksoftirqd/<span class="number">6</span></span><br><span class="line">root      <span class="number">36</span>    <span class="number">2</span>     <span class="number">0</span>      <span class="number">0</span>     __kthread_ <span class="number">0000000000</span> R ksoftirqd/<span class="number">7</span></span><br></pre></td></tr></table></figure>
+<p>软中断优先在 <code>irq_exit()</code> 中执行，如果超过时间等条件转为 softirqd 线程中执行。满足以下任一条件软中断在 softirqd 线程中执行：</p>
+<ul>
+<li>在 <code>irq_exit()</code>-&gt;<code>__do_softirq()</code> 中运行，时间超过 2ms。</li>
+<li>在 <code>irq_exit()</code>-&gt;<code>__do_softirq()</code> 中运行，轮询软中断超过 10 次。</li>
+<li>在 <code>irq_exit()</code>-&gt;<code>__do_softirq()</code> 中运行，本线程需要被调度。</li>
+<li>调用 <code>raise_softirq()</code> 唤醒软中断时，不在中断环境中。</li>
+</ul>
+<p>我们也看到，软中断处理是按照优先级逐个调用 softirq_vec[] 数组中的软中断处理函数，所以前面的软中断是可以阻塞后面的软中断的。这个在我们写程序的时候需要注意。</p>
+<h3 id="2-3-tasklet"><a href="#2-3-tasklet" class="headerlink" title="2.3 tasklet"></a>2.3 tasklet</h3><p>Linux 已经有了 softirq 机制，为什么还需要 tasklet 机制？最主要的原因是 softirq 是多 cpu 执行的，可能碰到很多重入的问题，而 tasklet 同一时刻只能在一个 cpu 上执行，不需要处理重入互斥问题。另外 Linux 也不建议用户去添加新的软中断。</p>
+<p>下面我们来具体分析一下 tasklet 的实现机制：</p>
+<ul>
+<li>per-cpu 变量 tasklet_vec/tasklet_hi_vec 以链表的形式记录了当前 cpu 需要处理的 tasklet 任务：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> __init <span class="title">softirq_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> cpu;</span><br><span class="line"></span><br><span class="line">	for_each_possible_cpu(cpu) &#123;</span><br><span class="line">		<span class="comment">// (1)tasklet_vec 为低优先级的 tasklet 链表</span></span><br><span class="line">		per_cpu(tasklet_vec, cpu).tail =</span><br><span class="line">			&amp;per_cpu(tasklet_vec, cpu).head;</span><br><span class="line">		<span class="comment">// (2)tasklet_hi_vec 为高优先级的 tasklet 链表</span></span><br><span class="line">		per_cpu(tasklet_hi_vec, cpu).tail =</span><br><span class="line">			&amp;per_cpu(tasklet_hi_vec, cpu).head;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>push 一个 tasklet 任务：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">tasklet_schedule</span><span class="params">(struct tasklet_struct *t)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!test_and_set_bit(TASKLET_STATE_SCHED, &amp;t-&gt;state))</span><br><span class="line">		__tasklet_schedule(t);</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="keyword">void</span> __tasklet_schedule(struct tasklet_struct *t)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line"></span><br><span class="line">	local_irq_save(flags);</span><br><span class="line">	<span class="comment">// (1) 将新的 tasklet 插入到本 cpu 链表尾部</span></span><br><span class="line">	t-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">	*__this_cpu_read(tasklet_vec.tail) = t;</span><br><span class="line">	__this_cpu_write(tasklet_vec.tail, &amp;(t-&gt;next));</span><br><span class="line">	<span class="comment">// (2)raise 软中断来处理 tasklet</span></span><br><span class="line">	raise_softirq_irqoff(TASKLET_SOFTIRQ);</span><br><span class="line">	local_irq_restore(flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>处理一个 tasklet 任务：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">tasklet_action</span><span class="params">(struct softirq_action *a)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">tasklet_struct</span> *<span class="title">list</span>;</span></span><br><span class="line"></span><br><span class="line">	local_irq_disable();</span><br><span class="line">	<span class="comment">// (1)list 取出当前链表中所有已有的 tasklet</span></span><br><span class="line">	<span class="built_in">list</span> = __this_cpu_read(tasklet_vec.head);</span><br><span class="line">	<span class="comment">// (2)tasklet_vec.head 和 tasklet_vec.tail 返回初始化状态，继续接收新的 tasklet</span></span><br><span class="line">	__this_cpu_write(tasklet_vec.head, <span class="literal">NULL</span>);</span><br><span class="line">	__this_cpu_write(tasklet_vec.tail, this_cpu_ptr(&amp;tasklet_vec.head));</span><br><span class="line">	local_irq_enable();</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (3) 逐个处理取出的 list 链表中的 tasklet</span></span><br><span class="line">	<span class="keyword">while</span> (<span class="built_in">list</span>) &#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">tasklet_struct</span> *<span class="title">t</span> = <span class="title">list</span>;</span></span><br><span class="line"></span><br><span class="line">		<span class="built_in">list</span> = <span class="built_in">list</span>-&gt;next;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (4)tasklet 互斥锁，保证 tasklet 同时只能在一个 cpu 上执行</span></span><br><span class="line">		<span class="keyword">if</span> (tasklet_trylock(t)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!atomic_read(&amp;t-&gt;count)) &#123;</span><br><span class="line"></span><br><span class="line">				<span class="comment">// (6) 在 tasklet 运行前清除 TASKLET_STATE_SCHED 标志</span></span><br><span class="line">				<span class="comment">// 这个时候 tasklet 可以重新加入新的队列了，但是还不能执行</span></span><br><span class="line">				<span class="keyword">if</span> (!test_and_clear_bit(TASKLET_STATE_SCHED,</span><br><span class="line">							&amp;t-&gt;state))</span><br><span class="line">					BUG();</span><br><span class="line"></span><br><span class="line">				<span class="comment">// (7) 执行实际的 tasklet 处理函数</span></span><br><span class="line">				t-&gt;func(t-&gt;data);</span><br><span class="line"></span><br><span class="line">				<span class="comment">// (8) 释放 tasklet 锁，其他 cpu 可以运行这个 tasklet 了</span></span><br><span class="line">				tasklet_unlock(t);</span><br><span class="line">				<span class="keyword">continue</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			tasklet_unlock(t);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		local_irq_disable();</span><br><span class="line">		<span class="comment">// (5) 如果获取 tasklet 互斥锁失败，先加入到 cpu tasklet_vec 链表中</span></span><br><span class="line">		<span class="comment">// 下次执行</span></span><br><span class="line">		t-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">		*__this_cpu_read(tasklet_vec.tail) = t;</span><br><span class="line">		__this_cpu_write(tasklet_vec.tail, &amp;(t-&gt;next));</span><br><span class="line">		__raise_softirq_irqoff(TASKLET_SOFTIRQ);</span><br><span class="line">		local_irq_enable();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><blockquote id="fn_ARMPG">
+<sup>ARMPG</sup>. <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.den0024a/index.html" target="_blank" rel="noopener">ARM Cortex-A Series Programmer’s Guide for ARMv8-A</a><a href="#reffn_ARMPG" title="Jump back to footnote [ARMPG] in the text."> &#8617;</a>
+</blockquote>
+<blockquote id="fn_GICANALY">
+<sup>GICANALY</sup>. <a href="http://www.wowotech.net/irq_subsystem/gic_driver.html" target="_blank" rel="noopener">GIC 代码分析 </a><a href="#reffn_GICANALY" title="Jump back to footnote [GICANALY] in the text."> &#8617;</a>
+</blockquote>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/09/11//android-m-external-storage.html/" data-toggle="tooltip" data-placement="top" title="Android M 外部存储剖析 ">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/08/20//linux-workqueue.html/" data-toggle="tooltip" data-placement="top" title="Linux Workqueue">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Linux" title="Linux">Linux</a>
+                        
+                          <a class="tag" href="/tags/#gic" title="gic">gic</a>
+                        
+                          <a class="tag" href="/tags/# 中断线程化 " title=" 中断线程化 "> 中断线程化 </a>
+                        
+                          <a class="tag" href="/tags/#softirq" title="softirq">softirq</a>
+                        
+                          <a class="tag" href="/tags/#tasklet" title="tasklet">tasklet</a>
+                        
+                          <a class="tag" href="/tags/#linux 中断 " title="linux 中断 ">linux 中断 </a>
+                        
+                          <a class="tag" href="/tags/#linux interrupt" title="linux interrupt">linux interrupt</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

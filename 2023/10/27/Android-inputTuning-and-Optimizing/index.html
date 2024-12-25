@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Android Input 调试与优化 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2023/10/27/Android-inputTuning-and-Optimizing/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#Performance" title="Performance">Performance</a>
+                            
+                        </div>
+                        <h1>Android Input 调试与优化</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Shijun Tang on
+                            2023-10-27
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>Android input系统负责处理与管理用户输入， 是用户交互体验的中枢，涉及从上到下各个领域。当遇到一些复杂的 Input 相关性能问题时，如何进行精准的 Debug 定位呢？本篇旨在介绍android Input的工作流程及debug手段，并借助perfetto工具，分享一些 Android Input Debug 与优化的实践和相应的优化方案。</p>
+<h1 id="一-Android-input-常用debug-手段"><a href="#一-Android-input-常用debug-手段" class="headerlink" title="一. Android input 常用debug 手段"></a>一. Android input 常用debug 手段</h1><h2 id="1-1-底层"><a href="#1-1-底层" class="headerlink" title="1.1 底层"></a>1.1 底层</h2><ul>
+<li><p>“<strong>adb shell getevent</strong>“ 命令可以获取Android kernel层上报到/dev/input/目录下的原始数据, 确定驱动层是否能正常的生成数据。</p>
+</li>
+<li><p>“<strong>adb shell input keyevent</strong> key-value” 可以模拟进行按键的点击，将点击事件直接通过InputDispatcher的injectInputEvent方法发送到Native层，若这边有问题表示InputDispatcher的拦截和分发存在问题。</p>
+</li>
+</ul>
+<h2 id="1-2-上层"><a href="#1-2-上层" class="headerlink" title="1.2 上层"></a>1.2 上层</h2><ul>
+<li><p>“<strong>adb shell dumpsys input</strong>“ 可以输出一些input系统运行时的一些信息，比如关键字RecentQueue，记录了10条最近的Input事件信息。还有诸如PendingEvent，InboundQueue，Windows，Connections等信息。</p>
+</li>
+<li><p>“<strong>adb shell setprop sys.inputlog.enabled true</strong>“ 打开native 层log。去确认是否有底层是否是事件上报？native 层是否drop 了事件？ 等等怀疑点。如果有需要， 也可打开以下log开关：</p>
+</li>
+</ul>
+ <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// frameworks/native/services/inputflinger/reader/Macros.cpp </span></span><br><span class="line">DEBUG_RAW_EVENTS  </span><br><span class="line">DEBUG_VIRTUAL_KEYS DEBUG_POINTERS DEBUG_POINTER_ASSIGNMENT </span><br><span class="line">DEBUG_GESTURES DEBUG_VIBRATOR DEBUG_STYLUS_FUSION </span><br><span class="line"></span><br><span class="line"><span class="comment">//frameworks/base/services/core/jni/com_android_server_input_InputManagerService.cpp</span></span><br><span class="line">DEBUG_INPUT_READER_POLICY </span><br><span class="line">DEBUG_INPUT_DISPATCHER_POLICY</span><br><span class="line"></span><br><span class="line"><span class="comment">//frameworks/native/services/inputflinger/dispatcher/inputDispatcher.cpp</span></span><br><span class="line">DEBUG_FOCUS</span><br><span class="line">DEBUG_INJECTION</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开启ViewRootImpl/View/ViewGroup中input event的处理过程的log开关。 去确认以下怀疑点：Input 事件传递到了哪个window？ 有没有被正确的view处理？有没有被drop?等等。</li>
+</ul>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//frameworks/base/services/core/java/com/android/server/wm/WindowManagerDebugConfig.java  </span></span><br><span class="line">DEBUG_INPUT = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//frameworks/base/core/java/android/view/KeyEvent.java </span></span><br><span class="line">DEBUG = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//frameworks/base/core/java/android/view/ViewRootImpl.java </span></span><br><span class="line">DEBUG_INPUT_RESIZE = <span class="keyword">true</span>;</span><br><span class="line">DEBUG_INPUT_STAGES = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//frameworks/base/core/java/android/view/ViewDebug.java</span></span><br><span class="line">DEBUG_POSITIONING = <span class="keyword">true</span>;</span><br></pre></td></tr></table></figure>
+<p>以上都需要动态或者静态的打开Log 开关，通过log 来分析定位。但是对于一些偶现复杂的问题， log就会很大，分析起来很困难。</p>
+<p>因此本篇推荐使用perfetto trace来分析定位复杂的android Input 问题，主要基于以下优点：</p>
+<ol>
+<li><p>抓取方便，相对于log对系统性能影响很小；</p>
+</li>
+<li><p>相对于Log 更直观，分析起来更容易。</p>
+</li>
+<li><p>Perfetto 抓取的信息更全面，定位更精准。</p>
+</li>
+</ol>
+<h1 id="二-Android-input-传递流程"><a href="#二-Android-input-传递流程" class="headerlink" title="二. Android input 传递流程"></a>二. Android input 传递流程</h1><p>当用户进行触摸、按键等操作时，硬件会产生相应的事件，这些事件经过内核的输入子系统处理后，会被传递给 Android 系统的 Input 系统。然后再由 Input 系统将事件分发给对应的应用程序处理。在这个过程中，会涉及到事件的传递、分发、处理等多个环节，任何一个环节有问题，都会引入bug或性能问题。</p>
+<h2 id="2-1-Android-input-传递流程"><a href="#2-1-Android-input-传递流程" class="headerlink" title="2.1 Android input 传递流程"></a>2.1 Android input 传递流程</h2><p>Android input 事件的整体传递流程见下图。</p>
+<p><img src="whiteboard_exported_image.jpg" alt=""></p>
+<h2 id="2-2-perfetto-trace-上-input-工作流"><a href="#2-2-perfetto-trace-上-input-工作流" class="headerlink" title="2.2 perfetto trace 上 input 工作流"></a>2.2 perfetto trace 上 input 工作流</h2><p>perfetto trace 包含的信息很丰富，怎么在浩如烟海的信息中寻找input的关键脉络呢？ 如下图：</p>
+<p><img src="perfetto_trace.PNG" alt=""></p>
+<p>按上图中序号，具体流程如下：</p>
+<ol>
+<li><p>底层产生一个Input事件，通过中断通知cpu,cpu 响应中断并通知驱动去处理，kernel 往/dev/input/event** 写数据。</p>
+</li>
+<li><p>InputReader 调用EventHub的 getEvents() 方法接收底层事件，把从/dev/input/event** 中读取的raw event (struct input_event) 转成 android event (keymap/layout) ，然后交给 InputDispatcher 进行事件分发。</p>
+</li>
+<li><p>InputDispatcher 拿到 InputReader 获取的事件之后，对事件进行包装和分发。</p>
+</li>
+<li><p>InputDispatcher 执行 notifyKey 的时候，会将 Input 事件封装后放到 InboundQueue 也就是“iq”队列中，后续 InputDispatcher 循环处理 Input 事件的时候，就是从 InboundQueue 取出事件然后做处理。</p>
+</li>
+<li><p>InputDispatcher 找到target window后，将事件放入对应的target window OutboundQueue也就是“oq”队列中等待通过SocketPair双工信道发送到Target window。这里的 OutboundQueue 指的是要被 App 拿去处理的事件队列，每一个 App(Connection) 都对应有一个 OutboundQueue ，事件会先进入 InboundQueue ，然后被 InputDIspatcher 派发到各个 App 的 OutboundQueue。</p>
+</li>
+<li><p>InputDispatcher把事件发送给具体的Target window后，会将事件从outboundQueue 中取出来放到WaitQueue也就是“wq”中，等待目标应用处理事件完成。并开启倒计时，如果超时，就会上报应用ANR异常事件。当分发出去的事件被处理完成，InputManagerService 就会从应用中得到一个回复，这里面会通过JNI通知InputDispatcher事件处理完成，此时就会移除 WaitQueue 中的事件，以免报ANR异常，从perfetto中看就是对应 App 的 WaitQueue 值减少了1。如果app主线程发生卡顿，那么 Input 事件没有及时被消耗，WaitQueue 这里就会看到堆积。</p>
+</li>
+<li><p>当input触控事件传递到App进程后，先通过enqueueInputEvent函数放入“aq”本地待处理队列中。</p>
+</li>
+<li><p>应用的UI线程在deliverInputEvent的流程中进行input事件的具体分发与处理。</p>
+</li>
+</ol>
+<p>下面是跟踪 InboundQueue， OutBoundQueue ，WaitQueue的源码，可以据此查询调用的地方。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">InputDispatcher::traceInboundQueueLengthLocked</span><span class="params">()</span> </span>&#123;      </span><br><span class="line">   <span class="keyword">if</span> (ATRACE_ENABLED()) &#123;</span><br><span class="line">       ATRACE_INT(<span class="string">"iq"</span>, mInboundQueue.<span class="built_in">size</span>());</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">InputDispatcher::traceOutboundQueueLength</span><span class="params">(<span class="keyword">const</span> Connection&amp; connection)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (ATRACE_ENABLED()) &#123;</span><br><span class="line">        <span class="keyword">char</span> counterName[<span class="number">40</span>];</span><br><span class="line">        <span class="built_in">snprintf</span>(counterName, <span class="keyword">sizeof</span>(counterName), <span class="string">"oq:%s"</span>, connection.getWindowName().c_str());</span><br><span class="line">        ATRACE_INT(counterName, connection.outboundQueue.<span class="built_in">size</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">InputDispatcher::traceWaitQueueLength</span><span class="params">(<span class="keyword">const</span> Connection&amp; connection)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (ATRACE_ENABLED()) &#123;</span><br><span class="line">        <span class="keyword">char</span> counterName[<span class="number">40</span>];</span><br><span class="line">        <span class="built_in">snprintf</span>(counterName, <span class="keyword">sizeof</span>(counterName), <span class="string">"wq:%s"</span>,  connection.getWindowName().c_str());</span><br><span class="line">        ATRACE_INT(counterName, connection.waitQueue.<span class="built_in">size</span>());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="三-Android-input-debug与优化实践"><a href="#三-Android-input-debug与优化实践" class="headerlink" title="三. Android input debug与优化实践"></a>三. Android input debug与优化实践</h1><h2 id="3-1-input关键线程调度优化"><a href="#3-1-input关键线程调度优化" class="headerlink" title="3.1 input关键线程调度优化"></a>3.1 input关键线程调度优化</h2><p>在某游戏界面滑动卡顿，偶现不跟手。app 侧在trace 上发现应用DeliverInputEvent 有时候没收到（见下图），app侧怀疑是TP报点异常。</p>
+<p><img src="DeliverInputEvent.png" alt=""></p>
+<p>这个input 事件到底是底层没上报，还是中间传递卡住了呢？只需要弄清楚在input 链路上到底是卡在哪里，也就明白了问题所在。在trace上查看整个input链路，发现有两点异常（如下图）。1，InputReader 由于长时间runnable 没有及时去读取底层的事件；2，InputDispatcher 由于长时间runnable 没有及时的将事件分发出去。在input 链路中任何一步处理不及时，都会导致最终的响应不及时。</p>
+<p><img src="InputReader&amp;InputDispatcher.png" alt=""></p>
+<p>在游戏场景下，Tp报点率比较高，对InputReader 和InputDisaptcher 等线程的调度及时性要求比较高，修改相关线程的调度策略后，测试实测改善很大，perfetto trace 截图如下。</p>
+<p><img src="InputReader&amp;InputDispatcher1.png" alt=""></p>
+<h2 id="3-2-减少帧的上屏时间"><a href="#3-2-减少帧的上屏时间" class="headerlink" title="3.2 减少帧的上屏时间"></a>3.2 减少帧的上屏时间</h2><p>在触控操作中，有时会发现应用程序提交当前帧的时间刚好错过了一个VSync周期，就得等待下一个VSync周期的到来，中间这段时间是闲置的。如下图。</p>
+<p><img src="perfetto_trace_VSync.PNG" alt=""></p>
+<p>尝试这么优化：当应用提交当前帧给SurfaceFlinger的时间减去上一次SurfaceFlinger唤醒的时间超过了1个VSync周期，小于3/2个周期时，直接通知SurfaceFlinger进行Message处理，最优时候可以节约出1帧时间。无论对于响应时间还是帧率的稳定性，效果都有提升。优化后trace 截图如下：</p>
+<p><img src="perfetto_trace_VSync1.PNG" alt=""></p>
+<h2 id="3-3-点击桌面图标响应时间优化"><a href="#3-3-点击桌面图标响应时间优化" class="headerlink" title="3.3 点击桌面图标响应时间优化"></a>3.3 点击桌面图标响应时间优化</h2><p>在桌面点击图标启动应用，响应时间较对比机差。最初抓log 分析没发现问题点。借助强大的perfetto抓取 trace，我们发现点击之后，应用没有立即执行点击事件，等了几帧之后才执行。如下图。原来android为了UI界面的一致性与连贯性，将点击事件发送到消息队列中，待其他视觉状态更新之后才执行点击操作。</p>
+<p><img src="perfetto_trace_Timeline.PNG" alt=""></p>
+<p>尝试修改成立即执行点击事件后，最优有2~3帧的收益，如下图。当然这是非通用改法，需要对side effect做bug fix。</p>
+<p><img src="perfetto_trace_Timeline1.PNG" alt=""></p>
+<h3 id="3-4-其他"><a href="#3-4-其他" class="headerlink" title="3.4 其他"></a>3.4 其他</h3><ul>
+<li><p>Tp 固件优化，减少Tp 休眠时间， 提高采样率，当然这会带来功耗的增加， 需要针对场景来做动态的改变。</p>
+</li>
+<li><p>提高屏幕刷新率。</p>
+</li>
+<li><p>改善控件的响应，提高感知触控的敏感性。包括：修改滑动控件的阀值、调低摩擦力系数和样条滑动持续时间等参数，以及调整view的触摸区域等等。</p>
+</li>
+<li><p>其他。</p>
+</li>
+</ul>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/" data-toggle="tooltip" data-placement="top" title="eBPF初体验：Android设备网络优化实践">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2023/07/07/Face-recognition-block-analysis/" data-toggle="tooltip" data-placement="top" title="人脸解锁带来的安卓系统崩溃之谜！">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#一-Android-input-常用debug-手段"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">一. Android input 常用debug 手段</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-1-底层"><span class="toc-nav-number">1.1.</span> <span class="toc-nav-text">1.1 底层</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-2-上层"><span class="toc-nav-number">1.2.</span> <span class="toc-nav-text">1.2 上层</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#二-Android-input-传递流程"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">二. Android input 传递流程</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-1-Android-input-传递流程"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">2.1 Android input 传递流程</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-2-perfetto-trace-上-input-工作流"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">2.2 perfetto trace 上 input 工作流</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#三-Android-input-debug与优化实践"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">三. Android input debug与优化实践</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-1-input关键线程调度优化"><span class="toc-nav-number">3.1.</span> <span class="toc-nav-text">3.1 input关键线程调度优化</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-2-减少帧的上屏时间"><span class="toc-nav-number">3.2.</span> <span class="toc-nav-text">3.2 减少帧的上屏时间</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-3-点击桌面图标响应时间优化"><span class="toc-nav-number">3.3.</span> <span class="toc-nav-text">3.3 点击桌面图标响应时间优化</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#3-4-其他"><span class="toc-nav-number">3.3.1.</span> <span class="toc-nav-text">3.4 其他</span></a></li></ol></li></ol></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#Performance" title="Performance">Performance</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2024 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
