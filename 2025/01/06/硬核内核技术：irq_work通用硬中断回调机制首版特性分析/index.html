@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          硬核内核技术：irq_work通用硬中断回调机制首版特性分析 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2025/01/06/硬核内核技术：irq_work通用硬中断回调机制首版特性分析/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                        </div>
+                        <h1>硬核内核技术：irq_work通用硬中断回调机制首版特性分析</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Bo.Chen on
+                            2025-01-06
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>irq_work 在实际工程应用的例子是，在手机出现卡屏卡死状态时，可以使用组合按键触发 irq_work 来 dump 系统信息，而避免使用进程调度，因为此时系统可能资源匮乏、锁竞争让执行 dump 系统信息的进程处于 D 状态无法正常调度工作，导致操作失效，失去分析现场的机会。</p>
+<p><img src="1.webp" alt="图片"></p>
+<hr>
+<p>本文是对 Linux 邮件列表中 ”[PATCH -tip -v6] irq_work: generic hard-irq context callbacks”主题的分析总结。2010 年 Peter Zijlstra 提交了 irq work 首版内核特性，从 perf event 中提取出通用的 irq work 机制。这个 patch 涉及到了多种 CPU 架构，本文主要以 X86 和 Arm 架构进行详细描述。</p>
+<h2 id="About-The-Author"><a href="#About-The-Author" class="headerlink" title="About The Author"></a>About The Author</h2><p><img src="2.webp" alt="图片"></p>
+<p>Peter Zijlstra 是 Linux 内核开发领域内一位杰出的内核开发者和维护者，以其在 CPU 调度领域的创新而闻名。他设计并提出了一种新型 CPU 调度器——Earliest Eligible Virtual Deadline First（EEVDF），这是一种先进的基于虚拟运行时间的调度策略，专门针对提升任务响应性和吞吐量而设计，尤其适用于对延迟敏感的任务处理场景。此外，Zijlstra 在组调度领域也颇有建树，这一特性使得 Linux 内核调度器能够更有效地管理相关任务的分组，以优化整体调度性能。在实时调度领域，Zijlstra 的工作不仅推动了实时调度算法的改进，还显著提升了系统性能。他对 Linux 内核的内存管理机制也进行了深入的优化和改进，极大地提高了系统的稳定性和效率。值得一提的是，Zijlstra 提供了一种创新机制，允许代码在 IRQ（中断请求）上下文中执行，这对于需要与系统其他部分交互的 NMI（非屏蔽中断）处理至关重要，为 Linux 内核的中断处理带来了新的可能。总的来说，Peter Zijlstra 的贡献对 Linux 内核的发展有着深远的影响。</p>
+<h2 id="Patch-Archives"><a href="#Patch-Archives" class="headerlink" title="Patch Archives"></a>Patch Archives</h2><table>
+    <colgroup>
+        <col width="30%">
+        <col width="90%">
+    </colgroup>
+    <tr>
+        <th>档案项</th>
+        <th>说明</th>
+    </tr>
+    <tr>
+        <td>Subject</td>
+        <td>irq_work: generic hard-irq context callbacks</td>
+    </tr>
+    <tr>
+        <td>Author</td>
+        <td>Peter Zijlstra a.p.zijlstra@chello.nl</td>
+    </tr>
+    <tr>
+        <td>合入内核版本</td>
+        <td>v2.6.37-rc1</td>
+    </tr>
+    <tr>
+        <td>合入时间</td>
+        <td>Thu Oct 14 14:01:34 2010</td>
+    </tr>
+</table>
+
+<h2 id="邮件主题"><a href="#邮件主题" class="headerlink" title="邮件主题"></a>邮件主题</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">[PATCH -tip -v6] irq_work: generic hard-irq context callbacks</span><br><span class="line"><span class="keyword">From</span>: Peter Zijlstra &lt;a.p.zijlstra@chello.nl&gt;</span><br><span class="line">Provide a mechanism that allows running code <span class="keyword">in</span><span class="built_in"> IRQ </span>context. </span><br><span class="line">It is most useful <span class="keyword">for</span> NMI code that needs <span class="keyword">to</span> interact with</span><br><span class="line">the rest of the<span class="built_in"> system </span>-- like wakeup a task <span class="keyword">to</span> drain buffers.</span><br><span class="line">Perf currently has such a mechanism, so extract that <span class="keyword">and</span> provide</span><br><span class="line">it as a generic feature, independent of perf so that others may </span><br><span class="line">also benefit.</span><br><span class="line">The<span class="built_in"> IRQ </span>context callback is generated through self-IPIs where possible, </span><br><span class="line"><span class="keyword">or</span> on architectures like powerpc the decrementer (the built-in timer </span><br><span class="line">facility) is <span class="builtin-name">set</span> <span class="keyword">to</span> generate an interrupt immediately.</span><br><span class="line">Architectures that don<span class="string">'t have anything like this get to do with a </span></span><br><span class="line"><span class="string">callback from the timer tick. These architectures can call irq_work_run()</span></span><br><span class="line"><span class="string">at the tail of any IRQ handlers that might enqueue such work (like the </span></span><br><span class="line"><span class="string">perf IRQ handler) to avoid undue latencies in processing the work.</span></span><br><span class="line"><span class="string">Huang Ying: some fixes</span></span><br><span class="line"><span class="string">This patch is only tested on x86 platform.</span></span><br></pre></td></tr></table></figure>
+<p>irq_work 提供了一种机制，允许在中断（IRQ）上下文中运行代码。这对于需要与系统其余部分交互的 NMI（非屏蔽中断）代码非常有用——比如唤醒一个任务来清空缓冲区。性能监控（Perf）目前就有这样一个机制，因此提取出来并作为一个通用特性提供，独立于性能监控，以便其他人也可以受益。在可能的情况下，通过自 IPIs（自我处理器间中断）生成中断上下文回调，或者在像 powerpc 这样的架构上，设置递减器（内置的定时器设施）立即生成一个中断。没有类似机制的架构可以通过定时器（timer tick）进行回调。这些架构可以在 IRQ 处理程序的尾部调用 irq_work_run()来处理已经入队的 work，以避免在处理工作中产生不必要的延迟。这个补丁仅在 x86 平台上进行了测试。</p>
+<blockquote>
+<p>注：irq_work 设计的初衷就是将一些实时性比较高的工作放到中断上下文执行，在中断上下文实现像工作队列 work 一样执行。irq_work 执行的内容相对比较简单，它会将耗时任务通过工作队列推迟执行。</p>
+</blockquote>
+<h2 id="修改文件"><a href="#修改文件" class="headerlink" title="修改文件"></a>修改文件</h2><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"> arch/alpha/Kconfig                   |    <span class="number">1</span></span><br><span class="line"> arch/alpha/<span class="keyword">include</span>/<span class="keyword">asm</span>/perf_event.h  |    <span class="number">5</span> -</span><br><span class="line"> arch/alpha/kernel/time.c             |   <span class="number">30</span> +++---</span><br><span class="line"> arch/arm/Kconfig                     |    <span class="number">1</span></span><br><span class="line"> arch/arm/<span class="keyword">include</span>/<span class="keyword">asm</span>/perf_event.h    |   <span class="number">12</span> --</span><br><span class="line"> arch/arm/kernel/perf_event.c         |    <span class="number">8</span> -</span><br><span class="line"> arch/frv/Kconfig                     |    <span class="number">1</span></span><br><span class="line"> arch/frv/<span class="class"><span class="keyword">lib</span>/<span class="title">Makefile</span>                |    2</span></span><br><span class="line"> arch/frv/<span class="class"><span class="keyword">lib</span>/<span class="title">perf_event</span>.<span class="title">c</span>            |   19 ----</span></span><br><span class="line"> arch/parisc/Kconfig                  |    <span class="number">1</span></span><br><span class="line"> arch/parisc/<span class="keyword">include</span>/<span class="keyword">asm</span>/perf_event.h |    <span class="number">3</span></span><br><span class="line"> arch/powerpc/Kconfig                 |    <span class="number">1</span></span><br><span class="line"> arch/powerpc/<span class="keyword">include</span>/<span class="keyword">asm</span>/paca.h      |    <span class="number">2</span></span><br><span class="line"> arch/powerpc/kernel/time.c           |   <span class="number">42</span> ++++----</span><br><span class="line"> arch/s390/Kconfig                    |    <span class="number">1</span></span><br><span class="line"> arch/s390/<span class="keyword">include</span>/<span class="keyword">asm</span>/perf_event.h   |    <span class="number">3</span></span><br><span class="line"> arch/sh/Kconfig                      |    <span class="number">1</span></span><br><span class="line"> arch/sh/<span class="keyword">include</span>/<span class="keyword">asm</span>/perf_event.h     |    <span class="number">7</span> -</span><br><span class="line"> arch/sparc/Kconfig                   |    <span class="number">2</span></span><br><span class="line"> arch/sparc/<span class="keyword">include</span>/<span class="keyword">asm</span>/perf_event.h  |    <span class="number">4</span></span><br><span class="line"> arch/sparc/kernel/pcr.c              |    <span class="number">8</span> -</span><br><span class="line"> arch/x86/Kconfig                     |    <span class="number">1</span></span><br><span class="line"> arch/x86/<span class="keyword">include</span>/<span class="keyword">asm</span>/entry_arch.h    |    <span class="number">4</span></span><br><span class="line"> arch/x86/<span class="keyword">include</span>/<span class="keyword">asm</span>/hardirq.h       |    <span class="number">2</span></span><br><span class="line"> arch/x86/<span class="keyword">include</span>/<span class="keyword">asm</span>/hw_irq.h        |    <span class="number">2</span></span><br><span class="line"> arch/x86/<span class="keyword">include</span>/<span class="keyword">asm</span>/irq_vectors.h   |    <span class="number">4</span></span><br><span class="line"> arch/x86/kernel/Makefile             |    <span class="number">1</span></span><br><span class="line"> arch/x86/kernel/cpu/perf_event.c     |   <span class="number">19</span> ----</span><br><span class="line"> arch/x86/kernel/entry_64.S           |    <span class="number">6</span> -</span><br><span class="line"> arch/x86/kernel/irq.c                |    <span class="number">8</span> -</span><br><span class="line"> arch/x86/kernel/irq_work.c           |   <span class="number">30</span> ++++++</span><br><span class="line"> arch/x86/kernel/irqinit.c            |    <span class="number">6</span> -</span><br><span class="line"> <span class="keyword">include</span>/linux/irq_work.h             |   <span class="number">20</span> ++++</span><br><span class="line"> <span class="keyword">include</span>/linux/perf_event.h           |   <span class="number">11</span> --</span><br><span class="line"> init/Kconfig                         |    <span class="number">8</span> +</span><br><span class="line"> kernel/Makefile                      |    <span class="number">2</span></span><br><span class="line"> kernel/irq_work.c                    |  <span class="number">164</span> +++++++++++++++++++++++++++++++++++</span><br><span class="line"> kernel/perf_event.c                  |  <span class="number">104</span> +---------------------</span><br><span class="line"> kernel/timer.c                       |    <span class="number">7</span> +</span><br><span class="line"> <span class="number">39</span> files changed, <span class="number">311</span> insertions(+), <span class="number">242</span> deletions(-)</span><br><span class="line"> delete mode <span class="number">100644</span> arch/frv/<span class="class"><span class="keyword">lib</span>/<span class="title">perf_event</span>.<span class="title">c</span></span></span><br><span class="line"> create mode <span class="number">100644</span> arch/x86/kernel/irq_work.c</span><br><span class="line"> create mode <span class="number">100644</span> <span class="keyword">include</span>/linux/irq_work.h</span><br><span class="line"> create mode <span class="number">100644</span> kernel/irq_work.c</span><br></pre></td></tr></table></figure>
+<h2 id="基本数据结构"><a href="#基本数据结构" class="headerlink" title="基本数据结构"></a>基本数据结构</h2><p><img src="3.webp" alt="图片"></p>
+<ul>
+<li>irq_work</li>
+</ul>
+<p>定义在 include/linux/irq_work.h 文件，irq_work 结构体是 Linux 内核中用于在中断上下文中执行回调函数的机制。irq_work_list 是一个 per cpu 链表，连接了当前 CPU 所有的 irq_work。irq_work 的 next 成员指向下一个 irq_work，它的最低两位被用来标记当前 irq_work 的状态（free/claimed/pending/busy）</p>
+<ul>
+<li>perf_event</li>
+</ul>
+<p>在 include/linux/perf_event.h 中定义，perf_event 是 Linux 性能计数框架的基础，它使得用户空间能够灵活地创建和管理性能监控事件，以收集系统和应用程序的性能数据。通过操作这个结构体，用户空间可以获取关于 CPU 周期、指令缓存命中、分支预测错误等性能相关的统计信息。perf_event 与 irq_work 的关联主要体现在性能事件（perf_event）的溢出处理和工作队列的调度上。如：当一个性能事件（perf_event）发生溢出时，内核需要执行相应的处理逻辑。这通常涉及到唤醒等待这些事件的应用，以便它可以处理这些数据。在内核中，perf_event 结构体中有一个 pending_irq 成员，它是一个 irq_work 结构体，用于处理性能事件的溢出工作。</p>
+<h2 id="基本接口"><a href="#基本接口" class="headerlink" title="基本接口"></a>基本接口</h2><table>
+  <tr>
+    <th>接口名称</th>
+    <th>含义</th>
+  </tr>
+  <tr>
+    <td>bool irq_work_queue(struct irq_work *entry)</td>
+    <td>将 irq_work 实例 entry 入队，成功返回 true，如果 entry 已经被入队则失败，当 callback 回调仍在处理过程中，也可以入队</td>
+  </tr>
+  <tr>
+    <td>void irq_work_run(void)</td>
+    <td>运行当前 CPU 链表的 irq_work 项，要求在硬件中断上下文运行，且保持 local irq 关闭，以避免中断嵌套</td>
+  </tr>
+  <tr>
+    <td>void irq_work_sync(struct irq_work *entry)</td>
+    <td>同步对 irq_work 结构体实例 entry 的访问，确保该实例当前不被使用</td>
+  </tr>
+</table>
+
+<h2 id="irq-work-初始化"><a href="#irq-work-初始化" class="headerlink" title="irq_work 初始化"></a>irq_work 初始化</h2><p>声明了一个 irq_work 链表，它是一个 PER CPU 结构，irq_work 入队后，将链接到此链表</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+static <span class="constructor">DEFINE_PER_CPU(<span class="params">struct</span> <span class="params">irq_work</span> <span class="operator">*</span>, <span class="params">irq_work_list</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>初始化一个 irq_work 需要指定它的回调 func，且将其next指针赋值为NULL</p>
+<figure class="highlight delphi"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">+<span class="keyword">static</span> <span class="keyword">inline</span> void init_irq_work(struct irq_work *entry, void <span class="comment">(*func)(struct irq_work *)</span>)</span><br><span class="line">+<span class="comment">&#123;</span></span><br><span class="line"><span class="comment">+       entry-&gt;next = NULL;</span></span><br><span class="line"><span class="comment">+       entry-&gt;func = func;</span></span><br><span class="line"><span class="comment">+&#125;</span></span><br></pre></td></tr></table></figure>
+<p>本 patch 中初始化一个 irq_work 的例子是 perf_event_alloc，它通过 init_irq_work 初始化一个 irq_work，这个 irq_work的回调perf_pending_event将唤醒等待 perf event 的进程</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">perf_event</span></span> *</span><br><span class="line">perf_event_alloc(<span class="class"><span class="keyword">struct</span> <span class="title">perf_event_attr</span></span> *attr, int cpu,</span><br><span class="line">                 <span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span></span> *task,</span><br><span class="line">                 <span class="class"><span class="keyword">struct</span> <span class="title">perf_event</span></span> *group_leader,</span><br><span class="line">                 <span class="class"><span class="keyword">struct</span> <span class="title">perf_event</span></span> *parent_event,</span><br><span class="line">                 perf_overflow_handler_t overflow_handler)</span><br><span class="line">|—— <span class="class"><span class="keyword">struct</span> <span class="title">perf_event</span></span> *event;</span><br><span class="line">|—— event = kzalloc(sizeof(*event), GFP_KERNEL);</span><br><span class="line">|__ +init_irq_work(&amp;event-&gt;pending, perf_pending_event);</span><br></pre></td></tr></table></figure>
+<h2 id="irq-work-的工作状态"><a href="#irq-work-的工作状态" class="headerlink" title="irq_work 的工作状态"></a>irq_work 的工作状态</h2><p><img src="4.webp" alt="图片"></p>
+<p>irq_work 主要有如下几种工作状态：</p>
+<table>
+  <tr>
+    <th>工作状态</th>
+    <th>说明</th>
+  </tr>
+  <tr>
+    <td>free</td>
+    <td>空闲状态，next 指针为 NULL，最低两位为 0，可转向 claimed 状态</td>
+  </tr>
+  <tr>
+    <td>claimed</td>
+    <td>声明状态，next 指针为 NULL，最低两位为 3，可转向 pending 状态</td>
+  </tr>
+  <tr>
+    <td>pending</td>
+    <td>待处理状态，next 指针不为 NULL，最低两位为 3，可转向 busy 状态</td>
+  </tr>
+  <tr>
+    <td>busy</td>
+    <td>忙状态，next 指针不为 NULL，最低两位为 2，可转向 free/claimed 状态</td>
+  </tr>
+</table>
+
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="addition">+/* kernel/irq_work.c */</span></span><br><span class="line"><span class="addition">+/*</span></span><br><span class="line"><span class="addition">+ * An entry can be in one of four states:</span></span><br><span class="line"><span class="addition">+ *</span></span><br><span class="line"><span class="addition">+ * free      NULL, 0 -&gt; &#123;claimed&#125;       : free to be used</span></span><br><span class="line"><span class="addition">+ * claimed   NULL, 3 -&gt; &#123;pending&#125;       : claimed to be enqueued</span></span><br><span class="line"><span class="addition">+ * pending   next, 3 -&gt; &#123;busy&#125;          : queued, pending callback</span></span><br><span class="line"><span class="addition">+ * busy      NULL, 2 -&gt; &#123;free, claimed&#125; : callback in progress, can be claimed</span></span><br><span class="line"><span class="addition">+ *</span></span><br><span class="line"><span class="addition">+ * We use the lower two bits of the next pointer to keep PENDING and BUSY</span></span><br><span class="line"><span class="addition">+ * flags.</span></span><br><span class="line"><span class="addition">+ */</span></span><br><span class="line"><span class="addition">+#define IRQ_WORK_PENDING        1UL</span></span><br><span class="line"><span class="addition">+#define IRQ_WORK_BUSY           2UL</span></span><br><span class="line"><span class="addition">+#define IRQ_WORK_FLAGS          3UL</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>irq_work 在清空 claimed 标记后，可以重新 claimed，入队；irq_work 处理完毕后，会重置为 free 状态</p>
+</blockquote>
+<h2 id="irq-work-claim"><a href="#irq-work-claim" class="headerlink" title="irq_work claim"></a>irq_work claim</h2><p>irq_work claim 是指将 irq_work 标记为正在使用，以确保一次只有一个处理器或线程可以访问，防止并发修改。</p>
+<p>claimed 通常用在并发编程的上下文中，特别是在多线程或多处理器环境中处理共享资源时。此处对 irq_work 执行 claim 指的是标记一个资源当前正在被特定线程或处理器使用。这样可以阻止其他线程或处理器同时访问。通过执行 irq_work_claim，线程或处理器可获得对该 irq_work 的独占访问。</p>
+<p>(1) 如果 irq_work 实例 entry 已经被标记了 IRQ_WORK_PENDING，表示已经被 claimed；</p>
+<p>(2) 对 irq_work 实例的 next 指针低两位赋值为 IRQ_WORK_FLAGS，表示转向 claimed 状态；</p>
+<p>(3) 通过 while 循环中 cmpxchg 判断来验证对 irq_work 实例 entry 操作期间是否有发生并发修改访问，保证原子操作</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">+static bool irq_work_claim(struct irq_work *entry)</span><br><span class="line"><span class="params">|—— +struct irq_work *<span class="keyword">next</span>, *nflags;</span></span><br><span class="line"><span class="params">|</span>—— +<span class="keyword">do</span> &#123;</span><br><span class="line"><span class="params">|   +      <span class="keyword">next</span> = entry-&gt;<span class="keyword">next</span>;</span></span><br><span class="line"><span class="params">|</span>   +      <span class="keyword">if</span> ((unsigned long)<span class="keyword">next</span> &amp; IRQ_WORK_PENDING)--(<span class="number">1</span>)</span><br><span class="line"><span class="params">|   +             <span class="keyword">return</span> <span class="literal">false</span>;</span></span><br><span class="line"><span class="params">|</span>   +      nflags = next_flags(<span class="keyword">next</span>, IRQ_WORK_FLAGS);---(<span class="number">2</span>)</span><br><span class="line"><span class="params">|   +&#125; <span class="keyword">while</span> (cmpxchg(&amp;entry-&gt;<span class="keyword">next</span>, <span class="keyword">next</span>, nflags) != <span class="keyword">next</span>)；---(3)</span></span><br><span class="line"><span class="params">|</span>_<span class="number">_</span> +<span class="keyword">return</span> <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
+<h2 id="irq-work-入队"><a href="#irq-work-入队" class="headerlink" title="irq_work 入队"></a>irq_work 入队</h2><p>将 irq_work 入队到 irq_work_list 链表，等待处理：</p>
+<p>(1) 判断 irq_work 实例 entry 是否已经入队，如果已经入队则返回 false;</p>
+<p>(2) 将 irq_work 实例 entry 入队，成功返回 true</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">+<span class="built_in">bool</span> irq<span class="constructor">_work_queue(<span class="params">struct</span> <span class="params">irq_work</span> <span class="operator">*</span><span class="params">entry</span>)</span></span><br><span class="line"><span class="pattern-match">|—— +<span class="keyword">if</span> (!irq<span class="constructor">_work_claim(<span class="params">entry</span>)</span>)-----------(1)</span></span><br><span class="line"><span class="pattern-match">|   +     return <span class="literal">false</span>;</span></span><br><span class="line"><span class="pattern-match">|—— +<span class="constructor">__irq_work_queue(<span class="params">entry</span>)</span>;--------------(2)</span></span><br><span class="line"><span class="pattern-match">|<span class="constructor">__</span> +return <span class="literal">true</span>;</span></span><br></pre></td></tr></table></figure>
+<p>__irq_work_queue 具体实现 irq_work 的入队操作：</p>
+<p>(1) irq_work_list 是一个 per-cpu 变量，是当前 cpu 上 irq_work 的链表头；</p>
+<p>(2) 将 irq_work 实例 entry 入队到这个 wirq_work_list。next_flags 用于设置 irq_work 的状态，这里将 next 指针的低两位与 IRQ_WORK_FLAGS（0b11）执行了或操作，根据前面 irq_work 工作状态一节的分析，next 非 NULL, 且 bit10=0b11，则表示执行了入队操作，entry 实例转换为 peding 状态，这里通过使用 cmpxchg 函数原子地更新 head。如果更新成功（即返回值等于 next），则退出循环。</p>
+<blockquote>
+<p>cmpxchg 操作本身是原子的，它会检查 head 的当前值是否与 next 相等。如果不相等，cmpxchg 操作会失败，并返回 head 的当前值，这表明在执行 cmpxchg 期间 head 已经被其他线程或处理器修改，说明有其它线程或处理器执行了 irq_work 入队操作，需要重新入队。</p>
+</blockquote>
+<p>(3) irq_work_next 函数用于检查 entry 项是否是队列中的第一个元素。如果是，这意味着在加入 entry 之前队列是空的，因此需要触发一个自中断（self-interrupt）来开始处理队列中的工作项。arch_irq_work_raise 函数是一个架构相关的函数，用于触发自中断，它会通知当前 CPU 开始处理 irq_work 队列。</p>
+<blockquote>
+<p>为什么要在队列为空时触发自中断？因为如果没有工作项在队列中，当前 CPU 可能不会主动去检查和处理 irq_work 队列。通过触发自中断，可以确保即使在队列刚刚从空变为非空时，CPU 也能立即响应并开始处理队列中的工作项。</p>
+</blockquote>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">+static void <span class="constructor">__irq_work_queue(<span class="params">struct</span> <span class="params">irq_work</span> <span class="operator">*</span><span class="params">entry</span>)</span></span><br><span class="line">+&#123;</span><br><span class="line">+        <span class="keyword">struct</span> irq_work **head, *next;</span><br><span class="line">+</span><br><span class="line">+        head = &amp;get<span class="constructor">_cpu_var(<span class="params">irq_work_list</span>)</span>;--------------------(<span class="number">1</span>)</span><br><span class="line">+</span><br><span class="line">+        <span class="keyword">do</span> &#123;</span><br><span class="line">+                next = *head;</span><br><span class="line">+                <span class="comment">/* Can assign non-atomic because we keep the flags set. */</span></span><br><span class="line">+                entry-&gt;next = next<span class="constructor">_flags(<span class="params">next</span>, IRQ_WORK_FLAGS)</span>;</span><br><span class="line">+        &#125; <span class="keyword">while</span> (cmpxchg(head, next, entry) != next);----------(<span class="number">2</span>)</span><br><span class="line">+</span><br><span class="line">+        <span class="comment">/* The list was empty, raise self-interrupt to start processing. */</span></span><br><span class="line">+        <span class="keyword">if</span> (!irq<span class="constructor">_work_next(<span class="params">entry</span>)</span>)-----------------------------(<span class="number">3</span>)</span><br><span class="line">+                arch<span class="constructor">_irq_work_raise()</span>;</span><br><span class="line">+</span><br><span class="line">+        put<span class="constructor">_cpu_var(<span class="params">irq_work_list</span>)</span>;</span><br><span class="line">+&#125;</span><br></pre></td></tr></table></figure>
+<p>当前 patch 中，irq_work 入队的发生时机位于 PMU 中断中，如果处于 NMI 中断上下文，则会通过 irq_work_queue 将一些操作通过 irq_work 执行；这样可以避免 NMI 中处理一些复杂操作。</p>
+<blockquote>
+<p>PMU 是一个硬件组件，用于监控、跟踪、计数系统内部的一些底层硬件事件，包括与 CPU 有关的事件（如执行指令数、捕获异常数、时钟周期数等），与 cache 有关的事件（数据/指令/L1/L2 cache 访问次数，cache miss 次数等）以及与 TLB 有关的事件等。对于 x86 架构，PMU（Performance Monitoring Unit）中断被配置为 NMI（Non-Maskable Interrupt）来处理。这种配置确保了性能监控事件的高优先级处理，即使在其他中断被禁用的情况下也能及时响应。在 arch/x86/events/core.c::perf_events_lapic_init()函数中，PMI（Performance Monitoring Interrupt）被配置为通过 NMI 向操作系统发送通知。这种配置允许操作系统在性能计数器溢出时，通过调用 perf_event_overflow 函数来处理数据采样和事件通知，而这个函数中的 nmi 参数用于指示性能事件是否是在 NMI 上下文中触发的。</p>
+</blockquote>
+<p>NMI 中断不能做太复杂的操作，因为 NMI 处理程序需要快速执行以避免影响系统的稳定性。NMI 处理程序需要快速返回以避免影响系统的实时性。通过将一些可以延迟处理的任务放入 irq_work_queue，NMI 处理程序可以快速返回，而将复杂的处理逻辑推迟到后续执行，这样可以保证系统的响应性。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">static <span class="built_in">int</span> x86<span class="constructor">_pmu_handle_irq(<span class="params">struct</span> <span class="params">pt_regs</span> <span class="operator">*</span><span class="params">regs</span>)</span></span><br><span class="line"><span class="pattern-match">|—— perf<span class="constructor">_event_overflow(<span class="params">event</span>, 1, &amp;<span class="params">data</span>, <span class="params">regs</span>)</span></span></span><br><span class="line"><span class="pattern-match">|    |<span class="constructor">__</span> <span class="constructor">__perf_event_overflow(<span class="params">event</span>, <span class="params">nmi</span>, 1, <span class="params">data</span>, <span class="params">regs</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">|        |—— event-&gt;pending<span class="constructor">_disable</span> = 1;</span></span><br><span class="line"><span class="pattern-match">|        |<span class="constructor">__</span> +irq<span class="constructor">_work_queue(&amp;<span class="params">event</span>-&gt;<span class="params">pending</span>)</span></span></span><br><span class="line"><span class="pattern-match">|<span class="constructor">__</span> return handled;</span></span><br></pre></td></tr></table></figure>
+<h2 id="irq-work-运行"><a href="#irq-work-运行" class="headerlink" title="irq_work 运行"></a>irq_work 运行</h2><p>irq_work_run 用于执行当前 CPU 链表的 irq_work 项，它会遍历当前 cpu 的 irq_work 链表，执行所有 irq_work 的 func 回调。这里需要注意的是 irq_work_run 属于硬件上下文，需要将 local irq 关掉，以避免发生中断嵌套</p>
+<p>(1) irq_work_list 是一个 per-cpu 变量，是当前 cpu 上 irq_work 的链表头；</p>
+<p>(2) 用于原子判断链表是否空；</p>
+<p>(3) 如果链表不为空，则会循环遍历每个 irq_work 项，执行其 func 回调函数。这里 next_flags 用于设置 irq_work 的状态为 busy，回调函数执行完毕后，irq_work 切换为 free 状态</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">+void irq_work_run(void)</span><br><span class="line">|—— +struct irq_work *<span class="keyword">list</span>, **head;</span><br><span class="line">|—— +head = &amp;__get_cpu_var(irq_work_list);----------------(<span class="number">1</span>)</span><br><span class="line">|—— +<span class="keyword">list</span> = xchg(head, <span class="keyword">NULL</span>);-----------------------------(<span class="number">2</span>)</span><br><span class="line">|__ +<span class="keyword">while</span> (<span class="keyword">list</span> != <span class="keyword">NULL</span>)---------------------------------(<span class="number">3</span>)</span><br><span class="line">        +struct irq_work *entry = <span class="keyword">list</span>;</span><br><span class="line">        +<span class="keyword">list</span> = irq_work_next(<span class="keyword">list</span>);</span><br><span class="line">        +entry-&gt;next = next_flags(<span class="keyword">NULL</span>, IRQ_WORK_BUSY);</span><br><span class="line">        +entry-&gt;func(entry);</span><br><span class="line">        +cmpxchg(&amp;entry-&gt;next, next_flags(<span class="keyword">NULL</span>,</span><br><span class="line">        +            RQ_WORK_BUSY), <span class="keyword">NULL</span>);</span><br></pre></td></tr></table></figure>
+<p>在当前 patch 中 irq_work 运行时机，主要包含两个：pmu 中断中（如 ARM 处理器）；定时器中断中</p>
+<ul>
+<li>pmu 中断中</li>
+</ul>
+<p>对于 ARM 处理器（如 ARMV7）的 PMU 组件有 1 个 cycle 计数器和多个其它事件计数器，通过配置可以指定时间计数器的阈值，当事件累积次数达到阈值时，计数器就会溢出触发中断。对于 ARMV7，对应的 PMU 硬件中断处理程序为 armv7pmu_handle_irq，它会通过 irq_work_run 执行 irq_work 队列中的 irq_work，而这个 irq_work 的回调就是用来处理 pending 的的 perf events 事件的。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//arch/arm/kernel/perf_event.c</span></span><br><span class="line">static irqreturn_t armv7pmu<span class="constructor">_handle_irq(<span class="params">int</span> <span class="params">irq_num</span>, <span class="params">void</span> <span class="operator">*</span><span class="params">dev</span>)</span></span><br><span class="line"><span class="pattern-match">|—— +irq<span class="constructor">_work_run()</span>；</span></span><br><span class="line"><span class="pattern-match">|<span class="constructor">__</span> return <span class="constructor">IRQ_HANDLED</span>;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>定时器中断中</li>
+</ul>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">void update_process_times(<span class="keyword">int</span> user_tick)</span><br><span class="line">|_<span class="number">_</span> +<span class="keyword">if</span> (in_ir<span class="string">q()</span>)</span><br><span class="line">    +    irq_work_run();</span><br></pre></td></tr></table></figure>
+<h2 id="irq-work-同步"><a href="#irq-work-同步" class="headerlink" title="irq_work 同步"></a>irq_work 同步</h2><p>irq_work同步对 irq_work 结构的访问，确保在执行某个操作时 irq_work 不会被其他执行路径同时使用。通过检查和等待 irq_work 的状态来实现。irq_work_sync 函数通常需要确保 irq_work 不会被中断或其他执行路径同时使用</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">/*</span></span><br><span class="line"><span class="comment">++ * Synchronize against the irq_work @entry, ensures the entry is not</span></span><br><span class="line"><span class="comment">+ * currently in use.</span></span><br><span class="line"><span class="comment">+ */</span></span><br><span class="line">+void irq<span class="constructor">_work_sync(<span class="params">struct</span> <span class="params">irq_work</span> <span class="operator">*</span><span class="params">entry</span>)</span></span><br><span class="line">+&#123;</span><br><span class="line">+        <span class="constructor">WARN_ON_ONCE(<span class="params">irqs_disabled</span>()</span>);</span><br><span class="line">+</span><br><span class="line">+        <span class="keyword">while</span> (irq<span class="constructor">_work_is_set(<span class="params">entry</span>, IRQ_WORK_BUSY)</span>)</span><br><span class="line">+                cpu<span class="constructor">_relax()</span>;</span><br><span class="line">+&#125;</span><br><span class="line">+<span class="constructor">EXPORT_SYMBOL_GPL(<span class="params">irq_work_sync</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>使用 irq_work_sync 的一个时机是 perf_event 释放时：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">static void free<span class="constructor">_event(<span class="params">struct</span> <span class="params">perf_event</span> <span class="operator">*</span><span class="params">event</span>)</span></span><br><span class="line"><span class="pattern-match">|—— +irq<span class="constructor">_work_sync(&amp;<span class="params">event</span>-&gt;<span class="params">pending</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">|—— <span class="keyword">if</span> (!event-&gt;parent) &#123;</span></span><br><span class="line"><span class="pattern-match">|             atomic<span class="constructor">_dec(&amp;<span class="params">nr_events</span>)</span>;</span></span><br><span class="line"><span class="pattern-match">|<span class="constructor">__</span> call<span class="constructor">_rcu(&amp;<span class="params">event</span>-&gt;<span class="params">rcu_head</span>, <span class="params">free_event_rcu</span>)</span>;</span></span><br></pre></td></tr></table></figure>
+<h2 id="irq-work-与工作队列-work-的比较"><a href="#irq-work-与工作队列-work-的比较" class="headerlink" title="irq_work 与工作队列 work 的比较"></a>irq_work 与工作队列 work 的比较</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>比较项</th>
+<th>irq_work</th>
+<th>工作队列 work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>执行上下文</td>
+<td>中断上下文</td>
+<td>进程上下文</td>
+</tr>
+<tr>
+<td>同步机制</td>
+<td>通过 irq_work_sync 函数，确保在执行 irq_work 时不会被其他中断或执行路径同时使用，从而避免数据竞争和同步问题</td>
+<td>通常使用互斥锁（mutexes）或其他同步机制来保护共享数据</td>
+</tr>
+<tr>
+<td>延迟和调度</td>
+<td>一旦触发，通常会尽快在中断上下文执行，延迟相对较低，通常只会执行简单操作，复杂操作推迟到软中断上下文或通过工作队列推迟到进程上下文</td>
+<td>可以通过 schedule_delayed_work 或 queue_delayed_work 来实现延迟执行，提供了更灵活的调度选项</td>
+</tr>
+<tr>
+<td>使用场景</td>
+<td>适合实时性要求高的场景</td>
+<td>适合处理不需要立即完成的任务</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p>[1]<a href="https://lore.kernel.org/lkml/1287036094.7768.291.camel@yhuang-dev/" target="_blank" rel="noopener">https://lore.kernel.org/lkml/1287036094.7768.291.camel@yhuang-dev/</a> </p>
+<p>[2]<a href="https://developer.arm.com/documentation/ddi0406/cd/?lang=en" target="_blank" rel="noopener">https://developer.arm.com/documentation/ddi0406/cd/?lang=en</a></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    
+                    <li class="next">
+                        <a href="/2024/12/25/物格而后知至-WALT调度器之RTG/" data-toggle="tooltip" data-placement="top" title="物格而后知至：WALT调度器之RTG">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#About-The-Author"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">About The Author</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#Patch-Archives"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">Patch Archives</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#邮件主题"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">邮件主题</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#修改文件"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">修改文件</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#基本数据结构"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">基本数据结构</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#基本接口"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">基本接口</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#irq-work-初始化"><span class="toc-nav-number">7.</span> <span class="toc-nav-text">irq_work 初始化</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#irq-work-的工作状态"><span class="toc-nav-number">8.</span> <span class="toc-nav-text">irq_work 的工作状态</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#irq-work-claim"><span class="toc-nav-number">9.</span> <span class="toc-nav-text">irq_work claim</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#irq-work-入队"><span class="toc-nav-number">10.</span> <span class="toc-nav-text">irq_work 入队</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#irq-work-运行"><span class="toc-nav-number">11.</span> <span class="toc-nav-text">irq_work 运行</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#irq-work-同步"><span class="toc-nav-number">12.</span> <span class="toc-nav-text">irq_work 同步</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#irq-work-与工作队列-work-的比较"><span class="toc-nav-number">13.</span> <span class="toc-nav-text">irq_work 与工作队列 work 的比较</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#参考链接"><span class="toc-nav-number"></span> <span class="toc-nav-text">参考链接</span></a>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
