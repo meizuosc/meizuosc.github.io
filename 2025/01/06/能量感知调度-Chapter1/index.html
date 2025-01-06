@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          能量感知调度（EAS，Energy-Aware Scheduling）的考古日志系列，连载一 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2025/01/06/能量感知调度-Chapter1/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                        </div>
+                        <h1>能量感知调度（EAS，Energy-Aware Scheduling）的考古日志系列，连载一</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by meizu on
+                            2025-01-06
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <blockquote>
+<p>本系列patch为EAS相关，主要记录EAS从提出讨论，经过多个版本迭代，最终合入主线内核的过程。</p>
+<p>本文是EAS调度器patch的RFC意见征求讨论，在RFCV5版本中，作者Morten Rasmussen对EAS调度器的能量成本模型和初始构架做了一个简要的介绍，并通过一个测试模型对EAS开启和非开启版本与主线内核进行对比测试。这个patch可以理解为EAS patch的前身，后续EAS经过10次的迭代，终合入主线内核。从 2013 年到 2019 年，EAS 的合入花费了 6 年时间。</p>
+</blockquote>
+<h2 id="Patch-Archives"><a href="#Patch-Archives" class="headerlink" title="Patch Archives"></a>Patch Archives</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>档案项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Subject</td>
+<td>[RFCv5 PATCH 00/46] sched: Energy cost model for energy-aware scheduling</td>
+</tr>
+<tr>
+<td>Author</td>
+<td>Morten Rasmussen</td>
+</tr>
+<tr>
+<td>合入内核版本</td>
+<td>-</td>
+</tr>
+<tr>
+<td>合入时间</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="About-The-Author"><a href="#About-The-Author" class="headerlink" title="About The Author"></a>About The Author</h2><p><img src="1.webp" alt="图片"></p>
+<p>Morten Rasmussen 是一位活跃在 Linux 内核开发社区的开发者，尤其在能量感知调度（Energy Aware Scheduling，简称 EAS）领域做出了显著的贡献。在 2014 年的 Linux 内核峰会（Linux Kernel Summit 2014）上，Morten Rasmussen 担任了为期一天的 EAS 主题研讨会的主持人。他与 Linaro 的 Daniel Lezcano 和 Mike Turquette 一起介绍了最近发布的 EAS 相关工具，推动了 EAS 技术的快速发展和普及。EAS 技术的发展引起了智能设备厂商的广泛关注，许多厂商开始学习和应用这项技术以优化设备的能耗。2017 年发布的 Google Pixel 2 采用了 EAS 技术，不仅降低了功耗，还提高了设备性能。Morten Rasmussen 的工作对于 Linux 内核在性能优化和电源管理方面的进步具有重要意义，特别是在移动和嵌入式设备领域。通过他的努力，Linux 内核能够更智能地管理能耗，提高系统的效率和响应性。</p>
+<h2 id="Patch-Timeline"><a href="#Patch-Timeline" class="headerlink" title="Patch Timeline"></a>Patch Timeline</h2><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">20181203095616</span>)合入 kernel v5<span class="number">.0</span>-rc1~<span class="number">148</span>^<span class="number">2</span>~<span class="number">9</span></span><br><span class="line">(<span class="number">20181203095613</span>)[PATCH v10 <span class="number">00</span>/<span class="number">15</span>] Energy Aware Scheduling</span><br><span class="line">(<span class="number">20181119141842</span>)[PATCH v9 <span class="number">00</span>/<span class="number">15</span>] Energy Aware Scheduling</span><br><span class="line">(<span class="number">20181016101458</span>)[PATCH v8 <span class="number">00</span>/<span class="number">15</span>] Energy Aware Scheduling</span><br><span class="line">(<span class="number">20180912091255</span>)[PATCH v7 <span class="number">00</span>/<span class="number">15</span>] Energy Aware Scheduling</span><br><span class="line">(<span class="number">20180820094406</span>)[PATCH v6 <span class="number">00</span>/<span class="number">15</span>] Energy Aware Scheduling</span><br><span class="line">(<span class="number">20180724122507</span>)[PATCH v5 <span class="number">00</span>/<span class="number">14</span>] Energy Aware Scheduling</span><br><span class="line">*(<span class="number">20150707192343</span>)[RFCv5 PATCH <span class="number">00</span>/<span class="number">46</span>] sched: Energy cost model <span class="keyword">for</span> energy-aware scheduling</span><br><span class="line">(<span class="number">20150512203835</span>)[RFCv4 PATCH <span class="number">00</span>/<span class="number">34</span>] sched: Energy cost model <span class="keyword">for</span> energy-aware scheduling</span><br><span class="line">(<span class="number">20150204183037</span>)[RFCv3 PATCH <span class="number">00</span>/<span class="number">48</span>] sched: Energy cost model <span class="keyword">for</span> energy-aware scheduling</span><br></pre></td></tr></table></figure>
+<h2 id="邮件主题"><a href="#邮件主题" class="headerlink" title="邮件主题"></a>邮件主题</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">From</span>        Morten Rasmussen &lt;&gt;</span><br><span class="line">Subject     [RFCv5 PATCH 00/46] sched: Energy cost model <span class="keyword">for</span> energy-aware scheduling</span><br><span class="line">Date        Tue, 7 Jul 2015 19:23:43 +0100</span><br><span class="line">Several techniques <span class="keyword">for</span> saving energy through various scheduler</span><br><span class="line">modifications have been proposed <span class="keyword">in</span> the past, however most of the</span><br><span class="line">techniques have <span class="keyword">not</span> been universally beneficial <span class="keyword">for</span> all use-cases <span class="keyword">and</span></span><br><span class="line">platforms. <span class="keyword">For</span> example, consolidating tasks on fewer cpus is an</span><br><span class="line">effective way <span class="keyword">to</span> save energy on some platforms, <span class="keyword">while</span> it might make</span><br><span class="line">things worse on others. At the same time there has been a demand <span class="keyword">for</span></span><br><span class="line">scheduler driven power management given the scheduler<span class="string">'s position to</span></span><br><span class="line"><span class="string">judge performance requirements for the near future [1].</span></span><br></pre></td></tr></table></figure>
+<p>过去曾多次提出过通过修改调度器来节省能耗的技术，然而，大多数技术并非对所有场景和平台都有收益。例如，在某些平台上，将任务集中到较少的CPU上是节省能耗的有效方式，而在其他平台上可能会使情况变得更糟。同时，鉴于调度器能够判断不久将来的性能需求，对调度器驱动的电源管理一直有需求[1]。</p>
+<p>这个提案受到[1]和2013年Ksummit研讨会讨论[2]的启发，采取了不同的方法，使用一个（相对）简单的平台 energy cost 模型来指导调度决策。通过为模型提供特定平台的成本数据，模型可以估算调度决策造成的能量影响。因此，调度器不是盲目地应用那些对当前场景可能有效也可能无效的技术，而是能够做出明智的节能决策。我们认为这种方法提供了一种可以适应任何平台的方法，包括像ARM big.LITTLE这样的异构系统。该模型仅考虑CPU，即不考虑外围设备、GPU或内存。模型数据包括每个P-state（性能状态）和C-state（空闲状态）的功耗。此外，这个提案的自然扩展是由调度器驱动P-state选择，因为它可以意识到CPU利用率的变化。</p>
+<p>这是一个 Request For Comments（RFC, 征求意见），但包含了大部分基本功能。模型及其基础设施已经在调度器中就位，并用于负载均衡决策。能源模型数据是硬编码的，还有一些限制需要解决。然而，这里主要介绍的是使用能源模型进行调度决策和调度器驱动的DVFS的主要思想。</p>
+<p>RFCv5是最新能源模型相关补丁和添加到CFS的PELT的scale-invariance的补丁集合，同时也修复了我们使用PELT进行负载均衡时出现的一些问题。v5的主要新增内容包括 Mike Turquette 之前发布的使调度器驱动DVFS成为可能的补丁[3]（请在原始线程中发表关于这些问题的评论）以及Juri的补丁，这些补丁在Mike的补丁基础上驱动调度器的DVFS。</p>
+<p>这些补丁基于tip/sched/core。自RFCv4以来的许多更改都是为了解决在v4审查过程中指出的问题。节能调度严格遵循“临界点”政策（有一个小例外）。也就是说，当系统被认为过载（超过“临界点”）时，所有的平衡决策都按照正常方式进行，基于优先级缩放的负载（priority scaled load）和任务分散（spreading of tasks）。当低于临界点时，激活节能调度决策。其理念是，当低于临界点时，我们可以安全地重新分配任务以节省能源，而不会损害吞吐量。重点更多的是在使用唤醒时将任务放在正确的CPU上，而不是在periodic/idle/nohz_idle的CPU上，因为后者在低于临界点时不太可能有机会平衡任务，因为任务更小且不总是running/runnable。</p>
+<p>补丁包现在由四个主要部分组成。前两个部分与第 4 版相比基本没有变化，只有错误修复和较小的改进。后两部分是 Mike 的 DVFS 补丁和 Juri 在 Mike 补丁基础上开发的调度器驱动的的 DVFS 补丁。</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Patch <span class="number">01</span><span class="number">-12</span>: sched: frequency <span class="keyword">and</span> cpu invariant per-entity <span class="keyword">load</span>-tracking</span><br><span class="line">                    <span class="keyword">and</span> other <span class="keyword">load</span>-tracking bits.</span><br><span class="line">Patch <span class="number">13</span><span class="number">-36</span>: sched: Energy <span class="keyword">cost</span> model <span class="keyword">and</span> energy-aware scheduling</span><br><span class="line">                    features.</span><br><span class="line">Patch <span class="number">37</span><span class="number">-38</span>: sched, cpufreq: Scheduler/DVFS integration (repost Mike</span><br><span class="line">                             Turquett<span class="string">e's patches [3])</span></span><br><span class="line"><span class="string">Patch 39-46: sched: Juri'</span>s additions <span class="keyword">to</span> Mik<span class="string">e's patches driving DVFS from</span></span><br><span class="line"><span class="string">                    the scheduler.</span></span><br></pre></td></tr></table></figure>
+<p>针对ARM TC2（2xA15+3xA7）启用cpufreq的测试结果：</p>
+<p>sysbench：单任务运行30秒</p>
+<p>rt-app [4]：mp3播放用例模型</p>
+<p>rt-app [4]：5 ~[6,13,19,25,31,38,44,50]%，周期性（2ms），任务运行30秒。</p>
+<blockquote>
+<p>注意：%是相对于最快CPU最高频率下的容量，即任务越繁忙，越不适合在小CPU上运行。除 rt-app 性能数据外，其他数据均以主线为标准进行比较。noEAS（禁用 ENERGY_AWARE 调度特性）具有容量感知能力，能为 big.LITTLE 提供一致的性能，但不考虑能效。</p>
+</blockquote>
+<p>我们在rt-app中添加了一个实验性的性能指标（基于Linaro的仓库[5]），它基本上表示从运行周期完成到下次激活剩余的平均时间，归一化到最佳情况：100是最佳情况（实际上无法实现），繁忙周期尽可能快地结束；0意味着平均而言我们刚好在下次激活前完成；负数意味着我们继续运行超过了下次激活的时间。每项测试平均运行20次的结果（ARM TC2）。</p>
+<p>ndm = cpufreq ondemand governor，20ms采样率， sched = scheduler driven DVFS</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Energy          Mainline (ndm) noEAS (ndm)    EAS (ndm)      EAS (sched)</span><br><span class="line">                nrg   prf      nrg   prf      nrg   prf      nrg   prf</span><br><span class="line">sysbench        <span class="number">100</span>   <span class="number">100</span>      <span class="number">107</span>   <span class="number">105</span>      <span class="number">108</span>   <span class="number">105</span>      <span class="number">107</span>   <span class="number">105</span></span><br><span class="line"></span><br><span class="line">rt-app mp3      <span class="number">100</span>   n.a.     <span class="number">101</span>   n.a.     <span class="number">45</span>    n.a.     <span class="number">43</span>    n.a.</span><br><span class="line"></span><br><span class="line">rt-app <span class="number">6</span>%       <span class="number">100</span>   <span class="number">85</span>       <span class="number">103</span>   <span class="number">85</span>        <span class="number">31</span>   <span class="number">60</span>        <span class="number">33</span>   <span class="number">59</span></span><br><span class="line">rt-app <span class="number">13</span>%      <span class="number">100</span>   <span class="number">76</span>       <span class="number">102</span>   <span class="number">76</span>        <span class="number">39</span>   <span class="number">46</span>        <span class="number">41</span>   <span class="number">50</span></span><br><span class="line">rt-app <span class="number">19</span>%      <span class="number">100</span>   <span class="number">64</span>       <span class="number">102</span>   <span class="number">64</span>        <span class="number">93</span>   <span class="number">54</span>        <span class="number">93</span>   <span class="number">54</span></span><br><span class="line">rt-app <span class="number">25</span>%      <span class="number">100</span>   <span class="number">53</span>       <span class="number">102</span>   <span class="number">53</span>        <span class="number">93</span>   <span class="number">43</span>        <span class="number">96</span>   <span class="number">45</span></span><br><span class="line">rt-app <span class="number">31</span>%      <span class="number">100</span>   <span class="number">44</span>       <span class="number">102</span>   <span class="number">43</span>       <span class="number">115</span>   <span class="number">35</span>       <span class="number">145</span>   <span class="number">43</span></span><br><span class="line">rt-app <span class="number">38</span>%      <span class="number">100</span>   <span class="number">35</span>       <span class="number">116</span>   <span class="number">32</span>       <span class="number">113</span>    <span class="number">2</span>       <span class="number">140</span>   <span class="number">29</span></span><br><span class="line">rt-app <span class="number">44</span>%      <span class="number">100</span>  <span class="number">-40</span>k      <span class="number">142</span>   <span class="number">-9</span>k      <span class="number">141</span>   <span class="number">-9</span>k      <span class="number">145</span>   <span class="number">-1</span>k</span><br><span class="line">rt-app <span class="number">50</span>%      <span class="number">100</span> <span class="number">-100</span>k      <span class="number">133</span>  <span class="number">-21</span>k      <span class="number">131</span>  <span class="number">-22</span>k      <span class="number">131</span>   <span class="number">-4</span>k</span><br></pre></td></tr></table></figure>
+<p>sysbench在所有启用或未启用EAS（节能调度）的内核上表现略好，因为任务总是被调度在大核心上。启用EAS时，rt-app的mp3能耗显著降低，因为它被调度在小核心上。</p>
+<p>rt-app的周期性测试范围从轻度使用到过载。在低利用率下，EAS显著降低了能耗，而性能指标略低，这是由于任务被打包在小核心上。随着利用率的增加，性能指标下降，因为CPU越来越接近过载。38%大约是小核心不再能够在每个周期内及时完成的点，饱和效应开始发挥作用。对于最后两个案例，系统过载了。EAS消耗的能量比主线多，但减少了性能退化（较少的负面性能指标）。调度器驱动的DVFS通常比ondemand提供更好的性能，这也是为什么我们看到更高的能耗。</p>
+<p>在x86_64上进行了编译测试和启动测试，但由于我们还没有x86_64的能源模型，所以它还没有发挥作用。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p>[1]<a href="https://lkml.org/lkml/2015/7/7/754" target="_blank" rel="noopener">https://lkml.org/lkml/2015/7/7/754</a><br>[2]<a href="https://lore.kernel.org/lkml/1436293469-25707-1-git-send-email-morten.rasmussen@arm.com/" target="_blank" rel="noopener">https://lore.kernel.org/lkml/1436293469-25707-1-git-send-email-morten.rasmussen@arm.com/</a></p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    
+                    <li class="next">
+                        <a href="/2025/01/06/硬核内核技术：irq_work通用硬中断回调机制首版特性分析/" data-toggle="tooltip" data-placement="top" title="硬核内核技术：irq_work通用硬中断回调机制首版特性分析">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#Patch-Archives"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">Patch Archives</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#About-The-Author"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">About The Author</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#Patch-Timeline"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">Patch Timeline</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#邮件主题"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">邮件主题</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#参考链接"><span class="toc-nav-number"></span> <span class="toc-nav-text">参考链接</span></a>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
