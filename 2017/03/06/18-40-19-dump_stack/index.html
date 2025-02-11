@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          dump_stack 实现分析 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#dump_stack" title="dump_stack">dump_stack</a>
+                            
+                        </div>
+                        <h1>dump_stack 实现分析</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Xie HaoCheng on
+                            2017-03-06
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="1-简介"><a href="#1-简介" class="headerlink" title="1 简介"></a>1 简介</h2><p>说起 <code>dump_stack()</code> ，相信从事 Linux 内核或者驱动相关开发的同行对于此函数肯定不陌生。我们经常会用到此函数来对自己的代码进行 debug，可以快速帮助开发者理清函数调用流程，或者说解决 bug…… 首先我们来看一下 dump_stack 的打印，相信很多人都遇到过 :</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">[    4.778339] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[258:charger<span class="emphasis">_thread]CPU: 1 PID: 258 Comm: charger_</span>thread Tainted: G        W       4.4.15+ #50</span><br><span class="line"></span><br><span class="line">[    4.778342] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[258:charger_thread]Hardware name: MT67XX</span><br><span class="line"></span><br><span class="line">[    4.778345] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[258:charger_thread]Call trace:</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778347</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc00008a40c&gt;</span>] dump_backtrace+0x0/0x14c</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778354</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc00008a56c&gt;</span>] show_stack+0x14/0x1c</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778358</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc000368930&gt;</span>] dump_stack+0x8c/0xb0</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778364</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc000852140&gt;</span>] ipanic_die+0x50/0x104</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778368</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc0000bfd94&gt;</span>] notifier<span class="emphasis">_call_</span>chain+0x88/0x2d4</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778374</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc0000c08d4&gt;</span>] notify_die+0x48/0x5c</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778377</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc00008a60c&gt;</span>] die+0x98/0x1b8</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778381</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc000099ab4&gt;</span>] <span class="emphasis">__do_</span>kernel_fault.part.6+0x74/0x90</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778386</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc000097cbc&gt;</span>] do<span class="emphasis">_page_</span>fault+0x2e8/0x2f8</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778392</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc000097d84&gt;</span>] do<span class="emphasis">_translation_</span>fault+0xb8/0xe0</span><br><span class="line"></span><br><span class="line">[<span class="string">    4.778396</span>] <span class="xml"><span class="tag">&lt;<span class="name">1</span>&gt;</span></span>-(1)[<span class="string">258:charger_thread</span>][<span class="symbol">&lt;ffffffc0000822bc&gt;</span>] do<span class="emphasis">_mem_</span>abort+0x40/0xa0</span><br></pre></td></tr></table></figure>
+<p>从打印可以清晰的了解程序到底发生了什么，这是一个很好用的函数，那么今天我们就来透过现象看本质，看看这个函数到底是何方神圣，怎么来实现这种功能的。</p>
+<h2 id="2-实现分析"><a href="#2-实现分析" class="headerlink" title="2 实现分析"></a>2 实现分析</h2><p>通过 grep，发现 dump_stack 函数原型存在于 kernel/lib/dump_stack.c 文件中（注：笔者使用的是 4.4 版本的代码）。它的实现流程如下图所示：</p>
+<p><img src="dump_stack.png" alt="dump_stack"></p>
+<p>可以看到关键的两个函数分别是 dump_stack_print_info 和 show_stack 。其中第一个函数是用来打印 info 信息的，而第二个函数是用来打印 Call trace 的。</p>
+<p><strong>Step 1: dump_stack_print_info</strong></p>
+<p>第一部分主要实现 print info ，函数比较简单，我们直接看代码：</p>
+<pre><code>
+void dump_stack_print_info(const char *log_lvl)
+{
+    printk("%sCPU: %d PID: %d Comm: %.20s %s %s %.*s\n",
+        log_lvl, raw_smp_processor_id(), current->pid, current->comm,
+        print_tainted(), init_utsname()->release,
+        (int)strcspn(init_utsname()->version, " "),
+        init_utsname()->version);
+
+    if (dump_stack_arch_desc_str[0] != '\0')
+        printk("%sHardware name: %s\n",
+        log_lvl, dump_stack_arch_desc_str);
+
+    print_worker_info(log_lvl, current);
+} 
+</code></pre>
+
+<p>其实 print info 的关键信息就是一句代码实现的：</p>
+<pre><code>printk(&quot;%sCPU: %d PID: %d Comm: %.20s %s %s %.*s\n&quot;， 
+    log_lvl, raw_smp_processor_id(), current-&gt;pid, current-&gt;comm, 
+    print_tainted(), init_utsname()-&gt;release,
+    (int)strcspn(init_utsname()-&gt;version, &quot; &quot;),
+    init_utsname()-&gt;version);
+</code></pre><p> current 指针指向的是当前进程，那么这句代码就是分别打印出了：log_level, CPU id, command, kernel taint state, kernel version,  这样就和前面例子中的打印信息对上了 ~</p>
+<p>关于这个 <code>print_tainted()</code> 函数，笔者也不甚了解，通过函数的注释可以知其一二：</p>
+<pre><code>
+/**
+  *  print_tainted - return a string to represent the kernel taint state.
+  *
+  *  'P' - Proprietary module has been loaded.
+  *  'F' - Module has been forcibly loaded.
+  *  'S' - SMP with CPUs not designed for SMP.
+  *  'R' - User forced a module unload.
+  *  'M' - System experienced a machine check exception.
+  *  'B' - System has hit bad_page.
+  *  'U' - Userspace-defined naughtiness.
+  *  'D' - Kernel has oopsed before
+  *  'A' - ACPI table overridden.
+  *  'W' - Taint on warning.
+  *  'C' - modules from drivers/staging are loaded.
+  *  'I' - Working around severe firmware bug.
+  *  'O' - Out-of-tree module has been loaded.
+  *  'E' - Unsigned module has been loaded.
+  *  'L' - A soft lockup has previously occurred.
+  *  'K' - Kernel has been live patched.
+  *
+  *  The string is overwritten by the next call to print_tainted().
+  */
+</code></pre>
+
+<p><strong>Step 2: show_stack</strong></p>
+<p>第二部分的主要功能是实现 Call trace ，它的执行流程如下：</p>
+<p><img src="show_dump.png" alt="show_stack"></p>
+<p> unwind_frame 是判断是否到达栈底的函数，一个线程堆栈大小为 THREAD_SIZE，SP 寄存器存储的是栈顶，由此可以找到对应的栈底，如果没有到堆栈底部，则每次持续打印出相关的函数调用列表。</p>
+<p>接下来就是另一个关键函数 dump_backtrace_entry ，看一下它的代码：</p>
+<pre><code>
+static void dump_backtrace_entry(unsigned long where)
+{   
+ /*
+  * Note that 'where' can have a physical address, but it's not handled.
+  */
+    print_ip_sym(where);
+}
+
+static inline void print_ip_sym(unsigned long ip)
+{
+    printk("[<%p>] %pS\n", (void *) ip, (void *) ip);
+}
+</code></pre>
+
+<p>可以看到真正的打印函数也就一句代码，这个是真正的精髓所在：</p>
+<pre><code>printk(&quot;[&lt;%p&gt;] %pS\n&quot;, (void *) ip, (void *) ip);
+</code></pre><p>把 %pS 作为格式化参数传递给 printk，printk 将负责把对应地址的函数名打印出来。由此看来，如何从地址转换到函数名这个最复杂的工作内核已经帮你做好了，dump stack 直接去用做好的轮子就行了。</p>
+<h2 id="3-关于堆栈"><a href="#3-关于堆栈" class="headerlink" title="3 关于堆栈"></a>3 关于堆栈</h2><p>关于堆栈，首先要从 CPU 说起，以 ARM 32bit 为例来说，我们知道它有很多种 mode，usr/fiq/irq/svc/abt/und/sys。对于每一种 mode 都存在自己的堆栈，并由 SP 寄存器指定，由于进行模式切换就需要保护现场，因此不同 mode 的 SP 要设置为不同值。在内核态使用的都是 svc mode 的堆栈，那如何把不同线程的堆栈分开呢，实际上内核针对不同线程会分配不同的堆栈地址，而堆栈地址都被存在 task_struct 中，这样每次线程调度时就可以把相应的地址设置给 SP 寄存器，由此实现不同内核线程堆栈的切换。</p>
+<p>再来说中断，不管 CPU 是在 usr mode 还是在 svc mode，只要中断到来都会使 CPU 进入到 irq mode，这是一种硬件行为，不过在这之后的处理就属于软件范畴了，kernel 中只是把 irq mode 作为一个中转状态，只存在了很短暂的时间，甚至中断处理程序都不再 irq mode 里执行。根据代码可知，经过短暂的 irq mode 中转后，CPU 会进入到 svc mode 来处理中断服务程序，此时使用的堆栈就是当前被中断进程的内核 svc 堆栈。</p>
+<p>综上所述，dump_stack 其实就是根据当前 svc mode 的 SP 寄存器，打印出堆栈中的函数信息的。</p>
+<h2 id="4、总结"><a href="#4、总结" class="headerlink" title="4、总结"></a>4、总结</h2><p>dump_stack 的实现流程其实都是基于如下两条关键代码：</p>
+<pre><code>printk(&quot;%sCPU: %d PID: %d Comm: %.20s %s %s %.*s\n&quot;， 
+    log_lvl, raw_smp_processor_id(), current-&gt;pid, current-&gt;comm, 
+    print_tainted(), init_utsname()-&gt;release,
+    (int)strcspn(init_utsname()-&gt;version, &quot; &quot;),
+    init_utsname()-&gt;version);
+</code></pre><p>以及</p>
+<pre><code>printk(&quot;[&lt;%p&gt;] %pS\n&quot;, (void *) ip, (void *) ip);
+</code></pre><p>  有了这两个作为基础，其实对于我们来说，实现一个自己的 dump stack 函数又有何难呢？这个任务就交给读者练习吧，相信一定会收获更多的！</p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/08/08/17-33-25-tee_fp/" data-toggle="tooltip" data-placement="top" title="指纹 TEE ">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/10/16//configure-jenkins-guide.html/" data-toggle="tooltip" data-placement="top" title=" 搭建 Jenkins 服务指南 ">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#dump_stack" title="dump_stack">dump_stack</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

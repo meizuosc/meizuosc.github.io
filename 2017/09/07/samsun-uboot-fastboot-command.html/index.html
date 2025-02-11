@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          samsung uboot fastboot command - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2017/09/07//samsun-uboot-fastboot-command.html/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#fastboot" title="fastboot">fastboot</a>
+                            
+                        </div>
+                        <h1>samsung uboot fastboot command</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Zhang Yaping on
+                            2017-09-07
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <h2 id="1-fastboot协议"><a href="#1-fastboot协议" class="headerlink" title="1 fastboot协议"></a>1 fastboot协议</h2><p>fastboot 协议是一种通过 usb 连接 pc 和 bootloader 的机制。他被设计的非常容易实现，能够用于多种设备和运行于 Linux、Windows 或者 OSX 的主机。下面将会讲述 pc 和 bootloader 如何通信，以 fastboot flash 命令举例。</p>
+<h3 id="1-1-pc-端"><a href="#1-1-pc-端" class="headerlink" title="1.1 pc 端"></a>1.1 pc 端</h3><p>假设烧写的镜像名为 uboot.bin，烧写的分区名为 bootloader。fastboot flash 命令并会被解析为多个命令。<br>步骤一：pc 发送命令 getvar:partition-type:bootloader<br>pc 发送的第一个命令，获取分区类型，如果你是某种特殊的类型，如 “ext4”。那么 pc 端会发送擦除这个分区的命令，然后在烧写一个 ext4 的类型的镜像进去。此处要烧写的分区是 bootloader，他没有特殊的格式，那么 uboot 就没有回应。<br>步骤二：pc 发送命令 getvar:max-download-size<br>在bootloader 中有一个接受数据的 buffer。这条命令就是获取这个 buffer 的大小。如果 buffer 太小那么 pc 就会把镜像拆分，分段发送。<br>步骤三：pc 发送命令 download:01fbe8b2<br>给出这条命令的时候就是告诉 bootloader，我（pc）现在要发送数据了。接着就是数据的传输过程了。download 命令后面的数据表示发送的数据的大小。<br>步骤四：pc 发送命令 flash:bootloader<br>告诉 bootloader 将发送的数据写到 bootloader 分区中去。如果在写数据的时候发现分区大小比数据大小要小，那么此时就会报错。</p>
+<h3 id="1-2-bootloader-的回应"><a href="#1-2-bootloader-的回应" class="headerlink" title="1.2 bootloader 的回应"></a>1.2 bootloader 的回应</h3><p>bootloader 是被动响应 pc 发送过来的指令。它给 pc 回应信息是一个不大于 64 个字节的包响应， 响应包开头四个字节是 “OKAY”、“FAIL”、“DATA” 或者 “INFO”。<br>        a.INFO：表示信心应该被显示<br>        b.FAIL ：表示命令执行失败<br>        c.OKAY：表示命令执行成功<br>        d.DATA：表示请求的命令已经为数据阶段做好准备<br>对于 pc 端发送过来的命令，bootloader 都会发送响应消息。响应消息的头部就是上述4个中的一个，具体用哪个是具体情况而定。</p>
+<h2 id="2-fastboot-命令"><a href="#2-fastboot-命令" class="headerlink" title="2 fastboot 命令"></a>2 fastboot 命令</h2><p>github 上的 uboot 源码中是没有实现 fastboot 的。这部分是由芯片厂商提供的。此处说的是三星在 uboot 中实现的 fastboot 命令。命令的入口函数为 do_fastboot。因为 usb 设备方面的初始化由芯片厂商完成，所以 usb初始化部分将不是本次讨论的重点。我们将重点关注 fastboot 的流程和其 download 机制。</p>
+<h3 id="2-1-fastboot-的-main-loop"><a href="#2-1-fastboot-的-main-loop" class="headerlink" title="2.1 fastboot 的 main loop"></a>2.1 fastboot 的 main loop</h3><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">do</span></span><br><span class="line">&#123;</span><br><span class="line">	continue_from_disconnect = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Initialize the board specific support */</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="number">0</span> == fastboot_init(&amp;<span class="keyword">interface</span>))</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">int</span> poll_status, board_poll_status;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* If we got this far, we are a success */</span></span><br><span class="line">		ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">		timeout_endtime = get_ticks();</span><br><span class="line">		timeout_endtime += timeout_ticks;</span><br><span class="line"></span><br><span class="line">		LCD_turnon();</span><br><span class="line"></span><br><span class="line">		<span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="built_in">uint</span>64_t current_time = <span class="number">0</span>;</span><br><span class="line">			poll_status = fastboot_poll();</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (<span class="number">1</span> == check_timeout)</span><br><span class="line">				current_time = get_ticks();</span><br><span class="line"></span><br><span class="line">			<span class="comment">/* Check if the user wanted to terminate with ^C */</span></span><br><span class="line">			<span class="keyword">if</span> ( ((poll_status != FASTBOOT_OK) &amp;&amp; (ctrlc())) || gflag_reboot)</span><br><span class="line">			&#123;</span><br><span class="line">				printf(<span class="string">"Fastboot ended by user\n"</span>);</span><br><span class="line">				continue_from_disconnect = <span class="number">0</span>;</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (FASTBOOT_ERROR == poll_status)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="comment">/* Error */</span></span><br><span class="line">				printf(<span class="string">"Fastboot error \n"</span>);</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> <span class="keyword">if</span> (FASTBOOT_DISCONNECT == poll_status)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="comment">/* break, cleanup and re-init */</span></span><br><span class="line">				printf(<span class="string">"Fastboot disconnect detected\n"</span>);</span><br><span class="line">				continue_from_disconnect = <span class="number">1</span>;</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> <span class="keyword">if</span> ((<span class="number">1</span> == check_timeout) &amp;&amp;</span><br><span class="line">				   (FASTBOOT_INACTIVE == poll_status))</span><br><span class="line">			&#123;	</span><br><span class="line">				<span class="comment">/* No activity */</span></span><br><span class="line">				<span class="keyword">if</span> (current_time &gt;= timeout_endtime)</span><br><span class="line">				&#123;</span><br><span class="line">					printf(<span class="string">"Fastboot inactivity detected\n"</span>);</span><br><span class="line">					<span class="keyword">break</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span></span><br><span class="line">			&#123;</span><br><span class="line">				<span class="comment">/* Something happened */</span></span><br><span class="line">				<span class="comment">/* Actual works of parsing are done by rx_handler */</span></span><br><span class="line">				<span class="keyword">if</span> (<span class="number">1</span> == check_timeout)</span><br><span class="line">				&#123;</span><br><span class="line">					<span class="comment">/* Update the timeout endtime */</span></span><br><span class="line">					timeout_endtime = current_time;</span><br><span class="line">					timeout_endtime += timeout_ticks;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			board_poll_status = board_fastboot_poll();</span><br><span class="line">			<span class="keyword">if</span> (BOARD_FASTBOOT_DISCONNECT == board_poll_status)</span><br><span class="line">			&#123;</span><br><span class="line">				printf(<span class="string">"Fastboot disconnect detected by board action\n"</span>);</span><br><span class="line">				continue_from_disconnect = <span class="number">0</span>;</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="comment">/* while (1) */</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Reset the board specific support */</span></span><br><span class="line">	fastboot_shutdown();</span><br><span class="line"></span><br><span class="line">	LCD_setfgcolor(<span class="number">0x000010</span>);</span><br><span class="line">	LCD_setleftcolor(<span class="number">0x000010</span>);</span><br><span class="line">	LCD_setprogress(<span class="number">100</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* restart the loop if a disconnect was detected */</span></span><br><span class="line">&#125; <span class="keyword">while</span> (continue_from_disconnect);</span><br></pre></td></tr></table></figure>
+<p>上面是 do_fastboot() 函数的主体部分。当调用 do_fastbboot() 函数时给出了第三个参数时候，那么这个值将被解析为超时时间，但是一般都没有传入第三个参数，所以关于超时的检测可以自动屏蔽了。fastboot_init() 函数，完成 usb 硬件设备相关的的初始化。设置了 serial number 以及接受数据的 buffer 的大小。此处的 buffer 和在 rx_handler() 中提及的 buffer 不同。</p>
+<p>while(1) 循环是一直在运行的，除非是检测到了 ctrl+c。通过检测某个中断位是否置 1，判断 pc 是否有消息发送过来，若是有命令发送过来那么将执行 rx_handler() 函数。这个功能是通过函数 fastboot_poll() 函数来实现的。</p>
+<h3 id="2-2-rx-handler"><a href="#2-2-rx-handler" class="headerlink" title="2.2 rx_handler()"></a>2.2 rx_handler()</h3><p>这个函数有两个参数，第一个参数 const unsigned char *buffer 表示接收到的数据在内存中的地址,第二个参数 unsigned int buffer_size 表示接收到的数据大小。 从这个函数的结构来看，它起初并不知道传进来的是命令还是数据，所以命令和数据都是通过一个 buffer 来接受的。那么他是如何实现下载这项功能的呢？</p>
+<h4 id="2-2-1-数据下载"><a href="#2-2-1-数据下载" class="headerlink" title="2.2.1 数据下载"></a>2.2.1 数据下载</h4><p>在前面说过 pc 端在发送数据之前先发送了 download:01fbe8b2 命令，后面接的是即将发送的数据的大小。  rx_handler() 函数会去处理 download 命令，将即将接收的数据大小放在静态变量 download_size 中。 download 命令处理完成，rx_handler() 函数返回。pc 端开始发送数据，buffer 填充满了之后再调用 rx_handler()函数，此时 download_size 的值不为 0，那么就代表此时接收到的是数据。<br><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line">	<span class="keyword">if</span> (download_size)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="comment">/* Something to download */</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (buffer_size)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="comment">/* Handle possible overflow */</span></span><br><span class="line">			<span class="keyword">unsigned</span> <span class="keyword">int</span> transfer_size = download_size - download_bytes;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (buffer_size &lt; transfer_size)</span><br><span class="line">				transfer_size = buffer_size;</span><br><span class="line"></span><br><span class="line">			<span class="comment">/* Save the data to the transfer buffer */</span></span><br><span class="line">			<span class="built_in">memcpy</span> (interface.transfer_buffer + download_bytes,</span><br><span class="line">				<span class="built_in">buffer</span>, transfer_size);</span><br><span class="line"></span><br><span class="line">			download_bytes += transfer_size;</span><br><span class="line"></span><br><span class="line">			<span class="comment">/* Check if transfer is done */</span></span><br><span class="line">			<span class="keyword">if</span> (download_bytes &gt;= download_size)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="comment">/* Reset global transfer variable, Keep download_bytes because it will be used in the next possible flashing command */</span></span><br><span class="line">				download_size = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> (download_error)</span><br><span class="line">				&#123;</span><br><span class="line">					<span class="comment">/* There was an earlier error */</span></span><br><span class="line">					<span class="built_in">sprintf</span>(response, <span class="string">"ERROR"</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span></span><br><span class="line">				&#123;</span><br><span class="line">					<span class="comment">/* Everything has transferred,</span></span><br><span class="line"><span class="comment">					   send the OK response */</span></span><br><span class="line">					<span class="built_in">sprintf</span>(response, <span class="string">"OKAY"</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				fastboot_tx_status(response, <span class="built_in">strlen</span>(response), FASTBOOT_TX_ASYNC);</span><br><span class="line"></span><br><span class="line">				<span class="built_in">printf</span>(<span class="string">"\ndownloading of %d bytes finished\n"</span>, download_bytes);</span><br><span class="line">				LCD_setprogress(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(CONFIG_RAMDUMP_MODE)</span></span><br><span class="line">				<span class="keyword">if</span> (is_ramdump) &#123;</span><br><span class="line">					is_ramdump = <span class="number">0</span>;</span><br><span class="line">					start_ramdump((<span class="keyword">void</span> *)<span class="built_in">buffer</span>);</span><br><span class="line">				&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="comment">/* Provide some feedback */</span></span><br><span class="line">			<span class="keyword">if</span> (download_bytes &amp;&amp; download_size &amp;&amp; <span class="number">0</span> == (download_bytes &amp; (<span class="number">0x100000</span> - <span class="number">1</span>)))</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="comment">/* Some feeback that the download is happening */</span></span><br><span class="line">				<span class="keyword">if</span> (download_error)</span><br><span class="line">					<span class="built_in">printf</span>(<span class="string">"X"</span>);</span><br><span class="line">				<span class="keyword">else</span></span><br><span class="line">					<span class="built_in">printf</span>(<span class="string">"."</span>);</span><br><span class="line">				<span class="keyword">if</span> (<span class="number">0</span> == (download_bytes % (<span class="number">80</span> * <span class="number">0x100000</span>))) <span class="built_in">printf</span>(<span class="string">"\n"</span>);</span><br><span class="line"></span><br><span class="line">				LCD_setfgcolor(<span class="number">0x2E8B57</span>);</span><br><span class="line">				LCD_setprogress(download_bytes / (download_size/<span class="number">100</span>));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="comment">/* Ignore empty buffers */</span></span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">"Warning empty download buffer\n"</span>);</span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">"Ignoring\n"</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		ret = <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure><br>上面是 fastboot 下载数据代码的一部分，其中 download_bytes 表示已经接收的数据的大小。当 download_bytes 大于或等于 download_size 表示数据接收完成，此时将 download_size 置为0，那么就退出了数据接收模式。因为接收数据和接收命令使用的是同一个 buffer，导致buffer不可能太大，所以在接收比较大的image的时候就比较慢，例如刷入system.img。通过修改 buffer 的大小或者在 download 命令中完成数据的接收工作，如此就可以解决这个问题。</p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2017/11/06/11-52-11-mtp/" data-toggle="tooltip" data-placement="top" title="Android MTP 分析">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2017/08/08/17-33-25-tee_fp/" data-toggle="tooltip" data-placement="top" title="指纹 TEE ">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#fastboot" title="fastboot">fastboot</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

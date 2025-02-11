@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Linux Signal - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2016/07/04//linux-signal.html/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                              <a class="tag" href="/tags/#signal" title="signal">signal</a>
+                            
+                              <a class="tag" href="/tags/#Linux 信号" title="Linux 信号">Linux 信号</a>
+                            
+                        </div>
+                        <h1>Linux Signal</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Peng Weilin on
+                            2016-07-04
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p>信号的基本使用场景：使用 <code>ctrl+c</code> 中止一个程序，或者使用 <code>kill pid</code> 命令杀掉一个进程。Linux 信号机制基本上每个同学都用过，但是信号的具体实现机制还是有很多人不清楚的。在很多人的概念中信号是一种异步机制，像中断一样。但是除了硬中断，信号也是由中断实现的吗？如果不是中断，系统又怎么样来利用软件机制模拟类似如异步中断的动作？</p>
+<blockquote>
+<p>本文的代码分析基于 Linux Kernel 3.18.22，最好的学习方法还是 “read the fucking source code”</p>
+</blockquote>
+<h2 id="1-信号的响应时机"><a href="#1-信号的响应时机" class="headerlink" title="1.信号的响应时机"></a>1.信号的响应时机</h2><p>理解信号异步机制的关键是信号的响应时机，我们对一个进程发送一个信号以后，其实并没有硬中断发生，只是简单把信号挂载到目标进程的信号 pending 队列上去，信号真正得到执行的时机是进程执行完异常/中断返回到用户态的时刻。</p>
+<p>让信号看起来是一个异步中断的关键就是，正常的用户进程是会频繁的在用户态和内核态之间切换的（这种切换包括：系统调用、缺页异常、系统中断…），所以信号能很快的能得到执行。但这也带来了一点问题，内核进程是不响应信号的，除非它刻意的去查询。所以通常情况下我们无法通过kill命令去杀死一个内核进程。</p>
+<p><img src="signal_ret_to_user.png" alt="信号响应时机"></p>
+<ul>
+<li>arch/arm64/kernel/entry.s:</li>
+<li>el0_sync()/el0_irq() -&gt; ret_to_user() -&gt; work_pending() -&gt; do_notify_resume()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment">// (1) 在arm64架构中，kernel运行在el1，用户态运行在el0。</span></span><br><span class="line">	<span class="comment">// el0_sync是用户态发生异常的入口，el0_irq是用户态发生中断的的入口。</span></span><br><span class="line">	<span class="comment">// 异常包括几种：系统调用el0_svc、数据异常el0_da、指令异常el0_ia等等几种。</span></span><br><span class="line">	.align	<span class="number">11</span></span><br><span class="line">ENTRY(vectors)</span><br><span class="line">	ventry	el0_sync			<span class="comment">// Synchronous 64-bit EL0</span></span><br><span class="line">	ventry	el0_irq				<span class="comment">// IRQ 64-bit EL0</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2) 用户态异常el0_sync</span></span><br><span class="line">	.align	<span class="number">6</span></span><br><span class="line">el0_sync:</span><br><span class="line">	kernel_entry <span class="number">0</span></span><br><span class="line">	mrs	x25, esr_el1			<span class="comment">// read the syndrome register</span></span><br><span class="line">	lsr	x24, x25, #ESR_EL1_EC_SHIFT	<span class="comment">// exception class</span></span><br><span class="line">	cmp	x24, #ESR_EL1_EC_SVC64		<span class="comment">// SVC in 64-bit state</span></span><br><span class="line">	b.eq	el0_svc</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_DABT_EL0	<span class="comment">// data abort in EL0</span></span><br><span class="line">	b.eq	el0_da</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_IABT_EL0	<span class="comment">// instruction abort in EL0</span></span><br><span class="line">	b.eq	el0_ia</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_FP_ASIMD	<span class="comment">// FP/ASIMD access</span></span><br><span class="line">	b.eq	el0_fpsimd_acc</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_FP_EXC64	<span class="comment">// FP/ASIMD exception</span></span><br><span class="line">	b.eq	el0_fpsimd_exc</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_SYS64		<span class="comment">// configurable trap</span></span><br><span class="line">	b.eq	el0_undef</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_SP_ALIGN	<span class="comment">// stack alignment exception</span></span><br><span class="line">	b.eq	el0_sp_pc</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_PC_ALIGN	<span class="comment">// pc alignment exception</span></span><br><span class="line">	b.eq	el0_sp_pc</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_UNKNOWN	<span class="comment">// unknown exception in EL0</span></span><br><span class="line">	b.eq	el0_undef</span><br><span class="line">	cmp	x24, #ESR_EL1_EC_BREAKPT_EL0	<span class="comment">// debug exception in EL0</span></span><br><span class="line">	b.ge	el0_dbg</span><br><span class="line">	b	el0_inv</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2.1) 用户态数据访问el0_da</span></span><br><span class="line">el0_da:</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Data abort handling</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	mrs	x26, far_el1</span><br><span class="line">	<span class="comment">// enable interrupts before calling the main handler</span></span><br><span class="line">	enable_dbg_and_irq</span><br><span class="line">	ct_user_exit</span><br><span class="line">	bic	x0, x26, #(<span class="number">0xff</span> &lt;&lt; <span class="number">56</span>)</span><br><span class="line">	mov	x1, x25</span><br><span class="line">	mov	x2, sp</span><br><span class="line">	bl	do_mem_abort</span><br><span class="line">	b	ret_to_user</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (3) 用户态中断el0_irq</span></span><br><span class="line">	.align	<span class="number">6</span></span><br><span class="line">el0_irq:</span><br><span class="line">	kernel_entry <span class="number">0</span></span><br><span class="line">el0_irq_naked:</span><br><span class="line">	enable_dbg</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_TRACE_IRQFLAGS</span></span><br><span class="line">	bl	trace_hardirqs_off</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	ct_user_exit</span><br><span class="line">	irq_handler</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_TRACE_IRQFLAGS</span></span><br><span class="line">	bl	trace_hardirqs_on</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">	b	ret_to_user</span><br><span class="line">ENDPROC(el0_irq)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (4) 返回用户态的处理函数ret_to_user</span></span><br><span class="line">	<span class="comment">// 判断thread_info-&gt;flags与#_TIF_WORK_MASK，是否有置位，有则跳转到work_pending执行。</span></span><br><span class="line">	<span class="comment">// _TIF_SIGPENDING置位即代表了进程有信号需要处理</span></span><br><span class="line">	<span class="comment">// #define _TIF_WORK_MASK		(_TIF_NEED_RESCHED | _TIF_SIGPENDING | \</span></span><br><span class="line">	<span class="comment">//			 _TIF_NOTIFY_RESUME | _TIF_FOREIGN_FPSTATE)</span></span><br><span class="line">ret_to_user:</span><br><span class="line">	disable_irq				<span class="comment">// disable interrupts</span></span><br><span class="line">	ldr	x1, [tsk, #TI_FLAGS]</span><br><span class="line">	<span class="keyword">and</span>	x2, x1, #_TIF_WORK_MASK</span><br><span class="line">	cbnz	x2, work_pending</span><br><span class="line">	enable_step_tsk x1, x2</span><br><span class="line">no_work_pending:</span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> CONFIG_MTK_COMPAT</span></span><br><span class="line">	kernel_exit_compat ret = <span class="number">0</span></span><br><span class="line">#<span class="keyword">else</span></span><br><span class="line">	kernel_exit <span class="number">0</span>, ret = <span class="number">0</span></span><br><span class="line">#endif</span><br><span class="line">ENDPROC(ret_to_user)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (5) work_pending</span></span><br><span class="line">fast_work_pending:</span><br><span class="line">	str	x0, [sp, #S_X0]			<span class="comment">// returned x0</span></span><br><span class="line">work_pending:</span><br><span class="line">	tbnz	x1, #TIF_NEED_RESCHED, work_resched</span><br><span class="line">	<span class="comment">/* TIF_SIGPENDING, TIF_NOTIFY_RESUME or TIF_FOREIGN_FPSTATE case */</span></span><br><span class="line">	ldr	x2, [sp, #S_PSTATE]</span><br><span class="line">	mov	x0, sp				<span class="comment">// 'regs'</span></span><br><span class="line">Markdown</span><br><span class="line">Toggle Zen Mode</span><br><span class="line">Preview</span><br><span class="line"></span><br><span class="line">	tst	x2, #PSR_MODE_MASK		<span class="comment">// user mode regs?</span></span><br><span class="line">	b.ne	no_work_pending			<span class="comment">// returning to kernel</span></span><br><span class="line">	enable_irq				<span class="comment">// enable interrupts for do_notify_resume()</span></span><br><span class="line">	bl	do_notify_resume</span><br><span class="line">	b	ret_to_user</span><br><span class="line">work_resched:</span><br><span class="line">	bl	schedule</span><br></pre></td></tr></table></figure>
+<ul>
+<li>arch/arm64/kernel/signal.c:</li>
+<li>-&gt; do_notify_resume() -&gt; do_signal() -&gt; get_signal()/handle_signal()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">asmlinkage <span class="keyword">void</span> <span class="title">do_notify_resume</span><span class="params">(struct pt_regs *regs,</span></span></span><br><span class="line"><span class="function"><span class="params">				 <span class="keyword">unsigned</span> <span class="keyword">int</span> thread_flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// (5.1)具体的信号处理过程</span></span><br><span class="line">	<span class="keyword">if</span> (thread_flags &amp; _TIF_SIGPENDING)</span><br><span class="line">		do_signal(regs);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (thread_flags &amp; _TIF_NOTIFY_RESUME) &#123;</span><br><span class="line">		clear_thread_flag(TIF_NOTIFY_RESUME);</span><br><span class="line">		tracehook_notify_resume(regs);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (thread_flags &amp; _TIF_FOREIGN_FPSTATE)</span><br><span class="line">		fpsimd_restore_current_state();</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-1-INTERRUPTIBLE-UNINTERRUPTIBLE-进程对信号的响应"><a href="#1-1-INTERRUPTIBLE-UNINTERRUPTIBLE-进程对信号的响应" class="headerlink" title="1.1 INTERRUPTIBLE/UNINTERRUPTIBLE 进程对信号的响应"></a>1.1 INTERRUPTIBLE/UNINTERRUPTIBLE 进程对信号的响应</h3><p>上节主要描述运行状态（TASK_RUNNING）进程对信号的响应时机：信号发送后挂到目标进程的信号队列，进程返回用户态的时候在 <code>do_notify_resume()</code> 中处理信号。</p>
+<p>那么对于阻塞状态的进程又怎么样来响应信号呢？</p>
+<p>让一个进程进入阻塞状态，我们可以选择让其进入可中断（TASK_INTERRUPTIBLE）或者不可中断（TASK_UNINTERRUPTIBLE）状态，比如 mutex 操作分为 <code>mutex_lock()</code> 和 <code>mutex_lock_interruptible()</code>。所谓的可中断和不可中断就是说是否可以被中断信号打断：如果进程处于可中断（TASK_INTERRUPTIBLE）状态，信号发送函数会直接唤醒进程，让进程处理完内核态操作去返回用户态，让进程迅速去执行信号处理函数；如果进程处于不可中断（TASK_UNINTERRUPTIBLE）状态俗称为 D 进程，信号只会挂到信号队列，但是没有机会去立即执行。</p>
+<ul>
+<li>kernel/signal.c:</li>
+<li>__send_signal() -&gt; complete_signal() -&gt; signal_wake_up() -&gt; signal_wake_up_state()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">signal_wake_up_state</span><span class="params">(struct task_struct *t, <span class="keyword">unsigned</span> <span class="keyword">int</span> state)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	set_tsk_thread_flag(t, TIF_SIGPENDING);</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * TASK_WAKEKILL also means wake it up in the stopped/traced/killable</span></span><br><span class="line"><span class="comment">	 * case. We don't check t-&gt;state here because there is a race with it</span></span><br><span class="line"><span class="comment">	 * executing another processor and just now entering stopped state.</span></span><br><span class="line"><span class="comment">	 * By using wake_up_state, we ensure the process will wake up and</span></span><br><span class="line"><span class="comment">	 * handle its death signal.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (1)在发送完信号后，会唤醒状态为TASK_INTERRUPTIBLE的进程。</span></span><br><span class="line">	<span class="keyword">if</span> (!wake_up_state(t, state | TASK_INTERRUPTIBLE))</span><br><span class="line">		kick_process(t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-2内核进程响应信号"><a href="#1-2内核进程响应信号" class="headerlink" title="1.2内核进程响应信号"></a>1.2内核进程响应信号</h3><p>上面说到内核进程普通情况下是不会响应信号的，如果需要内核进程响应信号，可以在内核进程中加入如下代码：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (signal_pending(current))</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 自定义信号处理函数</span></span><br><span class="line">&#125;</span><br><span class="line">flush_signals(current);</span><br></pre></td></tr></table></figure>
+<h2 id="2-信号简介"><a href="#2-信号简介" class="headerlink" title="2.信号简介"></a>2.信号简介</h2><p>在给大家引出重点的信号响应时机以后，还是简单介绍以下信号的背景知识。信号也是一种进程间通讯的机制，它传递的信息很短，只有一个编号。</p>
+<h3 id="2-1-常规信号和实时信号"><a href="#2-1-常规信号和实时信号" class="headerlink" title="2.1 常规信号和实时信号"></a>2.1 常规信号和实时信号</h3><p>Linux 传统的信号 1~31 为常规信号（regular signal），POSIX 还引入了一种新的信号实时信号（real-time signal）编号为 32~64。它们的不同在于：常规信号同一个编号在 pending 队列中只存在一份，如果有重复的则直接丢弃；实时信号的多个相同信号不能丢弃，需要保证每个信号都能送达。</p>
+<p>Linux 常用的是常规信号，以下是具体的定义<sup><a href="#fn_ULK" id="reffn_ULK">ULK</a></sup>：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th style="text-align:center">信号名称</th>
+<th style="text-align:center">缺省操作</th>
+<th style="text-align:center">解释</th>
+<th style="text-align:center">POSIX</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align:center">SIGHUP</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Hang up controlling terminal or process</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">SIGINT</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Interrupt from keyboard</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center">SIGQUIT</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Quit from keyboard</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align:center">SIGILL</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Illegal instruction</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align:center">SIGTRAP</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Breakpoint for debugging</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align:center">SIGABRT</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Abnormal termination</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align:center">SIGIOT</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Equivalent to SIGABRT</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>7</td>
+<td style="text-align:center">SIGBUS</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Bus error</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>8</td>
+<td style="text-align:center">SIGFPE</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Floating-point exception</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>9</td>
+<td style="text-align:center">SIGKILL</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Forced-process termination</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>10</td>
+<td style="text-align:center">SIGUSR1</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Available to processes</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>11</td>
+<td style="text-align:center">SIGSEGV</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Invalid memory reference</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>12</td>
+<td style="text-align:center">SIGUSR2</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Available to processes</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>13</td>
+<td style="text-align:center">SIGPIPE</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Write to pipe with no readers</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>14</td>
+<td style="text-align:center">SIGALRM</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Real-timerclock</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>15</td>
+<td style="text-align:center">SIGTERM</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Process termination</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>16</td>
+<td style="text-align:center">SIGSTKFLT</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Coprocessor stack error</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>17</td>
+<td style="text-align:center">SIGCHLD</td>
+<td style="text-align:center">Ignore</td>
+<td style="text-align:center">Child process stopped or terminated, or got signal if traced</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>18</td>
+<td style="text-align:center">SIGCONT</td>
+<td style="text-align:center">Continue</td>
+<td style="text-align:center">Resume execution, if stopped</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>19</td>
+<td style="text-align:center">SIGSTOP</td>
+<td style="text-align:center">Stop</td>
+<td style="text-align:center">Stop process execution</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>20</td>
+<td style="text-align:center">SIGTSTP</td>
+<td style="text-align:center">Stop</td>
+<td style="text-align:center">Stop process issued from tty</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>21</td>
+<td style="text-align:center">SIGTTIN</td>
+<td style="text-align:center">Stop</td>
+<td style="text-align:center">Background process requires input</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>22</td>
+<td style="text-align:center">SIGTTOU</td>
+<td style="text-align:center">Stop</td>
+<td style="text-align:center">Background process requires output</td>
+<td style="text-align:center">Yes</td>
+</tr>
+<tr>
+<td>23</td>
+<td style="text-align:center">SIGURG</td>
+<td style="text-align:center">Ignore</td>
+<td style="text-align:center">Urgent condition on socket</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>24</td>
+<td style="text-align:center">SIGXCPU</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">CPU time limit exceeded</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>25</td>
+<td style="text-align:center">SIGXFSZ</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">File size limit exceeded</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>26</td>
+<td style="text-align:center">SIGVTALRM</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Virtual timer clock</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>27</td>
+<td style="text-align:center">SIGPROF</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Profile timer clock</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>28</td>
+<td style="text-align:center">SIGWINCH</td>
+<td style="text-align:center">Ignore</td>
+<td style="text-align:center">Window resizing</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>29</td>
+<td style="text-align:center">SIGIO</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">I/O now possible</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>29</td>
+<td style="text-align:center">SIGPOLL</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Equivalent to SIGIO</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>30</td>
+<td style="text-align:center">SIGPWR</td>
+<td style="text-align:center">Terminate</td>
+<td style="text-align:center">Power supply failure</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>31</td>
+<td style="text-align:center">SIGSYS</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Bad system call</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>31</td>
+<td style="text-align:center">SIGUNUSED</td>
+<td style="text-align:center">Dump</td>
+<td style="text-align:center">Equivalent to SIGSYS</td>
+<td style="text-align:center">No</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>所谓的缺省操作：是在用户没有注册用户态的信号处理函数的情况下，默认的信号内核处理方法。在第4节中会详细的讲解。</p>
+<h2 id="3-信号的发送"><a href="#3-信号的发送" class="headerlink" title="3.信号的发送"></a>3.信号的发送</h2><p>信号的发送者可以是 user 也可以是 kernel，我们经常是通过用户态来调用 kill()、tkill() 等函数来发送信号的，我们通过分析这些系统调用来理解信号的具体发送过程。</p>
+<ul>
+<li>与信号相关的系统调用主要有以下函数：</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>系统调用</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kill</td>
+<td style="text-align:center">向线程组发送信号</td>
+</tr>
+<tr>
+<td>tkill</td>
+<td style="text-align:center">向进程发送信号</td>
+</tr>
+<tr>
+<td>tgkill</td>
+<td style="text-align:center">向指定线程组中的进程发送信号</td>
+</tr>
+<tr>
+<td>signal</td>
+<td style="text-align:center">注册信号的用户态处理函数</td>
+</tr>
+<tr>
+<td>sigprocmask</td>
+<td style="text-align:center">block/unblock信号</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="3-1-kill"><a href="#3-1-kill" class="headerlink" title="3.1 kill()"></a>3.1 kill()</h3><p><code>kill()</code> 系统调用的功能是发送一个信号给线程组，只需要线程组挑出一个线程来响应处理信号。但是对于致命信号，线程组内所有进程都会被杀死，而不仅仅是处理信号的线程。</p>
+<p><img src="signal_kill.png" alt="kill 调用"></p>
+<ul>
+<li>kernel/signal.c:</li>
+<li>kill() -&gt; kill_something_info() -&gt; kill_pid_info() -&gt; group_send_sig_info() -&gt; do_send_sig_info() -&gt; send_signal() -&gt; __send_signal()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE2(kill, <span class="keyword">pid_t</span>, pid, <span class="keyword">int</span>, sig)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">siginfo</span> <span class="title">info</span>;</span></span><br><span class="line"></span><br><span class="line">	info.si_signo = sig;</span><br><span class="line">	info.si_errno = <span class="number">0</span>;</span><br><span class="line">	info.si_code = SI_USER;</span><br><span class="line">	info.si_pid = task_tgid_vnr(current);</span><br><span class="line">	info.si_uid = from_kuid_munged(current_user_ns(), current_uid());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> kill_something_info(sig, &amp;info, pid);</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">kill_something_info</span><span class="params">(<span class="keyword">int</span> sig, struct siginfo *info, <span class="keyword">pid_t</span> pid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line">	<span class="comment">// (1)pid&gt;0, 发送信号给pid进程所在的线程组</span></span><br><span class="line">	<span class="keyword">if</span> (pid &gt; <span class="number">0</span>) &#123;</span><br><span class="line">		rcu_read_lock();</span><br><span class="line">		ret = kill_pid_info(sig, info, find_vpid(pid));</span><br><span class="line">		rcu_read_unlock();</span><br><span class="line">		<span class="keyword">return</span> ret;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	read_lock(&amp;tasklist_lock);</span><br><span class="line">	<span class="comment">// (2)(pid &lt;= 0) &amp;&amp; (pid != -1), 发送信号给pid进程所在进程组中的每一个线程组</span></span><br><span class="line">	<span class="keyword">if</span> (pid != <span class="number">-1</span>) &#123;</span><br><span class="line">		ret = __kill_pgrp_info(sig, info,</span><br><span class="line">				pid ? find_vpid(-pid) : task_pgrp(current));</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	<span class="comment">// (3)pid = -1, 发送信号给所有进程的进程组，除了pid=1和当前进程自己</span></span><br><span class="line">		<span class="keyword">int</span> retval = <span class="number">0</span>, count = <span class="number">0</span>;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> * <span class="title">p</span>;</span></span><br><span class="line"></span><br><span class="line">		for_each_process(p) &#123;</span><br><span class="line">			<span class="keyword">if</span> (task_pid_vnr(p) &gt; <span class="number">1</span> &amp;&amp;</span><br><span class="line">					!same_thread_group(p, current)) &#123;</span><br><span class="line">				<span class="keyword">int</span> err = group_send_sig_info(sig, info, p);</span><br><span class="line">				++count;</span><br><span class="line">				<span class="keyword">if</span> (err != -EPERM)</span><br><span class="line">					retval = err;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		ret = count ? retval : -ESRCH;</span><br><span class="line">	&#125;</span><br><span class="line">	read_unlock(&amp;tasklist_lock);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">group_send_sig_info</span><span class="params">(<span class="keyword">int</span> sig, struct siginfo *info, struct task_struct *p)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">	rcu_read_lock();</span><br><span class="line">	ret = check_kill_permission(sig, info, p);</span><br><span class="line">	rcu_read_unlock();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!ret &amp;&amp; sig)</span><br><span class="line">		<span class="comment">// (1.1)参数group=ture，信号发送给线程组</span></span><br><span class="line">		ret = do_send_sig_info(sig, info, p, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="signal_pending_queue.png" alt="信号队列"></p>
+<p>接下来来到了发送信号的核心函数 <code>__send_signal()</code>，函数的主要目的是把信号挂到信号的 pending 队列中去。pending 队列有两种：一种是进程组共享的 <code>task_struct-&gt;signal-&gt;shared_pending</code>，发送给线程组的信号会挂载到该队列；另一种是进程私有队列 <code>task_struct-&gt;pending</code>，发送给进程的信号会挂载到该队列。</p>
+<p>从下面的代码中，我们可以看到在创建线程时，线程组贡献信号队列 <code>task_struct-&gt;signal-&gt;shared_pending</code> 是怎么实现的。</p>
+<ul>
+<li>kernel/fork.c:</li>
+<li>do_fork() -&gt; copy_process() -&gt; copy_signal()/copy_sighand()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> struct task_struct *<span class="title">copy_process</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">long</span> clone_flags,</span></span></span><br><span class="line"><span class="function"><span class="params">					<span class="keyword">unsigned</span> <span class="keyword">long</span> stack_start,</span></span></span><br><span class="line"><span class="function"><span class="params">					<span class="keyword">unsigned</span> <span class="keyword">long</span> stack_size,</span></span></span><br><span class="line"><span class="function"><span class="params">					<span class="keyword">int</span> __user *child_tidptr,</span></span></span><br><span class="line"><span class="function"><span class="params">					struct pid *pid,</span></span></span><br><span class="line"><span class="function"><span class="params">					<span class="keyword">int</span> trace)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">	<span class="comment">// (1)复制父进程current的task_struct结构体到新进程p；</span></span><br><span class="line">	<span class="comment">// 这里已经包含做了signal的复制动作:p-&gt;signal=current-&gt;signal</span></span><br><span class="line">	p = dup_task_struct(current);</span><br><span class="line">	...</span><br><span class="line">	retval = copy_sighand(clone_flags, p);</span><br><span class="line">	<span class="keyword">if</span> (retval)</span><br><span class="line">		<span class="keyword">goto</span> bad_fork_cleanup_fs;</span><br><span class="line">	<span class="comment">// (2)如果是创建线程(CLONE_THREAD被置位)，那么新进程和父进程共享tsk-&gt;signal结构，</span></span><br><span class="line">	<span class="comment">// 不会分配新的tsk-&gt;signal结构空间</span></span><br><span class="line">	retval = copy_signal(clone_flags, p);</span><br><span class="line">	<span class="keyword">if</span> (retval)</span><br><span class="line">		<span class="keyword">goto</span> bad_fork_cleanup_sighand;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">copy_signal</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">long</span> clone_flags, struct task_struct *tsk)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">signal_struct</span> *<span class="title">sig</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2.1)如果是创建线程(CLONE_THREAD被置位)，不分配新的tsk-&gt;signal空间直接返回</span></span><br><span class="line">	<span class="keyword">if</span> (clone_flags &amp; CLONE_THREAD)</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    sig = kmem_cache_zalloc(signal_cachep, GFP_KERNEL);</span><br><span class="line">	tsk-&gt;signal = sig;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">copy_sighand</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">long</span> clone_flags, struct task_struct *tsk)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sighand_struct</span> *<span class="title">sig</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2.2)同样，也可以用CLONE_SIGHAND标志来控制是否共享tsk-&gt;sighand</span></span><br><span class="line">	<span class="keyword">if</span> (clone_flags &amp; CLONE_SIGHAND) &#123;</span><br><span class="line">		atomic_inc(&amp;current-&gt;sighand-&gt;count);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	sig = kmem_cache_alloc(sighand_cachep, GFP_KERNEL);</span><br><span class="line">	rcu_assign_pointer(tsk-&gt;sighand, sig);</span><br><span class="line">	<span class="keyword">if</span> (!sig)</span><br><span class="line">		<span class="keyword">return</span> -ENOMEM;</span><br><span class="line">	atomic_set(&amp;sig-&gt;count, <span class="number">1</span>);</span><br><span class="line">	<span class="built_in">memcpy</span>(sig-&gt;action, current-&gt;sighand-&gt;action, <span class="keyword">sizeof</span>(sig-&gt;action));</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>继续来看 <code>__send_signal()</code> 的具体实现：</p>
+<ul>
+<li>kernel/signal.c:</li>
+<li>-&gt; <code>__send_signal()</code> -&gt; <code>prepare_signal()</code>/<code>complete_signal()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __send_signal(<span class="keyword">int</span> sig, struct siginfo *info, struct task_struct *t,</span><br><span class="line">			<span class="keyword">int</span> group, <span class="keyword">int</span> from_ancestor_ns)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sigpending</span> *<span class="title">pending</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sigqueue</span> *<span class="title">q</span>;</span></span><br><span class="line">	<span class="keyword">int</span> override_rlimit;</span><br><span class="line">	<span class="keyword">int</span> ret = <span class="number">0</span>, result;</span><br><span class="line"></span><br><span class="line">	assert_spin_locked(&amp;t-&gt;sighand-&gt;siglock);</span><br><span class="line"></span><br><span class="line">	result = TRACE_SIGNAL_IGNORED;</span><br><span class="line">	<span class="comment">// (1)判断是否可以忽略信号</span></span><br><span class="line">	<span class="keyword">if</span> (!prepare_signal(sig, t,</span><br><span class="line">			from_ancestor_ns || (info == SEND_SIG_FORCED)))</span><br><span class="line">		<span class="keyword">goto</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2)选择信号pending队列</span></span><br><span class="line">	<span class="comment">// 线程组共享队列(t-&gt;signal-&gt;shared_pending) or 进程私有队列(t-&gt;pending)</span></span><br><span class="line">	pending = group ? &amp;t-&gt;signal-&gt;shared_pending : &amp;t-&gt;pending;</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Short-circuit ignored signals and support queuing</span></span><br><span class="line"><span class="comment">	 * exactly one non-rt signal, so that we can get more</span></span><br><span class="line"><span class="comment">	 * detailed information about the cause of the signal.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	result = TRACE_SIGNAL_ALREADY_PENDING;</span><br><span class="line">	<span class="comment">// (3)如果信号是常规信号(regular signal)，且已经在pending队列中，则忽略重复信号；</span></span><br><span class="line">	<span class="comment">// 另外一方面也说明了，如果是实时信号，尽管信号重复，但还是要加入pending队列；</span></span><br><span class="line">	<span class="comment">// 实时信号的多个信号都需要能被接收到。</span></span><br><span class="line">	<span class="keyword">if</span> (legacy_queue(pending, sig))</span><br><span class="line">		<span class="keyword">goto</span> ret;</span><br><span class="line"></span><br><span class="line">	result = TRACE_SIGNAL_DELIVERED;</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * fast-pathed signals for kernel-internal things like SIGSTOP</span></span><br><span class="line"><span class="comment">	 * or SIGKILL.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (4)如果是强制信号(SEND_SIG_FORCED)，不走挂载pending队列的流程，直接快速路径优先处理。</span></span><br><span class="line">	<span class="keyword">if</span> (info == SEND_SIG_FORCED)</span><br><span class="line">		<span class="keyword">goto</span> out_set;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Real-time signals must be queued if sent by sigqueue, or</span></span><br><span class="line"><span class="comment">	 * some other real-time mechanism.  It is implementation</span></span><br><span class="line"><span class="comment">	 * defined whether kill() does so.  We attempt to do so, on</span></span><br><span class="line"><span class="comment">	 * the principle of least surprise, but since kill is not</span></span><br><span class="line"><span class="comment">	 * allowed to fail with EAGAIN when low on memory we just</span></span><br><span class="line"><span class="comment">	 * make sure at least one signal gets delivered and don't</span></span><br><span class="line"><span class="comment">	 * pass on the info struct.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (5)符合条件的特殊信号可以突破siganl pending队列的大小限制(rlimit)</span></span><br><span class="line">	<span class="comment">// 否则在队列满的情况下，丢弃信号</span></span><br><span class="line">	<span class="comment">// signal pending队列大小rlimit的值可以通过命令"ulimit -i"查看</span></span><br><span class="line">	<span class="keyword">if</span> (sig &lt; SIGRTMIN)</span><br><span class="line">		override_rlimit = (is_si_special(info) || info-&gt;si_code &gt;= <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		override_rlimit = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (6)没有ignore的信号，加入到pending队列中。</span></span><br><span class="line">	q = __sigqueue_alloc(sig, t, GFP_ATOMIC | __GFP_NOTRACK_FALSE_POSITIVE,</span><br><span class="line">		override_rlimit);</span><br><span class="line">	<span class="keyword">if</span> (q) &#123;</span><br><span class="line">		list_add_tail(&amp;q-&gt;<span class="built_in">list</span>, &amp;pending-&gt;<span class="built_in">list</span>);</span><br><span class="line">		<span class="keyword">switch</span> ((<span class="keyword">unsigned</span> <span class="keyword">long</span>) info) &#123;</span><br><span class="line">		<span class="keyword">case</span> (<span class="keyword">unsigned</span> <span class="keyword">long</span>) SEND_SIG_NOINFO:</span><br><span class="line">			q-&gt;info.si_signo = sig;</span><br><span class="line">			q-&gt;info.si_errno = <span class="number">0</span>;</span><br><span class="line">			q-&gt;info.si_code = SI_USER;</span><br><span class="line">			q-&gt;info.si_pid = task_tgid_nr_ns(current,</span><br><span class="line">							task_active_pid_ns(t));</span><br><span class="line">			q-&gt;info.si_uid = from_kuid_munged(current_user_ns(), current_uid());</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> (<span class="keyword">unsigned</span> <span class="keyword">long</span>) SEND_SIG_PRIV:</span><br><span class="line">			q-&gt;info.si_signo = sig;</span><br><span class="line">			q-&gt;info.si_errno = <span class="number">0</span>;</span><br><span class="line">			q-&gt;info.si_code = SI_KERNEL;</span><br><span class="line">			q-&gt;info.si_pid = <span class="number">0</span>;</span><br><span class="line">			q-&gt;info.si_uid = <span class="number">0</span>;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			copy_siginfo(&amp;q-&gt;info, info);</span><br><span class="line">			<span class="keyword">if</span> (from_ancestor_ns)</span><br><span class="line">				q-&gt;info.si_pid = <span class="number">0</span>;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		userns_fixup_signal_uid(&amp;q-&gt;info, t);</span><br><span class="line"></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (!is_si_special(info)) &#123;</span><br><span class="line">		<span class="keyword">if</span> (sig &gt;= SIGRTMIN &amp;&amp; info-&gt;si_code != SI_USER) &#123;</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * Queue overflow, abort.  We may abort if the</span></span><br><span class="line"><span class="comment">			 * signal was rt and sent by user using something</span></span><br><span class="line"><span class="comment">			 * other than kill().</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			result = TRACE_SIGNAL_OVERFLOW_FAIL;</span><br><span class="line">			ret = -EAGAIN;</span><br><span class="line">			<span class="keyword">goto</span> ret;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * This is a silent loss of information.  We still</span></span><br><span class="line"><span class="comment">			 * send the signal, but the *info bits are lost.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			result = TRACE_SIGNAL_LOSE_INFO;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">out_set:</span><br><span class="line">	signalfd_notify(t, sig);</span><br><span class="line">	<span class="comment">// (7)更新pending-&gt;signal信号集合中对应的bit</span></span><br><span class="line">	sigaddset(&amp;pending-&gt;signal, sig);</span><br><span class="line">	<span class="comment">// (8)选择合适的进程来响应信号，如果需要并唤醒对应的进程</span></span><br><span class="line">	complete_signal(sig, t, group);</span><br><span class="line">ret:</span><br><span class="line">	trace_signal_generate(sig, info, t, group, result);</span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">prepare_signal</span><span class="params">(<span class="keyword">int</span> sig, struct task_struct *p, <span class="keyword">bool</span> force)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">signal_struct</span> *<span class="title">signal</span> = <span class="title">p</span>-&gt;<span class="title">signal</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">t</span>;</span></span><br><span class="line">	<span class="keyword">sigset_t</span> flush;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (signal-&gt;flags &amp; (SIGNAL_GROUP_EXIT | SIGNAL_GROUP_COREDUMP)) &#123;</span><br><span class="line">		<span class="comment">// (1.1)如果进程正在处于SIGNAL_GROUP_COREDUMP，则当前信号被忽略</span></span><br><span class="line">		<span class="keyword">if</span> (signal-&gt;flags &amp; SIGNAL_GROUP_COREDUMP) &#123;</span><br><span class="line">			pr_debug(<span class="string">"[%d:%s] is in the middle of doing coredump so skip sig %d\n"</span>, p-&gt;pid, p-&gt;comm, sig);</span><br><span class="line">			<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * The process is in the middle of dying, nothing to do.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (sig_kernel_stop(sig)) &#123;</span><br><span class="line">		<span class="comment">// (1.2)如果当前是stop信号，则移除线程组所有线程pending队列中的SIGCONT信号</span></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * This is a stop signal.  Remove SIGCONT from all queues.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		siginitset(&amp;flush, sigmask(SIGCONT));</span><br><span class="line">		flush_sigqueue_mask(&amp;flush, &amp;signal-&gt;shared_pending);</span><br><span class="line">		for_each_thread(p, t)</span><br><span class="line">			flush_sigqueue_mask(&amp;flush, &amp;t-&gt;pending);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (sig == SIGCONT) &#123;</span><br><span class="line">		<span class="keyword">unsigned</span> <span class="keyword">int</span> why;</span><br><span class="line">		<span class="comment">// (1.3)如果当前是SIGCONT信号，则移除线程组所有线程pending队列中的stop信号，并唤醒stop进程</span></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Remove all stop signals from all queues, wake all threads.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		siginitset(&amp;flush, SIG_KERNEL_STOP_MASK);</span><br><span class="line">		flush_sigqueue_mask(&amp;flush, &amp;signal-&gt;shared_pending);</span><br><span class="line">		for_each_thread(p, t) &#123;</span><br><span class="line">			flush_sigqueue_mask(&amp;flush, &amp;t-&gt;pending);</span><br><span class="line">			task_clear_jobctl_pending(t, JOBCTL_STOP_PENDING);</span><br><span class="line">			<span class="keyword">if</span> (likely(!(t-&gt;ptrace &amp; PT_SEIZED)))</span><br><span class="line">				wake_up_state(t, __TASK_STOPPED);</span><br><span class="line">			<span class="keyword">else</span></span><br><span class="line">				ptrace_trap_notify(t);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Notify the parent with CLD_CONTINUED if we were stopped.</span></span><br><span class="line"><span class="comment">		 *</span></span><br><span class="line"><span class="comment">		 * If we were in the middle of a group stop, we pretend it</span></span><br><span class="line"><span class="comment">		 * was already finished, and then continued. Since SIGCHLD</span></span><br><span class="line"><span class="comment">		 * doesn't queue we report only CLD_STOPPED, as if the next</span></span><br><span class="line"><span class="comment">		 * CLD_CONTINUED was dropped.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		why = <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">if</span> (signal-&gt;flags &amp; SIGNAL_STOP_STOPPED)</span><br><span class="line">			why |= SIGNAL_CLD_CONTINUED;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span> (signal-&gt;group_stop_count)</span><br><span class="line">			why |= SIGNAL_CLD_STOPPED;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (why) &#123;</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * The first thread which returns from do_signal_stop()</span></span><br><span class="line"><span class="comment">			 * will take -&gt;siglock, notice SIGNAL_CLD_MASK, and</span></span><br><span class="line"><span class="comment">			 * notify its parent. See get_signal_to_deliver().</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			signal-&gt;flags = why | SIGNAL_STOP_CONTINUED;</span><br><span class="line">			signal-&gt;group_stop_count = <span class="number">0</span>;</span><br><span class="line">			signal-&gt;group_exit_code = <span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (1.4)进一步判断信号是否会被忽略</span></span><br><span class="line">	<span class="keyword">return</span> !sig_ignored(p, sig, force);</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">sig_ignored</span><span class="params">(struct task_struct *t, <span class="keyword">int</span> sig, <span class="keyword">bool</span> force)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Blocked signals are never ignored, since the</span></span><br><span class="line"><span class="comment">	 * signal handler may change by the time it is</span></span><br><span class="line"><span class="comment">	 * unblocked.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (1.4.1)如果信号被blocked，不会被忽略</span></span><br><span class="line">	<span class="keyword">if</span> (sigismember(&amp;t-&gt;blocked, sig) || sigismember(&amp;t-&gt;real_blocked, sig))</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (1.4.2)进一步判断信号的忽略条件</span></span><br><span class="line">	<span class="keyword">if</span> (!sig_task_ignored(t, sig, force))</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Tracers may want to know about even ignored signals.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (1.4.3)信号符合忽略条件，且没有被trace，则信号被忽略</span></span><br><span class="line">	<span class="keyword">return</span> !t-&gt;ptrace;</span><br><span class="line">&#125;</span><br><span class="line">||| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">sig_task_ignored</span><span class="params">(struct task_struct *t, <span class="keyword">int</span> sig, <span class="keyword">bool</span> force)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">void</span> __user *handler;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (1.4.2.1)提取信号的操作函数</span></span><br><span class="line">	handler = sig_handler(t, sig);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (1.4.2.2)如果符合条件，信号被忽略</span></span><br><span class="line">	<span class="keyword">if</span> (unlikely(t-&gt;signal-&gt;flags &amp; SIGNAL_UNKILLABLE) &amp;&amp;</span><br><span class="line">			handler == SIG_DFL &amp;&amp; !force)</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (1.4.2.3)</span></span><br><span class="line">	<span class="keyword">return</span> sig_handler_ignored(handler, sig);</span><br><span class="line">&#125;</span><br><span class="line">|||| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">sig_handler_ignored</span><span class="params">(<span class="keyword">void</span> __user *handler, <span class="keyword">int</span> sig)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">/* Is it explicitly or implicitly ignored? */</span></span><br><span class="line">	<span class="comment">// (1.4.2.3.1)如果信号操作函数是忽略SIG_IGN，或者操作函数是默认SIG_DFL但是默认动作是忽略</span></span><br><span class="line">	<span class="comment">// 默认动作是忽略的信号包括：</span></span><br><span class="line">	<span class="comment">// #define SIG_KERNEL_IGNORE_MASK (\</span></span><br><span class="line">	<span class="comment">//    rt_sigmask(SIGCONT)   |  rt_sigmask(SIGCHLD)   | \</span></span><br><span class="line">	<span class="comment">//    rt_sigmask(SIGWINCH)  |  rt_sigmask(SIGURG)    )</span></span><br><span class="line">	<span class="comment">// 忽略这一类信号</span></span><br><span class="line">	<span class="keyword">return</span> handler == SIG_IGN ||</span><br><span class="line">		(handler == SIG_DFL &amp;&amp; sig_kernel_ignore(sig));</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">complete_signal</span><span class="params">(<span class="keyword">int</span> sig, struct task_struct *p, <span class="keyword">int</span> group)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">signal_struct</span> *<span class="title">signal</span> = <span class="title">p</span>-&gt;<span class="title">signal</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">t</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Now find a thread we can wake up to take the signal off the queue.</span></span><br><span class="line"><span class="comment">	 *</span></span><br><span class="line"><span class="comment">	 * If the main thread wants the signal, it gets first crack.</span></span><br><span class="line"><span class="comment">	 * Probably the least surprising to the average bear.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (8.1)判断当前线程是否符合响应信号的条件</span></span><br><span class="line">	<span class="keyword">if</span> (wants_signal(sig, p))</span><br><span class="line">		t = p;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (!group || thread_group_empty(p))</span><br><span class="line">		<span class="comment">// (8.2)如果信号是发给单线程的，直接返回</span></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * There is just one thread and it does not need to be woken.</span></span><br><span class="line"><span class="comment">		 * It will dequeue unblocked signals before it runs again.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Otherwise try to find a suitable thread.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="comment">// (8.3)在当前线程组中挑出一个符合响应信号条件的线程</span></span><br><span class="line">		<span class="comment">// 从signal-&gt;curr_target线程开始查找</span></span><br><span class="line">		t = signal-&gt;curr_target;</span><br><span class="line">		<span class="keyword">while</span> (!wants_signal(sig, t)) &#123;</span><br><span class="line">			t = next_thread(t);</span><br><span class="line">			<span class="keyword">if</span> (t == signal-&gt;curr_target)</span><br><span class="line">				<span class="comment">/*</span></span><br><span class="line"><span class="comment">				 * No thread needs to be woken.</span></span><br><span class="line"><span class="comment">				 * Any eligible threads will see</span></span><br><span class="line"><span class="comment">				 * the signal in the queue soon.</span></span><br><span class="line"><span class="comment">				 */</span></span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		signal-&gt;curr_target = t;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Found a killable thread.  If the signal will be fatal,</span></span><br><span class="line"><span class="comment">	 * then start taking the whole group down immediately.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (sig_fatal(p, sig) &amp;&amp;</span><br><span class="line">	    !(signal-&gt;flags &amp; (SIGNAL_UNKILLABLE | SIGNAL_GROUP_EXIT)) &amp;&amp;</span><br><span class="line">	    !sigismember(&amp;t-&gt;real_blocked, sig) &amp;&amp;</span><br><span class="line">	    (sig == SIGKILL || !t-&gt;ptrace)) &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * This signal will be fatal to the whole group.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">if</span> (!sig_kernel_coredump(sig)) &#123;</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * Start a group exit and wake everybody up.</span></span><br><span class="line"><span class="comment">			 * This way we don't have other threads</span></span><br><span class="line"><span class="comment">			 * running and doing things after a slower</span></span><br><span class="line"><span class="comment">			 * thread has the fatal signal pending.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			signal-&gt;flags = SIGNAL_GROUP_EXIT;</span><br><span class="line">			signal-&gt;group_exit_code = sig;</span><br><span class="line">			signal-&gt;group_stop_count = <span class="number">0</span>;</span><br><span class="line">			t = p;</span><br><span class="line">			<span class="keyword">do</span> &#123;</span><br><span class="line">				task_clear_jobctl_pending(t, JOBCTL_PENDING_MASK);</span><br><span class="line">				sigaddset(&amp;t-&gt;pending.signal, SIGKILL);</span><br><span class="line">				signal_wake_up(t, <span class="number">1</span>);</span><br><span class="line">			&#125; while_each_thread(p, t);</span><br><span class="line">			<span class="keyword">return</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * The signal is already in the shared-pending queue.</span></span><br><span class="line"><span class="comment">	 * Tell the chosen thread to wake up and dequeue it.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (8.4)唤醒挑选出的响应信号的线程</span></span><br><span class="line">	signal_wake_up(t, sig == SIGKILL);</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">ptrace_signal_wake_up</span><span class="params">(struct task_struct *t, <span class="keyword">bool</span> resume)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	signal_wake_up_state(t, resume ? __TASK_TRACED : <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line">||| →</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">signal_wake_up_state</span><span class="params">(struct task_struct *t, <span class="keyword">unsigned</span> <span class="keyword">int</span> state)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// (8.4.1)设置thread_info-&gt;flags中的TIF_SIGPENDING标志</span></span><br><span class="line">	<span class="comment">// ret_to_user()时会根据此标志来调用do_notify_resume()</span></span><br><span class="line">	set_tsk_thread_flag(t, TIF_SIGPENDING);</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * TASK_WAKEKILL also means wake it up in the stopped/traced/killable</span></span><br><span class="line"><span class="comment">	 * case. We don't check t-&gt;state here because there is a race with it</span></span><br><span class="line"><span class="comment">	 * executing another processor and just now entering stopped state.</span></span><br><span class="line"><span class="comment">	 * By using wake_up_state, we ensure the process will wake up and</span></span><br><span class="line"><span class="comment">	 * handle its death signal.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (8.4.2)唤醒阻塞状态为TASK_INTERRUPTIBLE的信号响应线程</span></span><br><span class="line">	<span class="keyword">if</span> (!wake_up_state(t, state | TASK_INTERRUPTIBLE))</span><br><span class="line">		kick_process(t);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-2-tkill"><a href="#3-2-tkill" class="headerlink" title="3.2 tkill()"></a>3.2 <code>tkill()</code></h3><p><code>kill()</code> 是向进程组发一个信号，而 <code>tkill()</code> 是向某一个进程发送信号。</p>
+<p><img src="signal_tkill.png" alt="tkill 调用"></p>
+<ul>
+<li>kernel/signal.c:</li>
+<li>tkill() -&gt; do_tkill() -&gt; do_send_specific() -&gt; send_signal()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE2(tkill, <span class="keyword">pid_t</span>, pid, <span class="keyword">int</span>, sig)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* This is only valid for single tasks */</span></span><br><span class="line">	<span class="keyword">if</span> (pid &lt;= <span class="number">0</span>)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> do_tkill(<span class="number">0</span>, pid, sig);</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">do_tkill</span><span class="params">(<span class="keyword">pid_t</span> tgid, <span class="keyword">pid_t</span> pid, <span class="keyword">int</span> sig)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">siginfo</span> <span class="title">info</span> = &#123;</span>&#125;;</span><br><span class="line"></span><br><span class="line">	info.si_signo = sig;</span><br><span class="line">	info.si_errno = <span class="number">0</span>;</span><br><span class="line">	info.si_code = SI_TKILL;</span><br><span class="line">	info.si_pid = task_tgid_vnr(current);</span><br><span class="line">	info.si_uid = from_kuid_munged(current_user_ns(), current_uid());</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> do_send_specific(tgid, pid, sig, &amp;info);</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span></span><br><span class="line">do_send_specific(<span class="keyword">pid_t</span> tgid, <span class="keyword">pid_t</span> pid, <span class="keyword">int</span> sig, struct siginfo *info)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p</span>;</span></span><br><span class="line">	<span class="keyword">int</span> error = -ESRCH;</span><br><span class="line"></span><br><span class="line">	rcu_read_lock();</span><br><span class="line">	p = find_task_by_vpid(pid);</span><br><span class="line">	<span class="keyword">if</span> (p &amp;&amp; (tgid &lt;= <span class="number">0</span> || task_tgid_vnr(p) == tgid)) &#123;</span><br><span class="line">		<span class="comment">// (1)tkill()符合条件1：tgid=0</span></span><br><span class="line">		<span class="comment">// tgkill()需要符合条件2：tgid指定的线程组 == p所在的线程组</span></span><br><span class="line">		error = check_kill_permission(sig, info, p);</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * The null signal is a permissions and process existence</span></span><br><span class="line"><span class="comment">		 * probe.  No signal is actually delivered.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">if</span> (!error &amp;&amp; sig) &#123;</span><br><span class="line">			<span class="comment">// (2)参数group=false，信号发送给单个进程组</span></span><br><span class="line">			error = do_send_sig_info(sig, info, p, <span class="literal">false</span>);</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * If lock_task_sighand() failed we pretend the task</span></span><br><span class="line"><span class="comment">			 * dies after receiving the signal. The window is tiny,</span></span><br><span class="line"><span class="comment">			 * and the signal is private anyway.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			<span class="keyword">if</span> (unlikely(error == -ESRCH))</span><br><span class="line">				error = <span class="number">0</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	rcu_read_unlock();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> error;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-3-tgkill"><a href="#3-3-tgkill" class="headerlink" title="3.3 tgkill()"></a>3.3 <code>tgkill()</code></h3><p><code>tgkill()</code> 是向特定线程组中的进程发送信号。</p>
+<p><img src="signal_tgkill.png" alt="tgkill 调用"></p>
+<ul>
+<li>kernel/signal.c:</li>
+<li>tkill() -&gt; do_tkill() -&gt; do_send_specific() -&gt; send_signal()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE3(tgkill, <span class="keyword">pid_t</span>, tgid, <span class="keyword">pid_t</span>, pid, <span class="keyword">int</span>, sig)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* This is only valid for single tasks */</span></span><br><span class="line">	<span class="keyword">if</span> (pid &lt;= <span class="number">0</span> || tgid &lt;= <span class="number">0</span>)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> do_tkill(tgid, pid, sig);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-4-signal"><a href="#3-4-signal" class="headerlink" title="3.4 signal()"></a>3.4 signal()</h3><p><code>signal()</code>/<code>sigaction()</code> 注册用户自定义的信号处理函数。</p>
+<ul>
+<li>kernel/signal.c:</li>
+<li>signal() -&gt; do_sigaction()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE2(signal, <span class="keyword">int</span>, sig, <span class="keyword">__sighandler_t</span>, handler)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">k_sigaction</span> <span class="title">new_sa</span>, <span class="title">old_sa</span>;</span></span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">	new_sa.sa.sa_handler = handler;</span><br><span class="line">	new_sa.sa.sa_flags = SA_ONESHOT | SA_NOMASK;</span><br><span class="line">	sigemptyset(&amp;new_sa.sa.sa_mask);</span><br><span class="line"></span><br><span class="line">	ret = do_sigaction(sig, &amp;new_sa, &amp;old_sa);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ret ? ret : (<span class="keyword">unsigned</span> <span class="keyword">long</span>)old_sa.sa.sa_handler;</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">do_sigaction</span><span class="params">(<span class="keyword">int</span> sig, struct k_sigaction *act, struct k_sigaction *oact)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">p</span> = <span class="title">current</span>, *<span class="title">t</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">k_sigaction</span> *<span class="title">k</span>;</span></span><br><span class="line">	<span class="keyword">sigset_t</span> mask;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!valid_signal(sig) || sig &lt; <span class="number">1</span> || (act &amp;&amp; sig_kernel_only(sig)))</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	k = &amp;p-&gt;sighand-&gt;action[sig<span class="number">-1</span>];</span><br><span class="line"></span><br><span class="line">	spin_lock_irq(&amp;p-&gt;sighand-&gt;siglock);</span><br><span class="line">	<span class="keyword">if</span> (oact)</span><br><span class="line">		*oact = *k;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (act) &#123;</span><br><span class="line">		sigdelsetmask(&amp;act-&gt;sa.sa_mask,</span><br><span class="line">			      sigmask(SIGKILL) | sigmask(SIGSTOP));</span><br><span class="line">		<span class="comment">// (1)将信号处理函数sighand-&gt;action[sig-1]替换成用户函数</span></span><br><span class="line">		*k = *act;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * POSIX 3.3.1.3:</span></span><br><span class="line"><span class="comment">		 *  "Setting a signal action to SIG_IGN for a signal that is</span></span><br><span class="line"><span class="comment">		 *   pending shall cause the pending signal to be discarded,</span></span><br><span class="line"><span class="comment">		 *   whether or not it is blocked."</span></span><br><span class="line"><span class="comment">		 *</span></span><br><span class="line"><span class="comment">		 *  "Setting a signal action to SIG_DFL for a signal that is</span></span><br><span class="line"><span class="comment">		 *   pending and whose default action is to ignore the signal</span></span><br><span class="line"><span class="comment">		 *   (for example, SIGCHLD), shall cause the pending signal to</span></span><br><span class="line"><span class="comment">		 *   be discarded, whether or not it is blocked"</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">if</span> (sig_handler_ignored(sig_handler(p, sig), sig)) &#123;</span><br><span class="line">			sigemptyset(&amp;mask);</span><br><span class="line">			sigaddset(&amp;mask, sig);</span><br><span class="line">			flush_sigqueue_mask(&amp;mask, &amp;p-&gt;signal-&gt;shared_pending);</span><br><span class="line">			for_each_thread(p, t)</span><br><span class="line">				flush_sigqueue_mask(&amp;mask, &amp;t-&gt;pending);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	spin_unlock_irq(&amp;p-&gt;sighand-&gt;siglock);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-5-sigprocmask"><a href="#3-5-sigprocmask" class="headerlink" title="3.5 sigprocmask()"></a>3.5 <code>sigprocmask()</code></h3><p><code>sigprocmask()</code> 用来设置进程对信号是否阻塞。阻塞以后，信号继续挂载到信号 pending 队列，但是信号处理时不响应信号。<code>SIG_BLOCK</code> 命令阻塞信号，<code>SIG_UNBLOCK</code> 命令解除阻塞信号。</p>
+<ul>
+<li>kernel/signal.c:</li>
+<li>sigprocmask() -&gt; set_current_blocked()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE3(sigprocmask, <span class="keyword">int</span>, how, <span class="keyword">old_sigset_t</span> __user *, nset,</span><br><span class="line">		<span class="keyword">old_sigset_t</span> __user *, oset)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">old_sigset_t</span> old_set, new_set;</span><br><span class="line">	<span class="keyword">sigset_t</span> new_blocked;</span><br><span class="line"></span><br><span class="line">	old_set = current-&gt;blocked.sig[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (nset) &#123;</span><br><span class="line">		<span class="keyword">if</span> (copy_from_user(&amp;new_set, nset, <span class="keyword">sizeof</span>(*nset)))</span><br><span class="line">			<span class="keyword">return</span> -EFAULT;</span><br><span class="line"></span><br><span class="line">		new_blocked = current-&gt;blocked;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">switch</span> (how) &#123;</span><br><span class="line">		<span class="keyword">case</span> SIG_BLOCK:</span><br><span class="line">			sigaddsetmask(&amp;new_blocked, new_set);</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> SIG_UNBLOCK:</span><br><span class="line">			sigdelsetmask(&amp;new_blocked, new_set);</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">case</span> SIG_SETMASK:</span><br><span class="line">			new_blocked.sig[<span class="number">0</span>] = new_set;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		<span class="keyword">default</span>:</span><br><span class="line">			<span class="keyword">return</span> -EINVAL;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (1)根据SIG_BLOCK/SIG_UNBLOCK命令来重新设计阻塞信号set current-&gt;blocked。</span></span><br><span class="line">		set_current_blocked(&amp;new_blocked);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (oset) &#123;</span><br><span class="line">		<span class="keyword">if</span> (copy_to_user(oset, &amp;old_set, <span class="keyword">sizeof</span>(*oset)))</span><br><span class="line">			<span class="keyword">return</span> -EFAULT;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>关于信号阻塞 <code>current-&gt;blocked</code> 的使用在信号处理函数 <code>get_signal()</code> 中使用。</p>
+<ul>
+<li>arch/arm64/kernel/signal.c:</li>
+<li>do_signal() -&gt; get_signal()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">get_signal</span><span class="params">(struct ksignal *ksig)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    signr = dequeue_signal(current, &amp;current-&gt;blocked, &amp;ksig-&gt;info);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">dequeue_signal</span><span class="params">(struct task_struct *tsk, <span class="keyword">sigset_t</span> *mask, <span class="keyword">siginfo_t</span> *info)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> signr;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* We only dequeue private signals from ourselves, we don't let</span></span><br><span class="line"><span class="comment">	 * signalfd steal them</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	signr = __dequeue_signal(&amp;tsk-&gt;pending, mask, info);</span><br><span class="line">	<span class="keyword">if</span> (!signr) &#123;</span><br><span class="line">		signr = __dequeue_signal(&amp;tsk-&gt;signal-&gt;shared_pending,</span><br><span class="line">					 mask, info);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line">|| →</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">int</span> __dequeue_signal(struct sigpending *pending, <span class="keyword">sigset_t</span> *mask,</span><br><span class="line">			<span class="keyword">siginfo_t</span> *info)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// (1)对于pending被设置的阻塞信号，信号处理时不予响应。</span></span><br><span class="line">	<span class="keyword">int</span> sig = next_signal(pending, mask);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (sig) &#123;</span><br><span class="line">		<span class="keyword">if</span> (current-&gt;notifier) &#123;</span><br><span class="line">			<span class="keyword">if</span> (sigismember(current-&gt;notifier_mask, sig)) &#123;</span><br><span class="line">				<span class="keyword">if</span> (!(current-&gt;notifier)(current-&gt;notifier_data)) &#123;</span><br><span class="line">					clear_thread_flag(TIF_SIGPENDING);</span><br><span class="line">					<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		collect_signal(sig, pending, info);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> sig;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-信号的处理"><a href="#4-信号的处理" class="headerlink" title="4.信号的处理"></a>4.信号的处理</h2><ul>
+<li>系统对信号的处理有三种方式：</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>信号响应</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>忽略</td>
+<td style="text-align:center">ignore</td>
+</tr>
+<tr>
+<td>调用用户态注册的处理函数</td>
+<td style="text-align:center">如果用户有注册信号处理函数，调用 sighand-&gt;action[signr-1] 中对应的注册函数</td>
+</tr>
+<tr>
+<td>调用默认的内核态处理函数</td>
+<td style="text-align:center">如果用户没有注册对应的处理函数，调用默认的内核处理</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>默认的内核态处理，进一步可以细分为几种：</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>信号默认内核处理类型</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Terminate</td>
+<td style="text-align:center">进程被中止(杀死)。</td>
+</tr>
+<tr>
+<td>Dump</td>
+<td style="text-align:center">进程被中止(杀死)，并且输出 dump 文件。</td>
+</tr>
+<tr>
+<td>Ignore</td>
+<td style="text-align:center">信号被忽略。</td>
+</tr>
+<tr>
+<td>Stop</td>
+<td style="text-align:center">进程被停止，把进程设置为 TASK_STOPPED 状态。</td>
+</tr>
+<tr>
+<td>Continue</td>
+<td style="text-align:center">如果进程被停止（TASK_STOPPED），把它设置成 TASK_RUNNING 状态。</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="4-1-do-signal"><a href="#4-1-do-signal" class="headerlink" title="4.1 do_signal()"></a>4.1 <code>do_signal()</code></h3><p>信号处理的核心函数就是 <code>do_signal()</code>，下面我们来详细分析一下具体实现。</p>
+<ul>
+<li>arch/arm64/kernel/signal.c:</li>
+<li>-&gt; ret_to_user() -&gt; do_notify_resume() -&gt; do_signal() -&gt; get_signal()/handle_signal()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">do_signal</span><span class="params">(struct pt_regs *regs)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> continue_addr = <span class="number">0</span>, restart_addr = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">int</span> retval = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">int</span> syscall = (<span class="keyword">int</span>)regs-&gt;syscallno;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">ksignal</span> <span class="title">ksig</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * If we were from a system call, check for system call restarting...</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (1)如果是 system call 被信号中断，判断是否需要重启 system call</span></span><br><span class="line">	<span class="keyword">if</span> (syscall &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">		continue_addr = regs-&gt;pc;</span><br><span class="line">		restart_addr = continue_addr - (compat_thumb_mode(regs) ? <span class="number">2</span> : <span class="number">4</span>);</span><br><span class="line">		retval = regs-&gt;regs[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Avoid additional syscall restarting via ret_to_user.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		regs-&gt;syscallno = ~<span class="number">0U</span>L;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Prepare for system call restart. We do this here so that a</span></span><br><span class="line"><span class="comment">		 * debugger will see the already changed PC.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">switch</span> (retval) &#123;</span><br><span class="line">		<span class="keyword">case</span> -ERESTARTNOHAND:</span><br><span class="line">		<span class="keyword">case</span> -ERESTARTSYS:</span><br><span class="line">		<span class="keyword">case</span> -ERESTARTNOINTR:</span><br><span class="line">		<span class="keyword">case</span> -ERESTART_RESTARTBLOCK:</span><br><span class="line">			regs-&gt;regs[<span class="number">0</span>] = regs-&gt;orig_x0;</span><br><span class="line">			regs-&gt;pc = restart_addr;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Get the signal to deliver. When running under ptrace, at this point</span></span><br><span class="line"><span class="comment">	 * the debugger may change all of our registers.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (2) 从线程的信号 pending 队列中取出信号，</span></span><br><span class="line">	<span class="comment">// 如果没有对应的用户自定义处理函数，则执行默认的内核态处理函数</span></span><br><span class="line">	<span class="keyword">if</span> (get_signal(&amp;ksig)) &#123;</span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Depending on the signal settings, we may need to revert the</span></span><br><span class="line"><span class="comment">		 * decision to restart the system call, but skip this if a</span></span><br><span class="line"><span class="comment">		 * debugger has chosen to restart at a different PC.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">if</span> (regs-&gt;pc == restart_addr &amp;&amp;</span><br><span class="line">		    (retval == -ERESTARTNOHAND ||</span><br><span class="line">		     retval == -ERESTART_RESTARTBLOCK ||</span><br><span class="line">		     (retval == -ERESTARTSYS &amp;&amp;</span><br><span class="line">		      !(ksig.ka.sa.sa_flags &amp; SA_RESTART)))) &#123;</span><br><span class="line">			regs-&gt;regs[<span class="number">0</span>] = -EINTR;</span><br><span class="line">			regs-&gt;pc = continue_addr;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (3)如果有对应的用户自定义处理函数，则执行用户态处理函数</span></span><br><span class="line">		handle_signal(&amp;ksig, regs);</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Handle restarting a different system call. As above, if a debugger</span></span><br><span class="line"><span class="comment">	 * has chosen to restart at a different PC, ignore the restart.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (4)重启被中断的system call</span></span><br><span class="line">	<span class="keyword">if</span> (syscall &gt;= <span class="number">0</span> &amp;&amp; regs-&gt;pc == restart_addr) &#123;</span><br><span class="line">		<span class="keyword">if</span> (retval == -ERESTART_RESTARTBLOCK)</span><br><span class="line">			setup_restart_syscall(regs);</span><br><span class="line">		user_rewind_single_step(current);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	restore_saved_sigmask();</span><br><span class="line">&#125;</span><br><span class="line">| →</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">get_signal</span><span class="params">(struct ksignal *ksig)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">sighand_struct</span> *<span class="title">sighand</span> = <span class="title">current</span>-&gt;<span class="title">sighand</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">signal_struct</span> *<span class="title">signal</span> = <span class="title">current</span>-&gt;<span class="title">signal</span>;</span></span><br><span class="line">	<span class="keyword">int</span> signr;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// (2.1)执行task work机制中的work</span></span><br><span class="line">	<span class="comment">// 这是和信号无关的机制，属于搭便车在ret_to_user时刻去执行的机制</span></span><br><span class="line">	<span class="keyword">if</span> (unlikely(current-&gt;task_works))</span><br><span class="line">		task_work_run();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (unlikely(uprobe_deny_signal()))</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Do this once, we can't return to user-mode if freezing() == T.</span></span><br><span class="line"><span class="comment">	 * do_signal_stop() and ptrace_stop() do freezable_schedule() and</span></span><br><span class="line"><span class="comment">	 * thus do not need another check after return.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (2.2)第二个搭便车的机制freeze，</span></span><br><span class="line">	<span class="comment">// 系统在suspend时会调用suspend_freeze_processes()来freeze线程</span></span><br><span class="line">	<span class="comment">// 实际上也是唤醒线程，让线程在ret_to_user时刻去freeze自己</span></span><br><span class="line">	try_to_freeze();</span><br><span class="line"></span><br><span class="line">relock:</span><br><span class="line">	spin_lock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Every stopped thread goes here after wakeup. Check to see if</span></span><br><span class="line"><span class="comment">	 * we should notify the parent, prepare_signal(SIGCONT) encodes</span></span><br><span class="line"><span class="comment">	 * the CLD_ si_code into SIGNAL_CLD_MASK bits.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (2.3)在子进程状态变化的情况下，发送SIGCHLD信号通知父进程</span></span><br><span class="line">	<span class="keyword">if</span> (unlikely(signal-&gt;flags &amp; SIGNAL_CLD_MASK)) &#123;</span><br><span class="line">		<span class="keyword">int</span> why;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (signal-&gt;flags &amp; SIGNAL_CLD_CONTINUED)</span><br><span class="line">			why = CLD_CONTINUED;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">			why = CLD_STOPPED;</span><br><span class="line"></span><br><span class="line">		signal-&gt;flags &amp;= ~SIGNAL_CLD_MASK;</span><br><span class="line"></span><br><span class="line">		spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Notify the parent that we're continuing.  This event is</span></span><br><span class="line"><span class="comment">		 * always per-process and doesn't make whole lot of sense</span></span><br><span class="line"><span class="comment">		 * for ptracers, who shouldn't consume the state via</span></span><br><span class="line"><span class="comment">		 * wait(2) either, but, for backward compatibility, notify</span></span><br><span class="line"><span class="comment">		 * the ptracer of the group leader too unless it's gonna be</span></span><br><span class="line"><span class="comment">		 * a duplicate.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		read_lock(&amp;tasklist_lock);</span><br><span class="line">		do_notify_parent_cldstop(current, <span class="literal">false</span>, why);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (ptrace_reparented(current-&gt;group_leader))</span><br><span class="line">			do_notify_parent_cldstop(current-&gt;group_leader,</span><br><span class="line">						<span class="literal">true</span>, why);</span><br><span class="line">		read_unlock(&amp;tasklist_lock);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">goto</span> relock;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (;;) &#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">k_sigaction</span> *<span class="title">ka</span>;</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (unlikely(current-&gt;jobctl &amp; JOBCTL_STOP_PENDING) &amp;&amp;</span><br><span class="line">		    do_signal_stop(<span class="number">0</span>))</span><br><span class="line">			<span class="keyword">goto</span> relock;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (unlikely(current-&gt;jobctl &amp; JOBCTL_TRAP_MASK)) &#123;</span><br><span class="line">			do_jobctl_trap();</span><br><span class="line">			spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line">			<span class="keyword">goto</span> relock;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (2.4)从信号pending队列中，取出优先级最好的信号</span></span><br><span class="line">		signr = dequeue_signal(current, &amp;current-&gt;blocked, &amp;ksig-&gt;info);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (!signr)</span><br><span class="line">			<span class="keyword">break</span>; <span class="comment">/* will return 0 */</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (unlikely(current-&gt;ptrace) &amp;&amp; signr != SIGKILL) &#123;</span><br><span class="line">			signr = ptrace_signal(signr, &amp;ksig-&gt;info);</span><br><span class="line">			<span class="keyword">if</span> (!signr)</span><br><span class="line">				<span class="keyword">continue</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (2.5)从信号处理数组sighand中，取出信号对应的处理函数</span></span><br><span class="line">		ka = &amp;sighand-&gt;action[signr<span class="number">-1</span>];</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* Trace actually delivered signals. */</span></span><br><span class="line">		trace_signal_deliver(signr, &amp;ksig-&gt;info, ka);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (2.6.1)信号处理的第1种方法：忽略</span></span><br><span class="line">		<span class="keyword">if</span> (ka-&gt;sa.sa_handler == SIG_IGN) <span class="comment">/* Do nothing.  */</span></span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">		<span class="comment">// (2.6.2)信号处理的第2种方法：调用用户态注册的处理函数</span></span><br><span class="line">		<span class="comment">// 获取到用户态的处理函数指针，返回调用handle_signal()来执行</span></span><br><span class="line">		<span class="keyword">if</span> (ka-&gt;sa.sa_handler != SIG_DFL) &#123;</span><br><span class="line">			<span class="comment">/* Run the handler.  */</span></span><br><span class="line">			ksig-&gt;ka = *ka;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (ka-&gt;sa.sa_flags &amp; SA_ONESHOT)</span><br><span class="line">				ka-&gt;sa.sa_handler = SIG_DFL;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">break</span>; <span class="comment">/* will return non-zero "signr" value */</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (2.6.3)信号处理的第3种方法：调用默认的内核态处理函数</span></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Now we are doing the default action for this signal.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="comment">// (2.6.3.1)SIG_KERNEL_IGNORE_MASK信号的默认处理方法Ignore：忽略</span></span><br><span class="line">		<span class="comment">// #define SIG_KERNEL_IGNORE_MASK (\</span></span><br><span class="line">		<span class="comment">//        rt_sigmask(SIGCONT)   |  rt_sigmask(SIGCHLD)   | \</span></span><br><span class="line">		<span class="comment">//         rt_sigmask(SIGWINCH)  |  rt_sigmask(SIGURG)    )</span></span><br><span class="line">		<span class="keyword">if</span> (sig_kernel_ignore(signr)) <span class="comment">/* Default is nothing. */</span></span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Global init gets no signals it doesn't want.</span></span><br><span class="line"><span class="comment">		 * Container-init gets no signals it doesn't want from same</span></span><br><span class="line"><span class="comment">		 * container.</span></span><br><span class="line"><span class="comment">		 *</span></span><br><span class="line"><span class="comment">		 * Note that if global/container-init sees a sig_kernel_only()</span></span><br><span class="line"><span class="comment">		 * signal here, the signal must have been generated internally</span></span><br><span class="line"><span class="comment">		 * or must have come from an ancestor namespace. In either</span></span><br><span class="line"><span class="comment">		 * case, the signal cannot be dropped.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="keyword">if</span> (unlikely(signal-&gt;flags &amp; SIGNAL_UNKILLABLE) &amp;&amp;</span><br><span class="line">				!sig_kernel_only(signr))</span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (2.6.3.2)SIG_KERNEL_STOP_MASK信号的默认处理方法Stop：do_signal_stop()</span></span><br><span class="line">		<span class="comment">// #define SIG_KERNEL_STOP_MASK (\</span></span><br><span class="line">		<span class="comment">// rt_sigmask(SIGSTOP)   |  rt_sigmask(SIGTSTP)   | \</span></span><br><span class="line">		<span class="comment">// rt_sigmask(SIGTTIN)   |  rt_sigmask(SIGTTOU)   )</span></span><br><span class="line">		<span class="keyword">if</span> (sig_kernel_stop(signr)) &#123;</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * The default action is to stop all threads in</span></span><br><span class="line"><span class="comment">			 * the thread group.  The job control signals</span></span><br><span class="line"><span class="comment">			 * do nothing in an orphaned pgrp, but SIGSTOP</span></span><br><span class="line"><span class="comment">			 * always works.  Note that siglock needs to be</span></span><br><span class="line"><span class="comment">			 * dropped during the call to is_orphaned_pgrp()</span></span><br><span class="line"><span class="comment">			 * because of lock ordering with tasklist_lock.</span></span><br><span class="line"><span class="comment">			 * This allows an intervening SIGCONT to be posted.</span></span><br><span class="line"><span class="comment">			 * We need to check for that and bail out if necessary.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			<span class="keyword">if</span> (signr != SIGSTOP) &#123;</span><br><span class="line">				spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line"></span><br><span class="line">				<span class="comment">/* signals can be posted during this window */</span></span><br><span class="line">				<span class="comment">// 不是SIGSTOP信号，且是孤儿进程组</span></span><br><span class="line">				<span class="keyword">if</span> (is_current_pgrp_orphaned())</span><br><span class="line">					<span class="keyword">goto</span> relock;</span><br><span class="line"></span><br><span class="line">				spin_lock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (likely(do_signal_stop(ksig-&gt;info.si_signo))) &#123;</span><br><span class="line">				<span class="comment">/* It released the siglock.  */</span></span><br><span class="line">				<span class="keyword">goto</span> relock;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * We didn't actually stop, due to a race</span></span><br><span class="line"><span class="comment">			 * with SIGCONT or something like that.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Anything else is fatal, maybe with a core dump.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		current-&gt;flags |= PF_SIGNALED;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// (2.6.3.3)SIG_KERNEL_COREDUMP_MASK信号的默认处理方法Dump：do_coredump() &amp; do_group_exit()</span></span><br><span class="line">		<span class="comment">// #define SIG_KERNEL_COREDUMP_MASK (\</span></span><br><span class="line">		<span class="comment">//         rt_sigmask(SIGQUIT)   |  rt_sigmask(SIGILL)    | \</span></span><br><span class="line">		<span class="comment">// 	rt_sigmask(SIGTRAP)   |  rt_sigmask(SIGABRT)   | \</span></span><br><span class="line">		<span class="comment">//         rt_sigmask(SIGFPE)    |  rt_sigmask(SIGSEGV)   | \</span></span><br><span class="line">		<span class="comment">// 	rt_sigmask(SIGBUS)    |  rt_sigmask(SIGSYS)    | \</span></span><br><span class="line">		<span class="comment">//         rt_sigmask(SIGXCPU)   |  rt_sigmask(SIGXFSZ)   | \</span></span><br><span class="line">		<span class="comment">// 	SIGEMT_MASK				       )</span></span><br><span class="line">		<span class="keyword">if</span> (sig_kernel_coredump(signr)) &#123;</span><br><span class="line">			<span class="keyword">if</span> (print_fatal_signals)</span><br><span class="line">				print_fatal_signal(ksig-&gt;info.si_signo);</span><br><span class="line">			proc_coredump_connector(current);</span><br><span class="line">			<span class="comment">/*</span></span><br><span class="line"><span class="comment">			 * If it was able to dump core, this kills all</span></span><br><span class="line"><span class="comment">			 * other threads in the group and synchronizes with</span></span><br><span class="line"><span class="comment">			 * their demise.  If we lost the race with another</span></span><br><span class="line"><span class="comment">			 * thread getting here, it set group_exit_code</span></span><br><span class="line"><span class="comment">			 * first and our do_group_exit call below will use</span></span><br><span class="line"><span class="comment">			 * that value and ignore the one we pass it.</span></span><br><span class="line"><span class="comment">			 */</span></span><br><span class="line">			do_coredump(&amp;ksig-&gt;info);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/*</span></span><br><span class="line"><span class="comment">		 * Death signals, no core dump.</span></span><br><span class="line"><span class="comment">		 */</span></span><br><span class="line">		<span class="comment">// (2.6.3.4)Death signals信号的默认处理方法Terminate：do_group_exit()</span></span><br><span class="line">		do_group_exit(ksig-&gt;info.si_signo);</span><br><span class="line">		<span class="comment">/* NOTREACHED */</span></span><br><span class="line">	&#125;</span><br><span class="line">	spin_unlock_irq(&amp;sighand-&gt;siglock);</span><br><span class="line"></span><br><span class="line">	ksig-&gt;sig = signr;</span><br><span class="line">	<span class="keyword">return</span> ksig-&gt;sig &gt; <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果用户没有注册信号处理函数，默认的内核处理函数在 <code>get_signal()</code> 函数中执行完了。对于用户有注册处理函数的信号，但是因为这些处理函数都是用户态的，所以内核使用了一个技巧：先构造堆栈，返回用户态去执行自定义信号处理函数，再返回内核态继续被信号打断的返回用户态的动作。</p>
+<p><img src="signal_handle_signal.png" alt="信号处理"></p>
+<p>我们来看 <code>handle_signal()</code> 函数中的具体实现。</p>
+<ul>
+<li>arch/arm64/kernel/signal.c:</li>
+<li>-&gt; ret_to_user() -&gt; do_notify_resume() -&gt; do_signal() -&gt; handle_signal()</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">handle_signal</span><span class="params">(struct ksignal *ksig, struct pt_regs *regs)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">thread_info</span> *<span class="title">thread</span> = <span class="title">current_thread_info</span>();</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> *<span class="title">tsk</span> = <span class="title">current</span>;</span></span><br><span class="line">	<span class="keyword">sigset_t</span> *oldset = sigmask_to_save();</span><br><span class="line">	<span class="keyword">int</span> usig = ksig-&gt;sig;</span><br><span class="line">	<span class="keyword">int</span> ret;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * translate the signal</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (usig &lt; <span class="number">32</span> &amp;&amp; thread-&gt;exec_domain &amp;&amp; thread-&gt;exec_domain-&gt;signal_invmap)</span><br><span class="line">		usig = thread-&gt;exec_domain-&gt;signal_invmap[usig];</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Set up the stack frame</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="comment">// (1)构造返回堆栈，将用户态返回地址替换成用户注册的信号处理函数&amp;ksig-&gt;ka</span></span><br><span class="line">	<span class="keyword">if</span> (is_compat_task()) &#123;</span><br><span class="line">		<span class="keyword">if</span> (ksig-&gt;ka.sa.sa_flags &amp; SA_SIGINFO)</span><br><span class="line">			ret = compat_setup_rt_frame(usig, ksig, oldset, regs);</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">			ret = compat_setup_frame(usig, ksig, oldset, regs);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		ret = setup_rt_frame(usig, ksig, oldset, regs);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Check that the resulting registers are actually sane.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	ret |= !valid_user_regs(&amp;regs-&gt;user_regs);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Fast forward the stepping logic so we step into the signal</span></span><br><span class="line"><span class="comment">	 * handler.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">if</span> (!ret)</span><br><span class="line">		user_fastforward_single_step(tsk);</span><br><span class="line"></span><br><span class="line">	signal_setup_done(ret, ksig, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><blockquote id="fn_ULK">
+<sup>ULK</sup>. <a href="http://shop.oreilly.com/product/9780596000028.do" target="_blank" rel="noopener">Understanding the Linux Kernel</a><a href="#reffn_ULK" title="Jump back to footnote [ULK] in the text."> &#8617;</a>
+</blockquote>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    <li class="previous">
+                        <a href="/2016/07/11//linux-process-stop.html/" data-toggle="tooltip" data-placement="top" title="Linux 进程中 Stop, Park, Freeze">&larr; Previous Post</a>
+                    </li>
+                    
+                    
+                    <li class="next">
+                        <a href="/2016/06/26//lockcreen-password.html/" data-toggle="tooltip" data-placement="top" title="剖析 Android M 锁屏密码存储方式">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                          <a class="tag" href="/tags/#signal" title="signal">signal</a>
+                        
+                          <a class="tag" href="/tags/#Linux 信号" title="Linux 信号">Linux 信号</a>
+                        
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>

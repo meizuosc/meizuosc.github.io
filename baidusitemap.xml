@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://kernel.meizu.com/2019/01/02/11-38-02-android-binder/</loc>
-    <lastmod>2025-02-11</lastmod>
-  </url>
-  <url>
     <loc>https://kernel.meizu.com/2016/06/05//camera-isp-intro.html/</loc>
     <lastmod>2025-02-11</lastmod>
   </url>
@@ -45,155 +41,155 @@
     <lastmod>2024-12-25</lastmod>
   </url>
   <url>
+    <loc>https://kernel.meizu.com/2017/08/08/17-33-25-tee_fp/</loc>
+    <lastmod>2024-12-25</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2016/09/02//linux-interrupt.html/</loc>
+    <lastmod>2024-12-25</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2023/11/10/Qcom_mvp/</loc>
+    <lastmod>2024-12-25</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2024/05/16/TouchScreen-Basics/</loc>
+    <lastmod>2024-12-25</lastmod>
+  </url>
+  <url>
     <loc>https://kernel.meizu.com/2024/12/06/Isolated-count-mismatch-analysis/</loc>
     <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2024/05/27/Linux-Page-Table-Check/</loc>
-    <lastmod>2024-07-12</lastmod>
+    <loc>https://kernel.meizu.com/2016/07/04//linux-signal.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2024/07/12/sub-system-cgroup-freezer-in-Linux-kernel/</loc>
-    <lastmod>2024-07-12</lastmod>
+    <loc>https://kernel.meizu.com/2016/10/16//configure-jenkins-guide.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2024/05/16/TouchScreen-Basics/</loc>
-    <lastmod>2024-05-16</lastmod>
+    <loc>https://kernel.meizu.com/2017/11/06/11-52-11-mtp/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2024/03/15/Futex%E6%9C%BA%E5%88%B6%E7%9A%84%E5%86%85%E6%A0%B8%E4%BC%98%E5%8C%96/</loc>
-    <lastmod>2024-03-18</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2024/01/12/Qcom-Thermal-Engine-frame-analysis/</loc>
-    <lastmod>2024-01-12</lastmod>
+    <loc>https://kernel.meizu.com/2018/07/12//android-p-fbe.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
     <loc>https://kernel.meizu.com/2023/12/13/Full-stack-resolution-of-the-Linux-time-subsystem/</loc>
-    <lastmod>2023-12-13</lastmod>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2023/11/23/Analysis-of-the-USB-4-0-FBO/</loc>
-    <lastmod>2023-11-23</lastmod>
+    <loc>https://kernel.meizu.com/2024/05/27/Linux-Page-Table-Check/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2023/11/10/Qcom_mvp/</loc>
-    <lastmod>2023-11-10</lastmod>
+    <loc>https://kernel.meizu.com/2016/06/19//nonlinear-regression.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/</loc>
-    <lastmod>2023-11-06</lastmod>
+    <loc>https://kernel.meizu.com/2016/07/16//linux-thermal-framework-intro.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2023/10/27/Android-inputTuning-and-Optimizing/</loc>
-    <lastmod>2023-10-27</lastmod>
+    <loc>https://kernel.meizu.com/2016/08/12//linux-selinux-intro.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/07/15//linux-thermal-framework-intro.html/</loc>
-    <lastmod>2023-10-27</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2017/03/05/18-40-19-dump_stack/</loc>
-    <lastmod>2023-10-27</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2016/07/24//linux-dead-lock-detect-lockdep.html/</loc>
-    <lastmod>2023-10-27</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2023/07/07/Face-recognition-block-analysis/</loc>
-    <lastmod>2023-10-27</lastmod>
+    <loc>https://kernel.meizu.com/2016/09/19/./android-design-pattern-singleton.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
     <loc>https://kernel.meizu.com/2023/07/04/Android-R-AVB2-0/</loc>
-    <lastmod>2023-08-07</lastmod>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2018/11/22//implementation-of-loading-fw-from-userspace.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2023/11/23/Analysis-of-the-USB-4-0-FBO/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/04/14//intro-wrapfs.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/07/11//linux-process-stop.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/06/25//lockcreen-password.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/07/20//linux-tick-and-tickless.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/06/18//nonlinear-regression.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/07/25//linux-dead-lock-detect-lockdep.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/07/10//linux-process-stop.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/08/21//linux-workqueue.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/07/03//linux-signal.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/07/19//linux-tick-and-tickless.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2023/11/06/Optimization-practice-and-exploration-of-Android-devices-based-on-eBPF/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/08/11//linux-selinux-intro.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2024/03/15/Futex%E6%9C%BA%E5%88%B6%E7%9A%84%E5%86%85%E6%A0%B8%E4%BC%98%E5%8C%96/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/08/05//bfs-porting.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2024/07/12/sub-system-cgroup-freezer-in-Linux-kernel/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/09/11//android-m-external-storage.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2018/07/12//linux-time.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/09/18/./android-design-pattern-singleton.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/08/06//bfs-porting.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/09/01//linux-interrupt.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/09/12//android-m-external-storage.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/10/15//configure-jenkins-guide.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2017/09/07//samsun-uboot-fastboot-command.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2016/08/20//linux-workqueue.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2017/11/18//memory%20management%20-%20ion.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2017/08/07/17-33-25-tee_fp/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2018/11/23//implementation-of-loading-fw-from-userspace.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2017/11/05/11-52-11-mtp/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2018/03/21//device-tree.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2017/09/06//samsun-uboot-fastboot-command.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2023/07/07/Face-recognition-block-analysis/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2017/12/26//tee.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/04/15//intro-wrapfs.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2017/11/17//memory%20management%20-%20ion.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2016/06/26//lockcreen-password.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2018/07/11//android-p-fbe.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2017/12/27//tee.html/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2018/03/20//device-tree.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2023/10/27/Android-inputTuning-and-Optimizing/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2018/07/11//linux-time.html/</loc>
-    <lastmod>2023-06-15</lastmod>
+    <loc>https://kernel.meizu.com/2024/01/12/Qcom-Thermal-Engine-frame-analysis/</loc>
+    <lastmod>2024-12-25</lastmod>
   </url>
 </urlset> 
