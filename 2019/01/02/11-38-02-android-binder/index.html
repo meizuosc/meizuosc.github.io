@@ -355,12 +355,12 @@ service_server：<br/><br/>
 <li>2、<strong>binder对象</strong>/<strong>handle</strong>(struct flat_binder_object)：</li>
 </ul>
 <p>这一类型数据的parcel包格式如下： </p>
-<p><img src="binder_parcel_binder_object_format.png" alt="binder_parcel_binder_object_format"></p>
+<p><img src="binder_parcel_binder_object_format.png" alt=""></p>
 <p>可以看到这种类型的parcel包中包含了两种数据：data0/data1/…是普通类型数据；binder_obj0/binder_obj1/…是binder对象，binder_obj0 offset/binder_obj1 offset/…指出了了binder对象在parcel包中的偏移；</p>
 <p>binder对象和handle共用结构体struct flat_binder_object。</p>
 <p>上一节说过<strong>binder对象</strong>其实就是一组函数的指针，但是一个指针只需要一个long类型就可以标识了，为什么还需要用一个结构体struct flat_binder_object来传递。我理解下来主要的思想如下：使用binder都是面向对象语言c++/java，它们把函数组也要实例化成一个对象，一个对象只有被引用时才不会被回收，远程引用也需要让本地引用加1。</p>
 <p>一组service函数，对本地进程来说就是binder，对其他需要使用的进程来说需要远程引用，就是handle，是一对多的关系。关系图如下：</p>
-<p><img src="binder_binderobj_and_handle.png" alt="binder_binderobj_and_handle"></p>
+<p><img src="binder_binderobj_and_handle.png" alt=""></p>
 <p>binder object是service_server的一个“local binder object”，service_manager和service_client创建了多个远程引用“remote handle”。</p>
 <p>这个其实就是binder的核心思想，binder花费了大量的代码在维护这个关系上面：</p>
 <ul>
@@ -377,15 +377,15 @@ service_server：<br/><br/>
 </li>
 </ul>
 <p>parcel还能传输文件句柄fd，此时的包格式如下：</p>
-<p><img src="binder_parcel_fd_object_format.png" alt="binder_parcel_fd_object_format"></p>
+<p><img src="binder_parcel_fd_object_format.png" alt=""></p>
 <p>传输fd的意义何在呢？当binder的两个进程间需要传输大量的数据。例如：图像声音数据、或者是一个对象。可以在匿名共享内存(Ashmem)中创建一块区域，源进程会得到一个相应的fd，再把这个fd使用binder传递给目的进程，就可以共享数据了。</p>
 <p>需要特别说明的是对象的传递，在同一个进程内进行函数调用的话，参数对象通常是使用引用的方式传递的。但是如果是跨进程的调用，是没有办法引用的，只有把整个对象复制过去。这种操作叫做对象的序列化，java称为Serializable，android有优化的实现Parcelable。注意对象序列化的Parcelable和binder的parcel数据封装不是一回事，尽管他们原理上很相似。binder并没有提供对象Parcelable的接口，如果我们要跨进程传输对象，只能把对象序列化(Parcelable)到匿名共享内存中，再把对应fd通过binder传输给目的进程。</p>
-<p><img src="binder_fdobject_translate.png" alt="binder_fdobject_translate"></p>
+<p><img src="binder_fdobject_translate.png" alt=""></p>
 <p>binder驱动在检测到传输的是fd，会在新的进程中分配一个新的fd，并指向原来的file结构，这样fd就被跨进程duplicate了。两个进程使用各自的fd对匿名共享内存区域进行mmap映射，就能访问相同的内存区域了。</p>
 <h2 id="1-3、IPC函数返回值"><a href="#1-3、IPC函数返回值" class="headerlink" title="1.3、IPC函数返回值"></a>1.3、IPC函数返回值</h2><p>函数返回值也是使用和函数参数一样的parcel结构来封装数据的。就不再重复叙述。</p>
 <p>上面提到的原则需要再次强调，在一次service_client和service_server之间的通讯，在传递参数和返回值时都要遵循的准则：service_client只会有<strong>handle</strong>，service_server只会有<strong>binder对象</strong>。</p>
 <h2 id="1-4、binder内存"><a href="#1-4、binder内存" class="headerlink" title="1.4、binder内存"></a>1.4、binder内存</h2><p>前面说过binder通讯的本质就是在共享内存上加上一层api，我们来看看他是怎么管理共享内存的。</p>
-<p><img src="binder_alloc_buffer.png" alt="binder_alloc_buffer"></p>
+<p><img src="binder_alloc_buffer.png" alt=""></p>
 <p>我们可以看到：</p>
 <ul>
 <li>binder驱动给每个进程分配最多4M的buffer空间，这段空间在内核通过binder_proc-&gt;alloc红黑树来管理，同时通过mmap映射到进程用户空间；</li>
@@ -393,7 +393,7 @@ service_server：<br/><br/>
 <li>因为是mmap的所有本进程的用户空间访问免除了一次拷贝；</li>
 <li>另外因为进程支持多个线程，所以多个线程会共享本进程的binder buffer；</li>
 </ul>
-<p><img src="binder_alloc_buffer_transaction.png" alt="binder_alloc_buffer_transaction"></p>
+<p><img src="binder_alloc_buffer_transaction.png" alt=""></p>
 <p>我们看一下process 0、process n进程和process 1进程进行binder通讯时的buffer使用情况：</p>
 <ul>
 <li>首先会在process 1进程的inbox(binder buffer)空间中分配buffer；</li>
@@ -401,7 +401,7 @@ service_server：<br/><br/>
 <li>因为mmap，process 1进程的用户空间也可以看见这些消息了；</li>
 </ul>
 <h1 id="2、binder驱动"><a href="#2、binder驱动" class="headerlink" title="2、binder驱动"></a>2、binder驱动</h1><p>驱动是整个binder通讯的核心，java和native都是对其的封装。<br>因为binder驱动代码比较繁杂，看代码比较不好理解。结合第一章讲的基础知识和binder通讯具体场景，我们使用图来分析每一个典型场景下binder驱动内的变化。</p>
-<h2 id="2-1、service-manager的初始化"><a href="#2-1、service-manager的初始化" class="headerlink" title="2.1、service_manager的初始化"></a>2.1、service_manager的初始化</h2><p><img src="binder_action_servicemanager_init.png" alt="binder_action_servicemanager_init"></p>
+<h2 id="2-1、service-manager的初始化"><a href="#2-1、service-manager的初始化" class="headerlink" title="2.1、service_manager的初始化"></a>2.1、service_manager的初始化</h2><p><img src="binder_action_servicemanager_init.png" alt=""></p>
 <p>通过上图我们可以看到具体过程：</p>
 <ul>
 <li>1、binder驱动为service_manager进程创建一个新的binder_node结构，赋值：.ptr=0、.cookie=0、.proc=当前proc；</li>
@@ -410,7 +410,7 @@ service_server：<br/><br/>
 </ul>
 <p>service_manager代码在<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/native/cmds/servicemanager/service_manager.c" target="_blank" rel="noopener">service_manager.c</a>、<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/native/cmds/servicemanager/binder.c" target="_blank" rel="noopener">binder.c</a>，可以具体查看。初始化过程为：</p>
 <figure class="highlight isbl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">main</span>() -&gt; <span class="title">binder_open</span>()、<span class="title">binder_become_context_manager</span>()</span></span><br></pre></td></tr></table></figure>
-<h2 id="2-2、service-server的addService"><a href="#2-2、service-server的addService" class="headerlink" title="2.2、service_server的addService"></a>2.2、service_server的addService</h2><p><img src="binder_action_serviceserver_addservice.png" alt="binder_action_serviceserver_addservice"></p>
+<h2 id="2-2、service-server的addService"><a href="#2-2、service-server的addService" class="headerlink" title="2.2、service_server的addService"></a>2.2、service_server的addService</h2><p><img src="binder_action_serviceserver_addservice.png" alt=""></p>
 <p>通过上图我们可以看到，在service_server向service_manager注册service的时候，在驱动中的具体流程如下：</p>
 <ul>
 <li>1、因为是向service_manager注册，所以target handle固定=0。通过binder_device-&gt;context找到handle 0对应的binder_node，也就找到了对应的binder_proc，找到了对应的service_manager进程；</li>
@@ -421,7 +421,7 @@ service_server：<br/><br/>
 </ul>
 <p>service_manager的读取响应和reply动作就不去具体分析了，因为都非常的清晰。service_manager代码在<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/native/cmds/servicemanager/service_manager.c" target="_blank" rel="noopener">service_manager.c</a>、<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/native/cmds/servicemanager/binder.c" target="_blank" rel="noopener">binder.c</a>，可以具体查看。service_manager在svcmgr_handler()函数中响应service_server的SVC_MGR_ADD_SERVICE请求，最终调用do_add_service()把handle和对应的service name加到svclist链表中：</p>
 <figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">main<span class="function"><span class="params">()</span> -&gt;</span> binder_loop<span class="function"><span class="params">()</span> -&gt;</span> binder_parse<span class="function"><span class="params">()</span> -&gt;</span> svcmgr_handler<span class="function"><span class="params">()</span> -&gt;</span> do_add_service()</span><br></pre></td></tr></table></figure>
-<h2 id="2-3、service-client的get-service"><a href="#2-3、service-client的get-service" class="headerlink" title="2.3、service_client的get service"></a>2.3、service_client的get service</h2><p><img src="binder_action_serviceclient_getservice_send.png" alt="binder_action_serviceclient_getservice_send"></p>
+<h2 id="2-3、service-client的get-service"><a href="#2-3、service-client的get-service" class="headerlink" title="2.3、service_client的get service"></a>2.3、service_client的get service</h2><p><img src="binder_action_serviceclient_getservice_send.png" alt=""></p>
 <p>如上图service_client向service_manager发送get service请求的数据比较简单：</p>
 <ul>
 <li>1、根据handle 0找到service_manager进程；</li>
