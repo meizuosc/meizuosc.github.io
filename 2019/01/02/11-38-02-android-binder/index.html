@@ -295,14 +295,14 @@ data：binder对象为一组本地service函数集；<br/>
 <td>
 service_manager：<br/><br/>
 binder驱动会创建对该binder对象的引用handle<br/>
-通过SVC_MGR_ADD_SERVICE命令把该handle加入到service_manage的handle链表中；<br/>
+通过SV_MGR_ADD_SERVICE命令把该handle加入到service_manage的handle链表中；<br/>
 </td>
 </tr>
 
 <tr>
 <td> service_client的get_service </td>
 <td>
-service_client:<br/><br/>
+servic_client:<br/><br/>
 target handle：handle0<br/>
 data：service name。整个过程中没有binder对象的参与。<br/>
 向service_manager获取service_server的service函数的handle；<br/>
