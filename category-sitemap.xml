@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="sitemap.xsl"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    <url>
+        <loc>https://kernel.meizu.com</loc>
+        <changefreq>daily</changefreq>
+        <priority>1</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E8%25B0%2583%25E5%25BA%25A6%25E5%2599%25A8/%25E7%2594%25B5%25E6%25BA%2590%25E7%25AE%25A1%25E7%2590%2586/</loc>
+        <lastmod>2025-02-11T03:44:09.431Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E8%25B0%2583%25E5%25BA%25A6%25E5%2599%25A8/</loc>
+        <lastmod>2025-02-11T03:44:09.431Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/android/</loc>
+        <lastmod>2025-02-11T03:41:56.853Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E8%25B0%2583%25E8%25AF%2595%25E4%25B8%258E%25E7%25A8%25B3%25E5%25AE%259A%25E6%2580%25A7/</loc>
+        <lastmod>2024-07-12T09:50:59.936Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E6%25B8%25A9%25E5%258D%2587%25E4%25B8%258E%25E5%258A%259F%25E8%2580%2597/</loc>
+        <lastmod>2024-07-12T09:27:05.931Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E6%2580%25A7%25E8%2583%25BD/</loc>
+        <lastmod>2024-03-18T01:27:10.133Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E6%2597%25B6%25E9%2597%25B4%25E7%25AE%25A1%25E7%2590%2586/</loc>
+        <lastmod>2023-12-13T09:23:20.255Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E5%2582%25A8%25E5%25AD%2598/</loc>
+        <lastmod>2023-11-23T09:23:40.633Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E6%2580%25A7%25E8%2583%25BD/%25E8%25B0%2583%25E5%25BA%25A6%25E5%2599%25A8/</loc>
+        <lastmod>2023-11-10T11:03:22.270Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/Bootloader/</loc>
+        <lastmod>2023-08-07T01:41:28.579Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/linux/</loc>
+        <lastmod>2023-06-15T13:17:08.384Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/Security/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/MTP/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E7%25B3%25BB%25E7%25BB%259F%25E7%25AE%25A1%25E7%2590%2586%25E5%2592%258C%25E7%25BB%25B4%25E6%258A%25A4/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E4%25B8%25AD%25E6%2596%25AD%25E7%25AE%25A1%25E7%2590%2586/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E7%25A8%258B%25E5%25BA%258F%25E8%25AE%25BE%25E8%25AE%25A1/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E5%25AD%2598%25E5%2582%25A8/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E8%25BF%259B%25E7%25A8%258B%25E7%25AE%25A1%25E7%2590%2586%25E4%25B8%258E%25E9%2580%259A%25E4%25BF%25A1/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E5%25AE%2589%25E5%2585%25A8/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E5%25A4%259A%25E5%25AA%2592%25E4%25BD%2593/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E7%2594%25B5%25E6%25BA%2590%25E7%25AE%25A1%25E7%2590%2586/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E4%25BC%25A0%25E6%2584%259F%25E5%2599%25A8/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E5%2586%2585%25E5%25AD%2598%25E7%25AE%25A1%25E7%2590%2586/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E6%2597%25A0%25E7%25BA%25BF%25E9%2580%259A%25E8%25AE%25AF/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://kernel.meizu.com/categories/%25E6%2596%2587%25E4%25BB%25B6%25E7%25B3%25BB%25E7%25BB%259F/</loc>
+        <lastmod>2023-06-15T13:17:08.380Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+</urlset>
+<!-- XML Sitemap generated by Hexo SEO Friendly Sitemap Generator -->
