@@ -2,16 +2,58 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://kernel.meizu.com/2016/04/08/cpufreq-sched.html/</loc>
+    <loc>https://kernel.meizu.com/2019/01/02/android-binder.html/</loc>
     
-    <lastmod>2025-02-11T03:46:28.117Z</lastmod>
+    <lastmod>2025-02-11T03:50:12.936Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2019/01/02/android-binder.html/</loc>
+    <loc>https://kernel.meizu.com/2016/06/05/camera-isp-intro.html/</loc>
     
-    <lastmod>2025-02-11T03:41:56.853Z</lastmod>
+    <lastmod>2025-02-11T03:49:56.336Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/28/cpuidle.html/</loc>
+    
+    <lastmod>2025-02-11T03:49:38.752Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/21/zram-introduction.html/</loc>
+    
+    <lastmod>2025-02-11T03:49:25.888Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/18/android-sensor-framework.html/</loc>
+    
+    <lastmod>2025-02-11T03:49:03.079Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/09/slab-allocator-and-kmalloc.html/</loc>
+    
+    <lastmod>2025-02-11T03:48:41.751Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/02/gps-introduction.html/</loc>
+    
+    <lastmod>2025-02-11T03:48:24.503Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/04/08/cpufreq-sched.html/</loc>
+    
+    <lastmod>2025-02-11T03:46:28.117Z</lastmod>
     
   </url>
   
@@ -185,48 +227,6 @@
   
   <url>
     <loc>https://kernel.meizu.com/2016/04/14/intro-wrapfs.html/</loc>
-    
-    <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/01/gps-introduction.html/</loc>
-    
-    <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/08/slab-allocator-and-kmalloc.html/</loc>
-    
-    <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/17/android-sensor-framework.html/</loc>
-    
-    <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/20/zram-introduction.html/</loc>
-    
-    <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/27/cpuidle.html/</loc>
-    
-    <lastmod>2023-06-15T13:17:08.380Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/06/04/camera-isp-intro.html/</loc>
     
     <lastmod>2023-06-15T13:17:08.380Z</lastmod>
     

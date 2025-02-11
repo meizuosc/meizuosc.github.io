@@ -1,11 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://kernel.meizu.com/2016/04/08//cpufreq-sched.html/</loc>
+    <loc>https://kernel.meizu.com/2019/01/02//android-binder.html/</loc>
     <lastmod>2025-02-11</lastmod>
   </url>
   <url>
-    <loc>https://kernel.meizu.com/2019/01/02//android-binder.html/</loc>
+    <loc>https://kernel.meizu.com/2016/06/05//camera-isp-intro.html/</loc>
+    <lastmod>2025-02-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/28//cpuidle.html/</loc>
+    <lastmod>2025-02-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/21//zram-introduction.html/</loc>
+    <lastmod>2025-02-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/18//android-sensor-framework.html/</loc>
+    <lastmod>2025-02-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/09//slab-allocator-and-kmalloc.html/</loc>
+    <lastmod>2025-02-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2016/05/02//gps-introduction.html/</loc>
+    <lastmod>2025-02-11</lastmod>
+  </url>
+  <url>
+    <loc>https://kernel.meizu.com/2016/04/08//cpufreq-sched.html/</loc>
     <lastmod>2025-02-11</lastmod>
   </url>
   <url>
@@ -90,30 +114,6 @@
   </url>
   <url>
     <loc>https://kernel.meizu.com/2016/04/14//intro-wrapfs.html/</loc>
-    <lastmod>2023-06-15</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/01//gps-introduction.html/</loc>
-    <lastmod>2023-06-15</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/08//slab-allocator-and-kmalloc.html/</loc>
-    <lastmod>2023-06-15</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/17//android-sensor-framework.html/</loc>
-    <lastmod>2023-06-15</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/20//zram-introduction.html/</loc>
-    <lastmod>2023-06-15</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2016/05/27//cpuidle.html/</loc>
-    <lastmod>2023-06-15</lastmod>
-  </url>
-  <url>
-    <loc>https://kernel.meizu.com/2016/06/04//camera-isp-intro.html/</loc>
     <lastmod>2023-06-15</lastmod>
   </url>
   <url>
