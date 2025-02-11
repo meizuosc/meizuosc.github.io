@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://kernel.meizu.com/2019/01/02/11-38-02-android-binder/</loc>
+    
+    <lastmod>2025-02-11T06:46:45.533Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2016/06/05/camera-isp-intro.html/</loc>
     
     <lastmod>2025-02-11T03:49:56.336Z</lastmod>
@@ -72,14 +79,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/08/08/17-33-25-tee_fp/</loc>
+    <loc>https://kernel.meizu.com/2016/09/02/linux-interrupt.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.569Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/09/02/linux-interrupt.html/</loc>
+    <loc>https://kernel.meizu.com/2017/08/08/17-33-25-tee_fp/</loc>
     
     <lastmod>2024-12-25T03:04:33.569Z</lastmod>
     
