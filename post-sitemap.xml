@@ -8,6 +8,14 @@
     </url>
 
     <url>
+        <loc>https://kernel.meizu.com/2019/01/02//android-binder.html/</loc>
+        <lastmod>2025-02-11T01:57:48.657Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://kernel.meizu.com/2025/01/06/%E7%A1%AC%E6%A0%B8%E5%86%85%E6%A0%B8%E6%8A%80%E6%9C%AF%EF%BC%9Airq_work%E9%80%9A%E7%94%A8%E7%A1%AC%E4%B8%AD%E6%96%AD%E5%9B%9E%E8%B0%83%E6%9C%BA%E5%88%B6%E9%A6%96%E7%89%88%E7%89%B9%E6%80%A7%E5%88%86%E6%9E%90/</loc>
         <lastmod>2025-01-06T07:30:10.708Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -161,14 +169,6 @@
 
     <url>
         <loc>https://kernel.meizu.com/2018/11/22//implementation-of-loading-fw-from-userspace.html/</loc>
-        <lastmod>2023-06-15T13:17:08.384Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://kernel.meizu.com/2019/01/01//android-binder.html/</loc>
         <lastmod>2023-06-15T13:17:08.384Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
