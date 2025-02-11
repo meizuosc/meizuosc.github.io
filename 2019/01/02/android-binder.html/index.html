@@ -20,56 +20,56 @@
         
     </title>
 
-    <link rel="canonical" href="https://kernel.meizu.com/2019/01/02/11-38-02-android-binder/">
+    <link rel="canonical" href="https://kernel.meizu.com/2019/01/02//android-binder.html/">
 
     <!-- Bootstrap Core CSS -->
     
-<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+<link rel="stylesheet" href="../../../../../css/bootstrap.min.css">
 
 
     <!-- Custom CSS --> 
     
         
-<link rel="stylesheet" href="../../../../css/dusign-light.css">
+<link rel="stylesheet" href="../../../../../css/dusign-light.css">
 
         
-<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+<link rel="stylesheet" href="../../../../../css/dusign-common-light.css">
 
         
-<link rel="stylesheet" href="../../../../css/font-awesome.css">
+<link rel="stylesheet" href="../../../../../css/font-awesome.css">
 
         
-<link rel="stylesheet" href="../../../../css/toc.css">
+<link rel="stylesheet" href="../../../../../css/toc.css">
 
         <!-- background effects end -->
     
     
     <!-- Pygments Highlight CSS -->
     
-<link rel="stylesheet" href="../../../../css/highlight.css">
+<link rel="stylesheet" href="../../../../../css/highlight.css">
 
 
     
-<link rel="stylesheet" href="../../../../css/widget.css">
+<link rel="stylesheet" href="../../../../../css/widget.css">
 
 
     
-<link rel="stylesheet" href="../../../../css/rocket.css">
+<link rel="stylesheet" href="../../../../../css/rocket.css">
 
 
     
-<link rel="stylesheet" href="../../../../css/signature.css">
+<link rel="stylesheet" href="../../../../../css/signature.css">
 
 
     
-<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+<link rel="stylesheet" href="../../../../../css/fonts.googleapis.css">
 
 
     <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
     <!-- photography -->
     
-<link rel="stylesheet" href="../../../../css/photography.css">
+<link rel="stylesheet" href="../../../../../css/photography.css">
 
 
     <!-- ga & ba script hoook -->
@@ -107,6 +107,8 @@
                 
                     <div class="post-heading">
                         <div class="tags">
+                            
+                              <a class="tag" href="/tags/#binder" title="binder">binder</a>
                             
                         </div>
                         <h1>Android Binder</h1>
@@ -663,21 +665,6 @@ service_server：<br/><br/>
             <!-- Tabe of Content -->
             <!-- Table of Contents -->
 
-    
-      
-        <aside id="sidebar">
-          <div id="toc" class="toc-article">
-          <strong class="toc-title">Contents</strong>
-          
-            
-              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#1、binder原理"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">1、binder原理</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-1、IPC函数指针"><span class="toc-nav-number">1.1.</span> <span class="toc-nav-text">1.1、IPC函数指针</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-2、IPC函数参数"><span class="toc-nav-number">1.2.</span> <span class="toc-nav-text">1.2、IPC函数参数</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-3、IPC函数返回值"><span class="toc-nav-number">1.3.</span> <span class="toc-nav-text">1.3、IPC函数返回值</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-4、binder内存"><span class="toc-nav-number">1.4.</span> <span class="toc-nav-text">1.4、binder内存</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#2、binder驱动"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">2、binder驱动</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-1、service-manager的初始化"><span class="toc-nav-number">2.1.</span> <span class="toc-nav-text">2.1、service_manager的初始化</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-2、service-server的addService"><span class="toc-nav-number">2.2.</span> <span class="toc-nav-text">2.2、service_server的addService</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-3、service-client的get-service"><span class="toc-nav-number">2.3.</span> <span class="toc-nav-text">2.3、service_client的get service</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-4、service-client调用service"><span class="toc-nav-number">2.4.</span> <span class="toc-nav-text">2.4、service_client调用service</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-5、Scatter-gather模式"><span class="toc-nav-number">2.5.</span> <span class="toc-nav-text">2.5、Scatter-gather模式</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-6、多个binder-context"><span class="toc-nav-number">2.6.</span> <span class="toc-nav-text">2.6、多个binder context</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-7、调试接口"><span class="toc-nav-number">2.7.</span> <span class="toc-nav-text">2.7、调试接口</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#3、service-manager实现"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">3、service manager实现</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#4、native实现"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">4、native实现</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-1、process-thread"><span class="toc-nav-number">4.1.</span> <span class="toc-nav-text">4.1、process&#x2F;thread</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-2、manager-proxy"><span class="toc-nav-number">4.2.</span> <span class="toc-nav-text">4.2、manager proxy</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-3、server"><span class="toc-nav-number">4.3.</span> <span class="toc-nav-text">4.3、server</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-4、client-proxy"><span class="toc-nav-number">4.4.</span> <span class="toc-nav-text">4.4、client proxy</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-5、service-thread管理"><span class="toc-nav-number">4.5.</span> <span class="toc-nav-text">4.5、service thread管理</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-6、死亡通知-DeathRecipient"><span class="toc-nav-number">4.6.</span> <span class="toc-nav-text">4.6、死亡通知(DeathRecipient)</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#5、java实现"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">5、java实现</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#6、AIDL-Android-Interface-Definition-Language"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">6、AIDL(Android Interface Definition Language)</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#参考资料："><span class="toc-nav-number">7.</span> <span class="toc-nav-text">参考资料：</span></a></li></ol>
-            
-          
-          </div>
-        </aside>
-      
-    
-
                 
             <!-- Sidebar Container -->
             <div class="
@@ -692,6 +679,8 @@ service_server：<br/><br/>
                     <h5><a href="/tags/">FEATURED TAGS</a></h5>
                     <div class="tags">
                        
+                          <a class="tag" href="/tags/#binder" title="binder">binder</a>
+                        
                     </div>
                 </section>
                 
@@ -796,22 +785,22 @@ service_server：<br/><br/>
 
 <!-- jQuery -->
 
-<script src="../../../../js/jquery.min.js"></script>
+<script src="../../../../../js/jquery.min.js"></script>
 
 
 <!-- Bootstrap Core JavaScript -->
 
-<script src="../../../../js/bootstrap.min.js"></script>
+<script src="../../../../../js/bootstrap.min.js"></script>
 
 
 <!-- Custom Theme JavaScript -->
 
-<script src="../../../../js/hux-blog.min.js"></script>
+<script src="../../../../../js/hux-blog.min.js"></script>
 
 
 <!-- Search -->
 
-<script src="../../../../js/search.js"></script>
+<script src="../../../../../js/search.js"></script>
 
 
 <!-- async load function -->
