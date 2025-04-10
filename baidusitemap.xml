@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://kernel.meizu.com/2025/04/10/Linux%20SMP%E5%90%AF%E5%8A%A8%E7%BD%97%E6%9B%BC%E5%8F%B2(%E4%B8%8B):PSCI%E7%9A%84%E5%AE%89%E5%85%A8%E5%94%A4%E9%86%92%E4%B8%8ETrustZone%E7%9A%84%E5%AF%86%E5%AE%A4%E5%8D%8F%E7%BA%A6/</loc>
+    <lastmod>2025-04-10</lastmod>
+  </url>
+  <url>
     <loc>https://kernel.meizu.com/2025/03/11/Linux%20SMP%E5%90%AF%E5%8A%A8%E7%BD%97%E6%9B%BC%E5%8F%B2(%E4%B8%8A):spin-table%E7%9A%84%E8%BD%AE%E8%AF%A2%E5%AE%9A%E6%83%85%E4%B8%8E%E7%A1%AC%E4%BB%B6%E8%A3%B8%E5%A5%94%E6%97%B6%E4%BB%A3/</loc>
     <lastmod>2025-04-10</lastmod>
   </url>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Linux SMP启动罗曼史（下）：PSCI的安全唤醒与TrustZone的密室协约 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2025/04/10/Linux SMP启动罗曼史(下):PSCI的安全唤醒与TrustZone的密室协约/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                        </div>
+                        <h1>Linux SMP启动罗曼史（下）：PSCI的安全唤醒与TrustZone的密室协约</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by FY.Lian on
+                            2025-04-10
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p><img src="1.webp" alt="图片"></p>
+<h4 id="从-spin-table-到-PSCI-的演进必要性"><a href="#从-spin-table-到-PSCI-的演进必要性" class="headerlink" title="从 spin-table 到 PSCI 的演进必要性"></a>从 spin-table 到 PSCI 的演进必要性</h4><p>尽管<strong>spin-table 机制</strong>（通过设置从核的<strong>启动地址寄存器（**</strong>CPU<strong> </strong>Release Address Register）**）能够实现多核冷启动，但其存在三大关键缺陷：</p>
+<ol>
+<li><strong>功能局限性</strong>：仅支持主核唤醒从核的冷启动操作，无法实现 CPU 热插拔、电源状态切换（IDLE/SUSPEND/RESET）等高级电源管理功能；</li>
+<li><strong>硬件耦合性</strong>：每个 SoC 需在设备树（DTB）中定义独特的<code>cpu-release-addr</code>属性，导致内核与硬件强绑定（如 NVIDIA Tegra 系列需特殊<code>reset</code>方法）；</li>
+<li><strong>安全风险</strong>：电源操作直接暴露于非安全世界（Normal World），攻击者可能通过篡改 CPU 状态寄存器实施提权攻击。</li>
+</ol>
+<p><strong>PSCI（Power State Coordination Interface）</strong> 的引入解决了上述问题，其核心设计目标包括：</p>
+<ul>
+<li><strong>标准化接口</strong>：定义跨平台的电源管理原语（如<code>CPU_ON</code>/<code>CPU_OFF</code>/<code>SYSTEM_RESET</code>），统一 ARMv8 生态的电源操作；</li>
+<li><strong>安全隔离</strong>：通过<strong>SMC（Secure Monitor Call）指令</strong>将敏感操作委托给安全世界（Secure World）执行；</li>
+<li><strong>拓扑抽象</strong>：支持多级集群（Multi-Cluster）、异构计算（Big.LITTLE）等复杂架构，通过 MPIDR（Multiprocessor Affinity Register） 标识 CPU 逻辑位置。</li>
+</ul>
+<h4 id="ATF-与-PSCI-的架构关系"><a href="#ATF-与-PSCI-的架构关系" class="headerlink" title="ATF 与 PSCI 的架构关系"></a>ATF 与 PSCI 的架构关系</h4><p><strong>ARM</strong> <strong>可信固件（ARM Trusted Firmware, ATF）</strong> 是 PSCI 的参考实现平台，其分层架构如下：</p>
+<p><img src="2.webp" alt="图片"></p>
+<h4 id="ATF-启动流程拆解"><a href="#ATF-启动流程拆解" class="headerlink" title="ATF 启动流程拆解"></a>ATF 启动流程拆解</h4><ol>
+<li><strong>BL1（Boot</strong> <strong>ROM</strong> <strong>阶段）</strong>：</li>
+<li>固化于 SoC ROM 中，作为<strong>可信根（Root of Trust）</strong>；</li>
+<li>初始化安全环境（EL3 异常向量表、系统寄存器），加载并验证 BL2 镜像的<strong>数字签名</strong>（RSA-2048/SHA-256）。</li>
+<li><strong>BL2（可信引导阶段）</strong>：</li>
+<li>解析 <strong>FIP（Firmware Image Package）</strong>格式容器，加载 BL31/BL32/BL33 组件；</li>
+<li>根据设备树（DTB）中的<code>psci</code>节点（<code>method = &quot;smc&quot;</code>）和<code>cpu-map</code>拓扑描述，构建  <strong>电源状态协调器（PSCI Coordinator）</strong>数据结构；</li>
+<li>传递<strong>动态配置信息</strong>（如 BL31 的入口地址<code>bl31_entrypoint</code>）给 BL33（通常为 U-Boot）。</li>
+<li><strong>BL31（运行时服务阶段）</strong>：</li>
+<li>常驻 EL3，作为<strong>安全监视器（Secure Monitor）</strong>；</li>
+<li>实现<strong>PSCI 服务分发器（psci_smc_handler）</strong>，处理来自内核的 SMC 调用：</li>
+</ol>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ATF源码示例（services/std_svc/psci/psci_main.c）  uintptr_t psci_smc_handler(uint32_t smc_fid, uint64_t x1, uint64_t x2, ...) &#123;  </span></span><br><span class="line">    <span class="keyword">switch</span> (smc_fid) &#123;  </span><br><span class="line">        <span class="keyword">case</span> PSCI_CPU_ON_AARCH64:  </span><br><span class="line">            <span class="keyword">return</span> psci_cpu_on(x1, x2, x3); <span class="comment">// 处理CPU启动请求  case PSCI_SYSTEM_RESET:  </span></span><br><span class="line">            <span class="function"><span class="keyword">return</span> <span class="title">psci_system_reset</span><span class="params">()</span></span>;     <span class="comment">// 处理系统复位  // 其他PSCI功能处理分支...  &#125;  </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>通过 <strong>GICv3 的 SGI（Software Generated</strong> <strong>Interrupt**</strong>）**触发从核复位，并设置其入口地址为<code>secondary_entry</code>。</li>
+</ul>
+<p><img src="3.webp" alt="图片"></p>
+<p>PSCI配置</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm64/boot/dts/arm/foundation-v8-psci.dtsi</span></span><br><span class="line"><span class="class">/ &#123;</span></span><br><span class="line"><span class="class">    <span class="class">psci </span>&#123;</span></span><br><span class="line"><span class="class">        compatible = <span class="string">"arm,psci-1.0"</span>;</span></span><br><span class="line"><span class="class">        method = <span class="string">"smc"</span>;</span></span><br><span class="line"><span class="class">    &#125;;</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">&amp;cpu0</span> &#123;</span><br><span class="line">    enable-method = <span class="string">"psci"</span>;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="variable">&amp;cpu1</span> &#123;</span><br><span class="line">    enable-method = <span class="string">"psci"</span>;</span><br><span class="line">&#125;;</span><br><span class="line">... ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>关于psci的配置可以参考内核文档：<code>Documentation/devicetree/bindings/arm/psci.txt</code></p>
+<p>在示例的dtsi中，每个cpuX节点都被添加了<code>enable-method = &quot;psci&quot;</code>属性，并且增加了psci的配置节点，表示接下来将使用psci启动SMP。配置中<code>method</code>属性指定了使用smc指令使AP核陷入EL3级（在psci-0.2之后的版本将主动忽略忽略<code>cpu_on</code>和<code>cpu_off</code>等函数 ID）。</p>
+<p>这个<code>method</code>属性可配置的值是包含smc和hvc指令，其都是从低运行级别请求高运行级别的指令，与其类似的还有svc系统调用指令。</p>
+<h4 id="bl31流程（等待唤醒）"><a href="#bl31流程（等待唤醒）" class="headerlink" title="bl31流程（等待唤醒）"></a>bl31流程（等待唤醒）</h4><p>下文以smc方式psci启动为例，由于涉及arm v8中EL3级的<code>PSCI CORE INTERFACE</code>还需结合ATF源码进行分析。</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">// plat/qemu/<span class="meta">common</span>/aarch64/plat_helpers.S</span><br><span class="line">        <span class="comment">/* -----------------------------------------------------</span></span><br><span class="line"><span class="comment">         * void plat_secondary_cold_boot_setup (void);</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * This function performs any platform specific actions</span></span><br><span class="line"><span class="comment">         * needed for a secondary cpu after a cold reset e.g</span></span><br><span class="line"><span class="comment">         * mark the cpu's presence, mechanism to place it in a</span></span><br><span class="line"><span class="comment">         * holding pen etc.</span></span><br><span class="line"><span class="comment">         * -----------------------------------------------------</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"><span class="symbol">func</span> plat_secondary_cold_boot_setup</span><br><span class="line">        <span class="comment">/* Calculate address of our hold entry */</span></span><br><span class="line">        <span class="keyword">bl </span>       plat_my_core_pos</span><br><span class="line">        <span class="keyword">lsl </span>       x0, x0, <span class="symbol">#PLAT_QEMU_HOLD_ENTRY_SHIFT</span></span><br><span class="line">        <span class="keyword">mov_imm </span>       x2, PLAT_QEMU_HOLD_BASE</span><br><span class="line">        <span class="comment">/* Wait until we have a go */</span></span><br><span class="line"><span class="symbol">poll_mailbox</span>:</span><br><span class="line">        <span class="keyword">ldr </span>       x1, [x2, x0]</span><br><span class="line">        <span class="keyword">cbz </span>       x1, <span class="number">1</span>f</span><br><span class="line">        <span class="comment">/* Clear the mailbox again ready for next time. */</span></span><br><span class="line">        <span class="keyword">mov </span>x1, <span class="symbol">#PLAT_QEMU_HOLD_STATE_WAIT</span></span><br><span class="line">        <span class="keyword">str </span>x1, [x2, x0]</span><br><span class="line">        <span class="comment">/* Jump to the provided entrypoint. */</span></span><br><span class="line">        <span class="keyword">mov_imm </span>       x0, PLAT_QEMU_TRUSTED_MAILBOX_BASE</span><br><span class="line">        <span class="keyword">ldr </span>       x1, [x0]</span><br><span class="line">        <span class="keyword">br </span>       x1</span><br><span class="line"><span class="number">1</span>:</span><br><span class="line">        <span class="keyword">wfe</span></span><br><span class="line"><span class="keyword"> </span>       <span class="keyword">b </span>       poll_mailbox</span><br><span class="line"><span class="symbol">endfunc</span> plat_secondary_cold_boot_setup</span><br></pre></td></tr></table></figure>
+<p>与前面spin-table类似地，在AP核上电后将执行到bl31的plat_secondary_cold_boot_setup方法中等待进一步的初始化。这里面比较重要的是，其首先获取了当前cpu的偏移值记录到<code>x0</code>中（这里记作pos），并通过<code>hold_base[pos]</code>检查启动许可是否有效（非零），若有效则跳转到PLAT_QEMU_TRUSTED_MAILBOX_BASE所保存的地址处；若无效则跳转到1标记处循环等待。</p>
+<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// services/std_svc/std_svc_setup.c</span><br><span class="line"><span class="comment">/* Register Standard Service Calls as runtime service */</span></span><br><span class="line">DECLARE_RT_SVC(</span><br><span class="line"><span class="built_in">                std_svc,</span></span><br><span class="line"><span class="built_in">                OEN_STD_START,</span></span><br><span class="line"><span class="built_in">                OEN_STD_END,</span></span><br><span class="line"><span class="built_in">                SMC_TYPE_FAST,</span></span><br><span class="line"><span class="built_in">                std_svc_setup,</span></span><br><span class="line">                std_svc_smc_handler</span><br><span class="line">)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+<p>接下来是BP核中的内容，首先是定义了smc运行时服务，其中就包含了后面为psci服务的任务，然后通过<code>DECLARE_RT_SVC</code>宏将服务信息添加到rt_svc_descs段（定义见bl31/bl31.ld.S）中。</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">bl31_main</span><br><span class="line">    -&gt;runtime_svc_init</span><br><span class="line"><span class="comment">// common/runtime_svc.c</span></span><br><span class="line"><span class="literal">void</span> __init runtime_svc_init(<span class="literal">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="params">...</span> <span class="params">...</span></span><br><span class="line">        for (index = <span class="number">0</span>U; index &lt; RT_SVC_DECS_NUM; index++) &#123;</span><br><span class="line">                <span class="params">...</span> <span class="params">...</span></span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * The runtime service may have separate rt_svc_desc_t</span></span><br><span class="line"><span class="comment">                 * for its fast smc and yielding smc. Since the service itself</span></span><br><span class="line"><span class="comment">                 * need to be initialized only once, only one of them will have</span></span><br><span class="line"><span class="comment">                 * an initialisation routine defined. Call the initialisation</span></span><br><span class="line"><span class="comment">                 * routine for this runtime service, if it is defined.</span></span><br><span class="line"><span class="comment">                 */</span></span><br><span class="line">                <span class="keyword">if</span> (service-&gt;init != <span class="built_in">NULL</span>) &#123;</span><br><span class="line">                        rc = service-&gt;init();</span><br><span class="line">                        <span class="keyword">if</span> (rc != <span class="number">0</span>) &#123;</span><br><span class="line">                                ERROR(<span class="string">"Error initializing runtime service %s\n"</span>,</span><br><span class="line">                                                service-&gt;name);</span><br><span class="line">                                continue;</span><br><span class="line">                        &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="params">...</span> <span class="params">...</span></span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>主要看runtime_svc_init方法中，这里遍历了所有定义的服务信息（rt_svc_descs段），并注册和初始化服务。</p>
+<figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">service-&gt;<span class="attr">init</span> = std_svc_setup</span><br><span class="line">  -&gt;psci_setup</span><br><span class="line">    -&gt;plat_setup_psci_ops</span><br><span class="line">// plat/qemu/common/qemu_pm.c</span><br><span class="line">static const plat_psci_ops_t <span class="attr">plat_qemu_psci_pm_ops</span> = &#123;</span><br><span class="line">        .<span class="attr">cpu_standby</span> = qemu_cpu_standby,</span><br><span class="line">        .<span class="attr">pwr_domain_on</span> = qemu_pwr_domain_on,</span><br><span class="line">        .<span class="attr">pwr_domain_off</span> = qemu_pwr_domain_off,</span><br><span class="line">        .<span class="attr">pwr_domain_pwr_down_wfi</span> = qemu_pwr_domain_pwr_down_wfi,</span><br><span class="line">        .<span class="attr">pwr_domain_suspend</span> = qemu_pwr_domain_suspend,</span><br><span class="line">        .<span class="attr">pwr_domain_on_finish</span> = qemu_pwr_domain_on_finish,</span><br><span class="line">        .<span class="attr">pwr_domain_suspend_finish</span> = qemu_pwr_domain_suspend_finish,</span><br><span class="line">        .<span class="attr">system_off</span> = qemu_system_off,</span><br><span class="line">        .<span class="attr">system_reset</span> = qemu_system_reset,</span><br><span class="line">        .<span class="attr">validate_power_state</span> = qemu_validate_power_state,</span><br><span class="line">&#125;;</span><br><span class="line">int plat_setup_psci_ops(uintptr_t sec_entrypoint,</span><br><span class="line">                        const plat_psci_ops_t **psci_ops)</span><br><span class="line">&#123;</span><br><span class="line">        uintptr_t *<span class="attr">mailbox</span> = (void *) PLAT_QEMU_TRUSTED_MAILBOX_BASE;</span><br><span class="line">        *<span class="attr">mailbox</span> = sec_entrypoint;</span><br><span class="line">        <span class="attr">secure_entrypoint</span> = (unsigned long) sec_entrypoint;</span><br><span class="line">        *<span class="attr">psci_ops</span> = &amp;plat_qemu_psci_pm_ops;</span><br><span class="line">        return <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在plat_qemu_psci_pm_ops中可以看到支持的各类操作，如CPU上电、下电、挂起等。这里需要关注的是qemu_pwr_domain_on方法，在后面的BP核启动AP核时会使用。</p>
+<p>在plat_setup_psci_ops方法中也配置了PLAT_QEMU_TRUSTED_MAILBOX_BASE，即BP核的入口地址。</p>
+<p>BP核启动AP核时陷入EL3。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">std_svc_smc_handler</span><br><span class="line">  -&gt;psci_smc_handler</span><br><span class="line">    -&gt;psci_cpu_on</span><br><span class="line">      -&gt;is_valid_mpidr</span><br><span class="line">      -&gt;psci_validate_entry_point    <span class="comment">// 验证入口地址有效</span></span><br><span class="line">      -&gt;psci_cpu_on_start</span><br><span class="line">        -&gt;psci_plat_pm_ops-&gt;pwr_domain_on = qemu_pwr_domain_on    <span class="comment">// 给核心上电</span></span><br><span class="line"><span class="comment">// include/lib/psci/psci.h</span></span><br><span class="line">#define PSCI_CPU_ON_AARCH32                U(<span class="number">0x84000003</span>)</span><br><span class="line">#define PSCI_CPU_ON_AARCH64                U(<span class="number">0xc4000003</span>)</span><br><span class="line"><span class="comment">// lib/psci/psci_main.c</span></span><br><span class="line"><span class="comment"><span class="markdown">/<span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="emphasis">***</span>*</span></span></span><br><span class="line"><span class="comment"><span class="markdown"><span class="bullet"> * </span>PSCI top level handler for servicing SMCs.</span></span></span><br><span class="line"><span class="comment"><span class="markdown"> <span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="emphasis">***</span>/</span></span></span><br><span class="line">u_register_t psci_smc_handler(uint32_t smc_fid,</span><br><span class="line">                          u_register_t x1,</span><br><span class="line">                          u_register_t x2,</span><br><span class="line">                          u_register_t x3,</span><br><span class="line">                          u_register_t x4,</span><br><span class="line">                          <span class="keyword">void</span> *cookie,</span><br><span class="line">                          <span class="keyword">void</span> *handle,</span><br><span class="line">                          u_register_t flags)</span><br><span class="line">&#123;</span><br><span class="line">                ... ...</span><br><span class="line">                <span class="comment">/* 64-bit PSCI function */</span></span><br><span class="line">                <span class="keyword">switch</span> (smc_fid) &#123;</span><br><span class="line">                <span class="keyword">case</span> PSCI_CPU_SUSPEND_AARCH64:</span><br><span class="line">                        ret = (u_register_t)</span><br><span class="line">                                psci_cpu_suspend((unsigned <span class="built_in">int</span>)x1, x2, x3);</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                <span class="keyword">case</span> PSCI_CPU_ON_AARCH64:</span><br><span class="line">                        ret = (u_register_t)psci_cpu_on(x1, x2, x3);</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                ... ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>bl31接收到该异常后执行std_svc_smc_handler处理函数，此处的<code>PSCI_CPU_ON_AARCH64</code>定义为0xc4000003最终调用平台相关的电源管理接口，完成cpu的上电工作。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">std_svc_smc_handler</span><br><span class="line">  -&gt;psci_smc_handler</span><br><span class="line">    -&gt;psci_cpu_on</span><br><span class="line">      -&gt;is_valid_mpidr</span><br><span class="line">      -&gt;psci_validate_entry_point    <span class="comment">// 验证入口地址有效</span></span><br><span class="line">      -&gt;psci_cpu_on_start</span><br><span class="line">        -&gt;psci_plat_pm_ops-&gt;pwr_domain_on = qemu_pwr_domain_on    <span class="comment">// 给核心上电</span></span><br><span class="line">        -&gt;cm_init_context_by_index    <span class="comment">// 通过cpu编号找到cpu_context_t，并保存cpu寄存器的值，在退出el3时进行恢复</span></span><br><span class="line">          -&gt;cm_setup_context        <span class="comment">// 设置cpu_context_t</span></span><br><span class="line"><span class="comment">// plat/qemu/common/qemu_pm.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> plat_psci_ops_t plat_qemu_psci_pm_ops = &#123;</span><br><span class="line">        .cpu_standby = qemu_cpu_standby,</span><br><span class="line">        .pwr_domain_on = qemu_pwr_domain_on,</span><br><span class="line">        .pwr_domain_off = qemu_pwr_domain_off,</span><br><span class="line">        .pwr_domain_pwr_down_wfi = qemu_pwr_domain_pwr_down_wfi,</span><br><span class="line">        .pwr_domain_suspend = qemu_pwr_domain_suspend,</span><br><span class="line">        .pwr_domain_on_finish = qemu_pwr_domain_on_finish,</span><br><span class="line">        .pwr_domain_suspend_finish = qemu_pwr_domain_suspend_finish,</span><br><span class="line">        .system_off = qemu_system_off,</span><br><span class="line">        .system_reset = qemu_system_reset,</span><br><span class="line">        .validate_power_state = qemu_validate_power_state,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// arch/arm64/kernel/psci.c</span></span><br><span class="line"><span class="comment"><span class="markdown">/<span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="emphasis">***</span>*</span></span></span><br><span class="line"><span class="comment"><span class="markdown"><span class="bullet"> * </span>Platform handler called when </span>a<span class="markdown"> power domain is about to be turned on. The</span></span></span><br><span class="line"><span class="comment"><span class="markdown"><span class="bullet"> * </span>mpidr determines </span>the<span class="markdown"> CPU to be turned on.</span></span></span><br><span class="line"><span class="comment"><span class="markdown"> <span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="strong">*****</span><span class="emphasis">***</span>/</span></span></span><br><span class="line"><span class="keyword">static</span> <span class="built_in">int</span> qemu_pwr_domain_on(u_register_t mpidr)</span><br><span class="line">&#123;</span><br><span class="line">        <span class="built_in">int</span> rc = PSCI_E_SUCCESS;</span><br><span class="line">        unsigned pos = plat_core_pos_by_mpidr(mpidr);</span><br><span class="line">        uint64_t *hold_base = (uint64_t *)PLAT_QEMU_HOLD_BASE;</span><br><span class="line">        hold_base[pos] = PLAT_QEMU_HOLD_STATE_GO;</span><br><span class="line">        sev();</span><br><span class="line">        <span class="keyword">return</span> rc;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此处先获取了BP核的偏移pos，接着将变量<code>hold_base[pos]</code>赋值为PLAT_QEMU_HOLD_STATE_GO，意味着添加了启动许可，最后调用sev指令唤醒BP核。这番操作与spin-table如出一辙，只不过一个在内核中另一个在bl31中。</p>
+<p>那么BP核就会从<code>bl31_warm_entrypoint</code>开始执行，在<code>plat_setup_psci_ops</code>中会设置（每个平台都有自己的启动地址）。在el3_exit中主要开启了mmu，配置了电源管理模块，接着使用之前保存cpu_context结构中的数据，写入到cscr_el3、spsr_el3、elr_el3，最后通过eret指令使自己进入到Linxu内核。</p>
+<h4 id="唤醒AP核"><a href="#唤醒AP核" class="headerlink" title="唤醒AP核"></a>唤醒AP核</h4><p>对比 PSCI 与 spin-table 两种机制的<code>cpu_operations</code>结构体差异，我们可以发现架构设计的重要转变：</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">//</span> 以spin-table和PSCI两种操作集对比为例</span><br><span class="line">const struct cpu_operations cpu_psci_ops = &#123;</span><br><span class="line">    <span class="string">.name</span>       = <span class="string">"psci"</span>,</span><br><span class="line">    <span class="string">.cpu_init</span>   = cpu_psci_cpu_init,    <span class="string">//</span> 仅做状态标记</span><br><span class="line">    <span class="string">.cpu_prepare=</span> cpu_psci_cpu_prepare, <span class="string">//</span> 空实现</span><br><span class="line">    <span class="string">.cpu_boot</span>   = cpu_psci_cpu_boot     <span class="string">//</span> 触发SMC调用</span><br><span class="line">&#125;;</span><br><span class="line">const struct cpu_operations cpu_spin_table_ops = &#123;</span><br><span class="line">    <span class="string">.name</span>       = <span class="string">"spin-table"</span>,</span><br><span class="line">    <span class="string">.cpu_init</span>   = spin_table_cpu_init,  <span class="string">//</span> 映射AP核启动地址</span><br><span class="line">    <span class="string">.cpu_prepare=</span> spin_table_cpu_prepare,<span class="string">//</span> 内存屏障操作</span><br><span class="line">    <span class="string">.cpu_boot</span>   = spin_table_cpu_boot   <span class="string">//</span> 写release变量</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>在 PSCI 实现中，<code>cpu_psci_cpu_boot</code>通过<code>psci_ops.cpu_on</code>发起 SMC 调用，这里隐藏着一个重要设计决策：内核不再直接操作 AP 核启动寄存器，而是将控制权移交 EL3 固件。这种抽象化处理使得同一份内核代码可以适配不同厂商的芯片实现。</p>
+<p>具体到启动参数传递：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">static <span class="built_in">int</span> cpu<span class="constructor">_psci_cpu_boot(<span class="params">unsigned</span> <span class="params">int</span> <span class="params">cpu</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    phys_addr_t pa_secondary_entry = <span class="constructor">__pa_symbol(<span class="params">secondary_entry</span>)</span>;</span><br><span class="line">    <span class="built_in">int</span> err = psci_ops.cpu<span class="constructor">_on(<span class="params">cpu_logical_map</span>(<span class="params">cpu</span>)</span>, pa_secondary_entry);</span><br><span class="line">    <span class="keyword">if</span> (err)</span><br><span class="line">        pr<span class="constructor">_err(<span class="string">"failed to boot CPU%d (%d)\n"</span>, <span class="params">cpu</span>, <span class="params">err</span>)</span>;</span><br><span class="line">    return err;</span><br><span class="line">&#125;</span><br><span class="line">psci_0_2_cpu_on</span><br><span class="line">  -&gt;__psci_cpu_on</span><br><span class="line">    -&gt;__invoke_psci_fn_smc</span><br><span class="line">      -&gt;arm_smccc_smc</span><br></pre></td></tr></table></figure>
+<p>故最终在cpu_psci_cpu_boot中调用到<code>psci_ops.cpu_on=``psci_0_2_cpu_on</code>函数，这里的第一个参数是CPU ID标识启动哪个cpu，第二个参数是AP核启动后进入内核执行的地址secondary_entry。这里的物理地址转换（<code>__pa_symbol</code>）值得注意 —— 由于 EL3 固件运行在 MMU 关闭环境，必须使用物理地址指定 AP 核的入口点。这解释了为何不能直接传递内核虚拟地址。</p>
+<p>SMC 调用的参数构造包含精心设计的位域信息：</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">arm_smccc_smc(<span class="number">0xC4000003</span>,   <span class="comment">// [bit31]快速调用 | [bit30]32位约定 | [PSCI_CPU_ON]</span></span><br><span class="line">              cpuid,        <span class="comment">// 目标CPU的MPIDR</span></span><br><span class="line">              pa_secondary_entry, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, &amp;res)</span><br></pre></td></tr></table></figure>
+<p>当 ATF 在 EL3 接收到该请求后，会执行以下关键操作序列：</p>
+<ol>
+<li>验证调用合法性（包括 MPIDR 有效性检查）</li>
+<li>配置目标 CPU 的复位向量到 secondary_entry</li>
+<li>释放目标 CPU 的复位信号</li>
+<li>清理执行上下文以保证安全状态</li>
+</ol>
+<p>AP 核最终从 secondary_entry 开始执行时，其上下文已经过 ATF 的初始化设置，包括关键寄存器的预设值和必要的安全策略加载。这比 spin-table 方案多了硬件抽象层的安全校验流程，但也带来了约 200-500 微秒的额外启动延迟（具体数值依赖芯片实现）。</p>
+<h2 id="AP核启动"><a href="#AP核启动" class="headerlink" title="AP核启动"></a>AP核启动</h2><p>上面介绍了两种AP核的启动方式，他们在进入到内核后都是从secondary_startup函数开始执行。</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">SYM_FUNC_START_LOCAL</span><span class="params">(secondary_startup)</span></span></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Common entry point for secondary CPUs.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        mov        x20, x0                                <span class="comment">// preserve boot mode</span></span><br><span class="line">        bl        finalise_el2</span><br><span class="line">        bl        __cpu_secondary_check52bitva</span><br><span class="line"><span class="selector-id">#if</span> VA_BITS &gt; <span class="number">48</span></span><br><span class="line">        ldr_l        x0, vabits_actual</span><br><span class="line">#endif</span><br><span class="line">        bl        __cpu_setup                        <span class="comment">// initialise processor</span></span><br><span class="line">        adrp        x1, swapper_pg_dir        <span class="comment">// 加载到x1，配置页表</span></span><br><span class="line">        adrp        x2, idmap_pg_dir        <span class="comment">// 加载到x2，配置页表</span></span><br><span class="line">        bl        __enable_mmu                        <span class="comment">// 使能mmu</span></span><br><span class="line">        ldr        x8, =__secondary_switched</span><br><span class="line">        br        x8</span><br><span class="line"><span class="function"><span class="title">SYM_FUNC_END</span><span class="params">(secondary_startup)</span></span></span><br><span class="line"><span class="function"><span class="title">SYM_FUNC_START_LOCAL</span><span class="params">(__secondary_switched)</span></span></span><br><span class="line">        mov        x0, x20</span><br><span class="line">        bl        set_cpu_boot_mode_flag</span><br><span class="line">        str_l        xzr, __early_cpu_boot_status, x3</span><br><span class="line">        adr_l        x5, vectors                        <span class="comment">// 设置异常向量表</span></span><br><span class="line">        msr        vbar_el1, x5</span><br><span class="line">        isb                                                        <span class="comment">// 指令同步屏障</span></span><br><span class="line">        adr_l        x0, secondary_data        <span class="comment">//获得主处理器传递过来的AP核数据</span></span><br><span class="line">        ldr        x2, [x0, #CPU_BOOT_TASK]        <span class="comment">// 获得AP核的idle进程的tsk结构</span></span><br><span class="line">        cbz        x2, __secondary_too_slow</span><br><span class="line">        init_cpu_task x2, x1, x3</span><br><span class="line"><span class="selector-id">#ifdef</span> CONFIG_ARM64_PTR_AUTH</span><br><span class="line">        ptrauth_keys_init_cpu x2, x3, x4, x5</span><br><span class="line">#endif</span><br><span class="line">        bl        secondary_start_kernel        <span class="comment">// 跳转到ｃ程序  继续执行AP核初始化</span></span><br><span class="line">        ASM_BUG()</span><br><span class="line"><span class="function"><span class="title">SYM_FUNC_END</span><span class="params">(__secondary_switched)</span></span></span><br></pre></td></tr></table></figure>
+<p>这里先保存启动模式信息，接着进行 EL2 相关配置、处理器及虚拟地址检查等操作，完成处理器初始化后加载页目录地址并启用 MMU。接着在<code>__secondary_switched</code> 函数中会设置启动模式标志、异常向量表，获取主处理器传递的数据来处理idle任务相关配置，最后调用 <code>secondary_start_kernel</code> 函数继续初始化，若流程异常则触发 <code>ASM_BUG()</code>。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm64/kernel/smp.c</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * This is the secondary CPU boot entry.  We're using this CPUs</span></span><br><span class="line"><span class="comment"> * idle thread stack, but a set of temporary page tables.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">asmlinkage notrace <span class="keyword">void</span> <span class="title">secondary_start_kernel</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 获取当前CPU的多处理器标识寄存器（MPIDR）的值，并与掩码按位与，得到用于标识当前CPU的ID，后续用于区分不同CPU等操作</span></span><br><span class="line">    u64 mpidr = read_cpuid_mpidr() &amp; MPIDR_HWID_BITMASK;</span><br><span class="line">    <span class="comment">// 指向所有内核线程共享的内存管理上下文结构体init_mm，二级CPU将关联此通用内存管理环境</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mm_struct</span> *<span class="title">mm</span> = &amp;<span class="title">init_mm</span>;</span></span><br><span class="line">    <span class="comment">// 用于获取当前CPU对应的特定操作函数集合结构体指针</span></span><br><span class="line">    <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cpu_operations</span> *<span class="title">ops</span>;</span></span><br><span class="line">    <span class="comment">// 获取当前CPU的编号，用于后续针对特定CPU的操作</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> cpu = smp_processor_id();</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * All kernel threads share the same mm context; grab a</span></span><br><span class="line"><span class="comment">     * reference and switch to it.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    mmgrab(mm);</span><br><span class="line">    current-&gt;active_mm = mm;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * TTBR0 is only used for the identity mapping at this stage. Make it</span></span><br><span class="line"><span class="comment">     * point to zero page to avoid speculatively fetching new entries.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    cpu_uninstall_idmap();</span><br><span class="line">    <span class="comment">// 如果系统使用中断优先级屏蔽机制，就进行相应的初始化，确保中断按期望的优先级规则处理</span></span><br><span class="line">    <span class="keyword">if</span> (system_uses_irq_prio_masking())</span><br><span class="line">        init_gic_priority_masking();</span><br><span class="line">    rcu_cpu_starting(cpu);</span><br><span class="line">    trace_hardirqs_off();    <span class="comment">// 关闭硬件中断的跟踪功能，减少启动阶段不必要的开销，专注于关键初始化</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * If the system has established the capabilities, make sure</span></span><br><span class="line"><span class="comment">     * this CPU ticks all of those. If it doesn't, the CPU will</span></span><br><span class="line"><span class="comment">     * fail to come online.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    check_local_cpu_capabilities();</span><br><span class="line">    ops = get_cpu_ops(cpu);    <span class="comment">// 获取当前CPU对应的操作函数集合指针，用于后续执行特定于该CPU的操作</span></span><br><span class="line">    <span class="keyword">if</span> (ops-&gt;cpu_postboot)</span><br><span class="line">        ops-&gt;cpu_postboot();    <span class="comment">// 如果存在启动后特定操作函数，就执行它，完成CPU启动后的额外初始化工作</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Log the CPU info before it is marked online and might get read.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    cpuinfo_store_cpu();</span><br><span class="line">    store_cpu_topology(cpu);</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Enable GIC and timers.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    notify_cpu_starting(cpu);</span><br><span class="line">    ipi_setup(cpu);    <span class="comment">// 进行处理器间中断（IPI）相关设置，用于建立CPU间可靠的通信机制</span></span><br><span class="line">    numa_add_cpu(cpu);    <span class="comment">// 在NUMA架构下，将当前CPU添加到NUMA相关管理结构中，便于后续内存分配等考虑CPU与内存的关系</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * OK, now it's safe to let the boot CPU continue.  Wait for</span></span><br><span class="line"><span class="comment">     * the CPU migration code to notice that the CPU is online</span></span><br><span class="line"><span class="comment">     * before we continue.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    pr_info(<span class="string">"CPU%u: Booted secondary processor 0x%010lx [0x%08x]\n"</span>,</span><br><span class="line">                     cpu, (<span class="keyword">unsigned</span> <span class="keyword">long</span>)mpidr,</span><br><span class="line">                     read_cpuid_id());</span><br><span class="line">    update_cpu_boot_status(CPU_BOOT_SUCCESS);    <span class="comment">// 将当前CPU的启动状态更新为成功启动，方便其他模块判断启动情况</span></span><br><span class="line">    set_cpu_online(cpu, <span class="literal">true</span>);    <span class="comment">// 正式将当前CPU设置为在线状态，使其可参与系统的任务调度等正常运行操作</span></span><br><span class="line">    complete(&amp;cpu_running);       <span class="comment">// 完成一个同步操作，通知其他等待的代码（如引导CPU相关代码）当前CPU已准备就绪</span></span><br><span class="line">    local_daif_restore(DAIF_PROCCTX);    <span class="comment">// 恢复本地（当前CPU）的DAIF寄存器状态到指定的进程上下文相关状态，保障中断等处理正常</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * OK, it's off to the idle thread for us</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    cpu_startup_entry(CPUHP_AP_ONLINE_IDLE);    <span class="comment">// 进入idle状态</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到从 CPU 进入到内核后所进行的一系列配置操作，获取当前 CPU 的标识相关信息（例如“mpidr”）以及编号（“cpu”），并将其与内核线程共享的内存管理上下文（“init_mm”）相关联。紧接着开展一系列初始化工作，例如处理与内存映射有关的“TTBR0”设置、中断相关功能的初始化（这些都是与处理器强相关的初始化代码，一些通用的初始化工作已由主处理器完成）。</p>
+<p>随后向系统的其他部分通告当前 CPU 已成功启动且能够参与运行，最终进入空闲线程等待调度器分配任务，至此，二级 CPU 顺利完成启动流程并融入到多处理器系统的运行之中。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>ARM64 SMP多核启动(上)- spin-table - yooooooo - 博客园</p>
+<p>ARM64 SMP多核启动(下)- PSCI - yooooooo - 博客园</p>
+<p>ChinaUnix博客 - Article Blog</p>
+<p>GitHub - u-boot/u-boot: “Das U-Boot” Source Tree</p>
+<p>GitHub - ARM-software/arm-trusted-firmware: Read-only mirror of Trusted Firmware-A</p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    
+                    <li class="next">
+                        <a href="/2025/03/11/Linux SMP启动罗曼史(上):spin-table的轮询定情与硬件裸奔时代/" data-toggle="tooltip" data-placement="top" title="Linux SMP启动罗曼史（上）：spin-table的轮询定情与硬件裸奔时代">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#从-spin-table-到-PSCI-的演进必要性"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">从 spin-table 到 PSCI 的演进必要性</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#ATF-与-PSCI-的架构关系"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">ATF 与 PSCI 的架构关系</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#ATF-启动流程拆解"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">ATF 启动流程拆解</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#bl31流程（等待唤醒）"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">bl31流程（等待唤醒）</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#唤醒AP核"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">唤醒AP核</span></a></li></ol></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#AP核启动"><span class="toc-nav-number"></span> <span class="toc-nav-text">AP核启动</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#参考"><span class="toc-nav-number"></span> <span class="toc-nav-text">参考</span></a>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
