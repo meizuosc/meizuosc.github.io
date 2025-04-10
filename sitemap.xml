@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://kernel.meizu.com/2025/03/11/Linux%2520SMP%25E5%2590%25AF%25E5%258A%25A8%25E7%25BD%2597%25E6%259B%25BC%25E5%258F%25B2(%25E4%25B8%258A):spin-table%25E7%259A%2584%25E8%25BD%25AE%25E8%25AF%25A2%25E5%25AE%259A%25E6%2583%2585%25E4%25B8%258E%25E7%25A1%25AC%25E4%25BB%25B6%25E8%25A3%25B8%25E5%25A5%2594%25E6%2597%25B6%25E4%25BB%25A3/</loc>
+    
+    <lastmod>2025-04-10T09:56:11.819Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2019/01/02/11-38-02-android-binder/</loc>
     
     <lastmod>2025-02-11T06:46:45.533Z</lastmod>
@@ -156,14 +163,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
+    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
+    <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
     
@@ -198,14 +205,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/11/linux-process-stop.html/</loc>
+    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
+    <loc>https://kernel.meizu.com/2016/07/11/linux-process-stop.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
     
@@ -261,21 +268,7 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/08/06/bfs-porting.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2016/09/12/android-m-external-storage.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2017/09/07/samsun-uboot-fastboot-command.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     
@@ -289,7 +282,7 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2018/11/23/implementation-of-loading-fw-from-userspace.html/</loc>
+    <loc>https://kernel.meizu.com/2017/09/07/samsun-uboot-fastboot-command.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     
@@ -303,7 +296,21 @@
   </url>
   
   <url>
+    <loc>https://kernel.meizu.com/2018/11/23/implementation-of-loading-fw-from-userspace.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2023/07/07/Face-recognition-block-analysis/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/08/06/bfs-porting.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     

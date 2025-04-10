@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          Linux SMP启动罗曼史（上）：spin-table的轮询定情与硬件裸奔时代 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2025/03/11/Linux SMP启动罗曼史(上):spin-table的轮询定情与硬件裸奔时代/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                        </div>
+                        <h1>Linux SMP启动罗曼史（上）：spin-table的轮询定情与硬件裸奔时代</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by FY.Lian on
+                            2025-03-11
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p><img src="1.webp" alt="图片"></p>
+<h2 id="SMP-基础概念"><a href="#SMP-基础概念" class="headerlink" title="SMP 基础概念"></a>SMP 基础概念</h2><p><strong>SMP**</strong>（Symmetric Multiprocessing）** 指多个处理器核心在单一操作系统中以对等方式协同工作的架构模式。在 ARM64 体系下，这意味着所有 CPU 核心共享统一的内存空间，且由内核调度器动态分配任务。理解这种对称性至关重要 —— 它决定了多核启动流程必须解决的核心问题：如何让从核（Secondary Cores）在正确的时间、以正确的状态加入已运行主核（Primary Core）的系统环境。</p>
+<h3 id="发展与历史"><a href="#发展与历史" class="headerlink" title="发展与历史"></a>发展与历史</h3><p>在ARM架构的发展历程中，SMP（对称多处理器）启动机制的设计与硬件演进、行业需求紧密交织。早期ARM多核处理器（如Cortex-A9/A15）因缺乏统一的电源管理标准，催生了spin-table这种过渡性方案。其设计思路源于ARMv7时代”硬件简化、软件复杂”的哲学，通过在共享内存中设置轮询标志位实现主从核同步。这种方式无需专用硬件支持，2010年前后广泛用于树莓派3等嵌入式设备，但也因持续轮询导致功耗浪费（典型场景增加5-10%功耗），且无法适应地址空间扩展和安全隔离需求。</p>
+<p>随着2013年异构计算（big.LITTLE架构）和虚拟化技术的兴起，硬件复杂度的提升倒逼标准化进程。ARM公司为此推出PSCI（Power State Coordination Interface），将其作为ARMv8架构的核心组件。该标准通过TrustZone安全环境下的固件抽象层，将核间唤醒、电源状态管理等操作封装为标准的SMC（安全监控调用）指令，既解决了不同芯片厂商的接口碎片化问题，又支持动态拓扑调整和核间中断唤醒。这种设计显著降低了系统功耗（据ARM白皮书数据，空闲状态功耗可降低22%），同时为Linux内核实现CPU热插拔、NUMA架构支持铺平了道路。</p>
+<p>技术选择的关键在于硬件代际和系统需求。早期ARMv7/ARMv8芯片因物理设计限制多采用spin-table，例如NXP LS1043A工业控制器至今仍沿用该方案以确保微秒级确定性的启动时序。而现代移动平台（如骁龙8系列）和服务器芯片（如Neoverse V2）则强制依赖PSCI，这不仅满足Android 7.0后系统对异构调度和能效优化的强制要求，还与ACPI电源管理标准深度整合，使得同一份UEFI固件可同时引导Linux和Windows系统。值得关注的是，尽管Linux内核自4.14版本开始逐步弃用spin-table（仍保留为兼容选项），但在实时操作系统（如Zephyr）和航空航天领域，其无中断延迟的特性仍具不可替代性。</p>
+<p>当前行业已形成清晰的迁移路径：PSCI 2.0规范新增了异步唤醒和错误核隔离功能，与RAS（可靠性可用性可服务性）特性协同工作，逐步覆盖从边缘计算到数据中心的完整场景。而spin-table作为技术演进中的阶段性方案，其历史价值在于为早期ARM生态提供了低成本的多核启动实现，这种”软件先行”的思路至今仍在RISC-V等新兴架构的SMP实现中可见其影响痕迹。开发者如今通过设备树的enable-method字段即可透明切换两种模式，这种兼容性设计恰是ARM生态从碎片走向标准化的缩影。</p>
+<h3 id="多核启动的关键挑战"><a href="#多核启动的关键挑战" class="headerlink" title="多核启动的关键挑战"></a>多核启动的关键挑战</h3><h3 id=""><a href="#" class="headerlink" title=" "></a> </h3><p><strong>1. 核间同步困境</strong><br>当主核完成内核初始化时，从核可能仍处于复位状态或执行 Bootloader 代码。这需要设计精确的唤醒协议，例如：</p>
+<ul>
+<li>基于内存屏障的 spin-table 机制</li>
+<li>依托固件的 PSCI 标准唤醒</li>
+<li>硬件辅助的核间中断 (IPI) 触发</li>
+</ul>
+<p><strong>2. 启动顺序依赖性</strong><br>下图展示了典型的多核启动时序冲突：<br><img src="2.webp" alt="图片"><br>若从核在内核未完成关键资源初始化（如页表、异常向量表）时启动，将导致不可预测的竞态条件。</p>
+<p><strong>3. 异构地址空间映射</strong><br>主核在启动过程中会逐步开启 MMU，而从核唤醒时可能面临：</p>
+<ul>
+<li>物理地址与虚拟地址的转换不一致</li>
+<li>不同 CPU 的页表同步机制</li>
+<li>缓存一致性协议 (Cache Coherency) 的激活时机</li>
+</ul>
+<p><strong>4. 固件与内核的职责边界</strong><br>以 PSCI 方案为例，ARM Trusted Firmware (ATF) 需处理：</p>
+<ul>
+<li>CPU 电源状态管理</li>
+<li>安全与非安全世界的上下文切换</li>
+<li>启动参数的合法性验证<br>而内核则负责准备 CPU 操作集和调度就绪状态。</li>
+</ul>
+<h3 id="本文分析基础"><a href="#本文分析基础" class="headerlink" title="本文分析基础"></a>本文分析基础</h3><p>基于 Linux 6.1 内核的 ARM64 架构实现，我们聚焦以下前提：</p>
+<ol>
+<li>单核启动已完成且稳定运行（<code>cpu0</code>完成<code>start_kernel</code>初始化）</li>
+<li>SoC 符合 ARM 启动协议（如 CPU 离线状态定义、设备树规范）</li>
+<li>分析范围涵盖主流启动方案（spin-table/PSCI）</li>
+</ol>
+<p>u-boot GitHub - u-boot/u-boot at v2025.01-rc4</p>
+<p>ATF GitHub - ARM-software/arm-trusted-firmware at v2.12.0</p>
+<h2 id="定义cpu"><a href="#定义cpu" class="headerlink" title="定义cpu"></a>定义cpu</h2><p>在 SMP 架构的冷启动阶段，系统呈现一种特殊的 “单核工作态”—— 仅有引导处理器（Bootstrap Processor，简称 BP）处于执行状态，其余应用处理器（Application Processors，AP）则处于断电或复位状态。这种设计源于硬件资源的初始化顺序需求：BP 需要首先完成内存控制器初始化、设备树解析等关键操作，为后续多核协同工作建立基础环境。<br>（思考：为什么不能在上电时直接启动所有处理器？这涉及硬件资源竞争的问题 —— 若多个核心同时访问未初始化的 DRAM 控制器，可能导致总线死锁）<br>内核通过五个核心状态掩码（cpu_*_mask）来勾画处理器的生命周期，这些掩码在多核启动过程中扮演着状态路由器的角色。其中与冷启动强相关的三个关键掩码为：</p>
+<ol>
+<li><strong>cpu_possible_mask</strong>在设备树解析阶段确立，表示物理存在的 CPU 集合。对于固定拓扑的嵌入式系统，该掩码在启动早期即被固化。</li>
+<li><strong>cpu_present_mask</strong>反映当前可被操作系统识别的 CPU 集合。在支持 CPU 热插拔的系统中，该掩码会动态变化；而在本文讨论的 SMP 启动场景中，其内容与 cpu_possible_mask 始终一致。</li>
+<li><strong>cpu_online_mask</strong>标志着已完成内核初始化的活跃 CPU 集合。BP 核在启动阶段通过<code>set_cpu_online()</code>函数将每个完成初始化的 AP 核加入该掩码，调度器依据此掩码分配任务。</li>
+</ol>
+<h2 id="内核启动"><a href="#内核启动" class="headerlink" title="内核启动"></a>内核启动</h2><p><img src="3.webp" alt="图片"><br>在 ARM64 体系架构的启动序列中，<code>setup_arch()</code>作为架构相关初始化的入口点，在完成设备树解析、内存映射等基础工作后，将控制权移交至<code>smp_prepare_cpus()</code>。这个过渡标志着系统从单核运行态向多核就绪态的转变，其核心任务是为后续 AP 核启动建立硬件抽象层。</p>
+<h3 id="smp-prepare-cpus"><a href="#smp-prepare-cpus" class="headerlink" title="smp_prepare_cpus"></a>smp_prepare_cpus</h3><p>作为 SMP 启动的 “硬件适配层”，该函数承担着三项关键使命：<br><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm64/kernel/smp.c</span></span><br><span class="line">void __init smp<span class="constructor">_prepare_cpus(<span class="params">unsigned</span> <span class="params">int</span> <span class="params">max_cpus</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    const <span class="keyword">struct</span> cpu_operations *ops;</span><br><span class="line">    <span class="built_in">int</span> err;</span><br><span class="line">    unsigned <span class="built_in">int</span> cpu;</span><br><span class="line">    unsigned <span class="built_in">int</span> this_cpu;</span><br><span class="line">     <span class="comment">// 拓扑信息初始化</span></span><br><span class="line">    init<span class="constructor">_cpu_topology()</span>;</span><br><span class="line">    this_cpu = smp<span class="constructor">_processor_id()</span>;</span><br><span class="line">    store<span class="constructor">_cpu_topology(<span class="params">this_cpu</span>)</span>;</span><br><span class="line">    <span class="comment">// NUMA域构建</span></span><br><span class="line">    numa<span class="constructor">_store_cpu_info(<span class="params">this_cpu</span>)</span>;</span><br><span class="line">    numa<span class="constructor">_add_cpu(<span class="params">this_cpu</span>)</span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * If UP is mandated by "nosmp" (which implies "maxcpus=0"), don't set</span></span><br><span class="line"><span class="comment">     * secondary CPUs present.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (max_cpus<span class="operator"> == </span><span class="number">0</span>)  <span class="comment">// 处理nosmp启动模式</span></span><br><span class="line">        return;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Initialise the present map (which describes the set of CPUs</span></span><br><span class="line"><span class="comment">     * actually populated at the present time) and release the</span></span><br><span class="line"><span class="comment">     * secondaries from the bootloader.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     <span class="comment">// AP核准备循环</span></span><br><span class="line">    for<span class="constructor">_each_possible_cpu(<span class="params">cpu</span>)</span> &#123;</span><br><span class="line">        per<span class="constructor">_cpu(<span class="params">cpu_number</span>, <span class="params">cpu</span>)</span> = cpu;</span><br><span class="line">        <span class="keyword">if</span> (cpu<span class="operator"> == </span>smp<span class="constructor">_processor_id()</span>)</span><br><span class="line">            continue;</span><br><span class="line">        ops = get<span class="constructor">_cpu_ops(<span class="params">cpu</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (!ops)</span><br><span class="line">            continue;</span><br><span class="line">        err = ops-&gt;cpu<span class="constructor">_prepare(<span class="params">cpu</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (err)</span><br><span class="line">            continue;</span><br><span class="line">        set<span class="constructor">_cpu_present(<span class="params">cpu</span>, <span class="params">true</span>)</span>;</span><br><span class="line">        numa<span class="constructor">_store_cpu_info(<span class="params">cpu</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>1. 拓扑发现与建模<br>通过<code>init_cpu_topology()</code>解析设备树中的<code>/cpus</code>节点，构建包括 Socket/Cluster/Core 等层级的拓扑结构。该信息直接影响调度域划分和缓存一致性协议选择，例如：</p>
+<ul>
+<li>共享 LLC 的核组成调度域</li>
+<li>跨 Cluster 通信使用 CCI-400 总线协议</li>
+<li>核心休眠状态根据拓扑层级递进</li>
+</ul>
+<p>2. NUMA 域初始化<br>在 NUMA 架构中（ARM移动平台一般不使用），<code>numa_store_cpu_info()</code>将当前 BP 核注册到其所属的内存节点，为后续的<code>zonelist</code>生成提供基础。该操作确保在 AP 核唤醒前，内存分配策略已具备 NUMA 感知能力。</p>
+<p>3. AP 核硬件预配置<br>循环遍历<code>possible</code>掩码中的每个候选 AP 核：</p>
+<ol>
+<li><strong>获取操作集</strong>：<code>get_cpu_ops()</code>根据设备树<code>enable-method</code>字段返回 spin_table/psci 等具体实现</li>
+<li><strong>执行核级准备</strong>：如 spin_table 需配置 holding pen 地址，PSCI 需验证固件版本</li>
+<li><strong>更新 present 掩码</strong>：成功预配的核被标记为 present，纳入调度器管理范围<br>（注释：max_cpus 参数可被<code>nr_cpus=</code>启动选项覆盖，实现动态核数限制）</li>
+</ol>
+<h4 id="启动参数与核数控制"><a href="#启动参数与核数控制" class="headerlink" title="启动参数与核数控制"></a>启动参数与核数控制</h4><p><code>NR_CPUS</code>作为编译期确定的硬限制，定义了内核支持的最大逻辑处理器数。其实际影响体现在：</p>
+<ol>
+<li><strong>内存占用</strong>：percpu 数据区、调度队列等结构体按 NR_CPUS 预分配</li>
+<li><strong>热插拔上限</strong>：运行时激活的 CPU 数不可超过 NR_CPUS</li>
+<li><strong>位图尺寸优化</strong>：cpumask 等结构体使用 BITS_TO_LONGS (NR_CPUS) 计算存储单元<br>但真正的运行时限制由<code>setup_max_cpus</code>变量控制，该值可通过启动参数<code>maxcpus=</code>动态调整。这种双层控制机制使得：</li>
+</ol>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 允许后续热插拔至32核，但启动时仅激活4核</span></span><br><span class="line"><span class="attribute">maxcpus</span>=4 <span class="attribute">nr_cpus</span>=32</span><br></pre></td></tr></table></figure>
+<p>smp_init<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// kernel/smp.c</span></span><br><span class="line"><span class="comment">/* Called by boot processor to activate the rest. */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> __init <span class="title">smp_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> num_nodes, num_cpus;</span><br><span class="line">    idle_threads_init();</span><br><span class="line">    cpuhp_threads_init();</span><br><span class="line">    pr_info(<span class="string">"Bringing up secondary CPUs ...\n"</span>);</span><br><span class="line">    bringup_nonboot_cpus(setup_max_cpus);</span><br><span class="line">    num_nodes = num_online_nodes();</span><br><span class="line">    num_cpus  = num_online_cpus();</span><br><span class="line">    pr_info(<span class="string">"Brought up %d node%s, %d CPU%s\n"</span>,</span><br><span class="line">        num_nodes, (num_nodes &gt; <span class="number">1</span> ? <span class="string">"s"</span> : <span class="string">""</span>),</span><br><span class="line">        num_cpus,  (num_cpus  &gt; <span class="number">1</span> ? <span class="string">"s"</span> : <span class="string">""</span>));</span><br><span class="line">    <span class="comment">/* Any cleanup work */</span></span><br><span class="line">    smp_cpus_done(setup_max_cpus);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>smps_init</code> 函数主要是由BP核（通常是 CPU0）调用，用于激活系统中其余的处理器（也就是除BP核之外的其他 CPU），并且在完成激活操作后进行一些相关的信息统计和清理工作，是 Linux 内核在多处理器（SMP）系统启动阶段的一个关键函数，协调多个 CPU 从初始状态进入到可正常参与系统运行的状态。</p>
+<ul>
+<li><strong><code>idle_threads_init();</code></strong>：</li>
+</ul>
+<p>这个函数主要负责初始化每个 CPU 的空闲线程（idle thread）相关资源和状态。在多处理器系统中，当一个 CPU 暂时没有任务可执行时，就会运行空闲线程，空闲线程会进行一些诸如电源管理（让 CPU 进入低功耗状态等）、等待新任务到来等操作。该函数会为每个 CPU 创建合适的空闲线程环境，设置好其初始的执行上下文、栈空间等相关要素，确保各个 CPU 在空闲时有正确的行为逻辑，为整个系统的节能以及 CPU 空闲时的管理奠定基础。</p>
+<ul>
+<li><strong><code>cpuhp_threads_init();</code></strong>：</li>
+</ul>
+<p><code>cpuhp_threads_init</code> 函数会创建和配置这些用于 CPU 热插拔管理的线程，注册相应的回调函数等，使得内核具备处理 CPU 热插拔事件的能力，提高系统的灵活性和可扩展性。</p>
+<ul>
+<li><strong><code>bringup_nonboot_cpus(setup_max_cpus);</code></strong>：</li>
+</ul>
+<p><code>bringup_nonboot_cpus</code> 函数承担着激活非引导 CPU（也就是除了最先启动的那个 CPU 之外的其他 CPU）的重要任务，它接收 <code>setup_max_cpus</code> 作为参数，前面提到过 <code>setup_max_cpus</code> 定义了系统准备激活的最大 CPU 数量。将其纳入到内核的 CPU 管理体系中，以便后续能参与系统的任务调度等操作。</p>
+<ul>
+<li><strong><code>num_nodes = num_online_nodes();</code></strong>和 <code>num_cpus = num_online_cpus();</code>：</li>
+</ul>
+<ul>
+<li><p><code>num_online_nodes()</code> 函数获取目前在线节点的数量，让 <code>num_nodes</code> 反映当前系统中实际可正常使用的 NUMA 节点个数。</p>
+</li>
+<li><p><code>num_online_cpus()</code> 函数获取目前在线的cpu数量，使 <code>num_cpus</code> 代表当前系统中真正能够运行任务的 CPU 数量。</p>
+</li>
+</ul>
+<ul>
+<li><strong><code>smp_cpus_done(setup_max_cpus);</code></strong>：</li>
+</ul>
+<p>在所有 CPU 激活以及相关统计信息输出之后，调用 <code>smp_cpus_done</code> 函数，该函数由具体的平台定义，进行一些后续的清理或者收尾工作。主要涉及到释放一些在 CPU 启动过程中临时占用的资源、完成一些和 CPU 启动相关的状态标记清理等操作，确保系统处于一个稳定且合理的状态，完成从 CPU 启动激活阶段到后续正常运行阶段的平稳过渡。</p>
+<h2 id="SMP启动方式"><a href="#SMP启动方式" class="headerlink" title="SMP启动方式"></a>SMP启动方式</h2><ul>
+<li><h3 id="spin-table"><a href="#spin-table" class="headerlink" title="spin-table"></a>spin-table</h3>在剖析自旋表唤醒机制时，我们首先关注处理器上电后的执行流向。所有物理核（BP 核与 AP 核）初始均由芯片内置的 ROM code 引导，该固化程序完成基础时钟和内存控制器的初始化后，BP 核与 AP 核开始出现执行路径分化。此时 BP 核按常规启动流程接管引导加载程序控制权，逐步向<strong>内核</strong>执行环境过渡；而 AP 核则陷入由<strong>引导加载程序预设的自旋等待区</strong>（以 U-Boot 的 spin_table_secondary_jump 函数为典型实现），其本质是通过轮询内存中特定地址的状态字来维持待机姿态。</li>
+</ul>
+<h4 id="1-U-Boot-流程（等待唤醒）"><a href="#1-U-Boot-流程（等待唤醒）" class="headerlink" title="1. U-Boot 流程（等待唤醒）"></a>1. U-Boot 流程（等待唤醒）</h4><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">//</span> arch/arm/cpu/armv8/start.S</span><br><span class="line"><span class="string">.globl</span>        _start</span><br><span class="line">_start:</span><br><span class="line"><span class="string">...</span> <span class="string">...</span></span><br><span class="line"><span class="comment">#if defined(CONFIG_ARMV8_SPIN_TABLE) &amp;&amp; !defined(CONFIG_XPL_BUILD)</span></span><br><span class="line">        branch_<span class="keyword">if</span>_master x0, master_cpu    <span class="string">//</span> 若为BP则跳转master_cpu</span><br><span class="line">        b        spin_table_secondary_jump <span class="string">//</span> AP核进入自旋</span><br><span class="line">        /* never return */</span><br><span class="line"><span class="string">...</span> <span class="string">...</span></span><br></pre></td></tr></table></figure>
+<p>在所有核上电后将执行到 U-Boot 的<code>_start</code>方法中检查AP核。这里的branch_if_master宏通过读取 MPIDR_EL1 寄存器中的 Affinity 字段，结合设备树中定义的 CPU 节点信息，精确识别当前执行的是启动核心（BP）还是从属核心（AP）。</p>
+<p>当确认为 AP 核后，执行流将跳转到<code>spin_table_secondary_jump</code>段，这段代码构建了从核的等待逻辑：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm/cpu/armv8/spin_table_v8.S</span></span><br><span class="line"><span class="function"><span class="title">ENTRY</span><span class="params">(spin_table_secondary_jump)</span></span></span><br><span class="line"><span class="selector-class">.globl</span> spin_table_reserve_begin</span><br><span class="line">spin_table_reserve_begin:</span><br><span class="line"><span class="number">0</span>:        wfe</span><br><span class="line">        ldr        x0, spin_table_cpu_release_addr <span class="comment">// 加载释放地址到寄存器</span></span><br><span class="line">        cbz        x0, <span class="number">0</span>b <span class="comment">// 地址未就绪则继续等待</span></span><br><span class="line">        br        x0      <span class="comment">// 跳转到指定地址执行</span></span><br><span class="line"><span class="selector-class">.globl</span> spin_table_cpu_release_addr</span><br><span class="line">        <span class="selector-class">.align</span>        <span class="number">3</span></span><br><span class="line">spin_table_cpu_release_addr:</span><br><span class="line">        <span class="selector-class">.quad</span>        <span class="number">0</span></span><br><span class="line"><span class="selector-class">.globl</span> spin_table_reserve_end</span><br><span class="line">spin_table_reserve_end:</span><br><span class="line"><span class="function"><span class="title">ENDPROC</span><span class="params">(spin_table_secondary_jump)</span></span></span><br></pre></td></tr></table></figure>
+<p>这段指令序列展现了 spin-table 机制的核心思想：AP 核通过<code>wfe</code>指令进入低功耗等待状态，其唤醒完全依赖 BP 核设置的<code>spin_table_cpu_release_addr</code>物理地址。当 BP 核完成必要的系统初始化（如内存控制器配置、页表建立等）后，会向该地址写入启动地址并触发<code>sev</code>指令广播事件。这种设计使得 AP 核的唤醒时机完全可控。</p>
+<p>值得注意的是<code>spin_table_cpu_release_addr</code>在初始状态下为零值，这强制 AP 核必须等待 BP 核显式设置有效地址后才能继续执行。这种同步机制虽然保证了启动顺序，但也带来了潜在的启动延迟问题。当 AP 核检测到非零值时，<code>br x0</code>指令将执行流转移到 BP 核预设的启动代码，在那里继续执行后续初始化流程。</p>
+<p>整个流程中硬件指令（如 wfe/sev）与软件约定的完美配合，展现了早期 ARM 多核启动设计的精妙之处。</p>
+<p>释放地址的传递机制通过设备树完成。U-Boot 在启动阶段通过<code>spin_table_update_dt()</code>函数将<code>spin_table_cpu_release_addr</code>的物理地址注入设备树的<code>cpu-release-addr</code>属性：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm/cpu/armv8/spin_table.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">spin_table_update_dt</span><span class="params">(<span class="keyword">void</span> *fdt)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        ... ...</span><br><span class="line">        <span class="keyword">for</span> (offset = fdt_first_subnode(fdt, cpus_offset);</span><br><span class="line">             offset &gt;= <span class="number">0</span>;</span><br><span class="line">             offset = fdt_next_subnode(fdt, offset)) &#123;</span><br><span class="line">                ... ...</span><br><span class="line">                <span class="comment">/*</span></span><br><span class="line"><span class="comment">                 * In the first loop, we check if every CPU node specifies</span></span><br><span class="line"><span class="comment">                 * spin-table.  Otherwise, just return successfully to not</span></span><br><span class="line"><span class="comment">                 * disturb other methods, like psci.</span></span><br><span class="line"><span class="comment">                 */</span>    <span class="comment">// 若不是以spin-table方式启动则退出</span></span><br><span class="line">                prop = fdt_getprop(fdt, offset, <span class="string">"enable-method"</span>, <span class="literal">NULL</span>);</span><br><span class="line">                <span class="keyword">if</span> (!prop || <span class="built_in">strcmp</span>(prop, <span class="string">"spin-table"</span>))</span><br><span class="line">                        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (offset = fdt_first_subnode(fdt, cpus_offset);</span><br><span class="line">             offset &gt;= <span class="number">0</span>;</span><br><span class="line">             offset = fdt_next_subnode(fdt, offset)) &#123;</span><br><span class="line">                prop = fdt_getprop(fdt, offset, <span class="string">"device_type"</span>, <span class="literal">NULL</span>);</span><br><span class="line">                <span class="keyword">if</span> (!prop || <span class="built_in">strcmp</span>(prop, <span class="string">"cpu"</span>))</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                <span class="comment">// 配置各cpu节点的"cpu-release-addr"属性</span></span><br><span class="line">                ret = fdt_setprop_u64(fdt, offset, <span class="string">"cpu-release-addr"</span>,</span><br><span class="line">                                (<span class="keyword">unsigned</span> <span class="keyword">long</span>)&amp;spin_table_cpu_release_addr);</span><br><span class="line">                <span class="keyword">if</span> (ret)</span><br><span class="line">                        <span class="keyword">return</span> -ENOSPC;</span><br><span class="line">        &#125;</span><br><span class="line">        ... ...</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="2-唤醒AP核"><a href="#2-唤醒AP核" class="headerlink" title="2. 唤醒AP核"></a>2. 唤醒AP核</h4><p>内核初始化阶段通过以下调用链获取<code>spin_table_cpu_release_addr</code>的物理地址：</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">setup_arch   <span class="comment">//arch/arm64/kernel/setup.c</span></span><br><span class="line">  -&gt;smp_init_cpus  <span class="comment">//arch/arm64/kernel/smp.c</span></span><br><span class="line">    -&gt;smp_cpu_setup</span><br><span class="line">      -&gt;cpu_ops[cpu]-&gt;cpu_init(cpu)</span><br><span class="line">        -&gt;smp_spin_table_cpu_init  <span class="comment">//arch/arm64/kernel/smp_spin_table.c</span></span><br></pre></td></tr></table></figure>
+<p>具体实现中，<code>smp_spin_table_cpu_init()</code>从设备树解析出<code>cpu-release-addr</code>值，存储到<code>cpu_release_addr[]</code>（NR_CPUS个元素的数组）供后续使用：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm64/kernel/smp_spin_table.c</span></span><br><span class="line"><span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cpu_operations</span> <span class="title">smp_spin_table_ops</span> = &#123;</span></span><br><span class="line">    .name       = <span class="string">"spin-table"</span>,</span><br><span class="line">    .cpu_init   = smp_spin_table_cpu_init,</span><br><span class="line">    .cpu_prepare    = smp_spin_table_cpu_prepare,</span><br><span class="line">    .cpu_boot   = smp_spin_table_cpu_boot,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">smp_spin_table_cpu_init</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> cpu)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ... ...</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Determine the address from which the CPU is polling.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    ret = of_property_read_u64(dn, <span class="string">"cpu-release-addr"</span>,</span><br><span class="line">                   &amp;cpu_release_addr[cpu]);</span><br><span class="line">    ... ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用路径如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">smp_spin_table_cpu_prepare</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> cpu)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    __le64 __iomem *release_addr;</span><br><span class="line">    <span class="comment">// 获取secondary_holding_pen的物理地址，它是启动AP核的关键符号的物理地址</span></span><br><span class="line">    <span class="keyword">phys_addr_t</span> pa_holding_pen = __pa_symbol(secondary_holding_pen);</span><br><span class="line">    <span class="comment">// 检查对应CPU编号的释放地址是否存在（不为0），若不存在则返回 -ENODEV，无法进行后续准备工作</span></span><br><span class="line">    <span class="keyword">if</span> (!cpu_release_addr[cpu])</span><br><span class="line">        <span class="keyword">return</span> -ENODEV;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * The cpu-release-addr may or may not be inside the linear mapping.</span></span><br><span class="line"><span class="comment">     * As ioremap_cache will either give us a new mapping or reuse the</span></span><br><span class="line"><span class="comment">     * existing linear mapping, we can use it to cover both cases. In</span></span><br><span class="line"><span class="comment">     * either case the memory will be MT_NORMAL.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     <span class="comment">// 将AP核对应的释放地址物理地址映射到内核虚拟地址空间，方便后续操作</span></span><br><span class="line">    release_addr = ioremap_cache(cpu_release_addr[cpu],</span><br><span class="line">                     <span class="keyword">sizeof</span>(*release_addr));</span><br><span class="line">    <span class="keyword">if</span> (!release_addr)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * We write the release address as LE regardless of the native</span></span><br><span class="line"><span class="comment">     * endianness of the kernel. Therefore, any boot-loaders that</span></span><br><span class="line"><span class="comment">     * read this address need to convert this address to the</span></span><br><span class="line"><span class="comment">     * boot-loader's endianness before jumping. This is mandated by</span></span><br><span class="line"><span class="comment">     * the boot protocol.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     <span class="comment">// 将pa_holding_pen（secondary_holding_pen对应的物理地址）写入到release_addr所指向的内存地址处</span></span><br><span class="line">    writeq_relaxed(pa_holding_pen, release_addr);</span><br><span class="line">    dcache_clean_inval_poc((__force <span class="keyword">unsigned</span> <span class="keyword">long</span>)release_addr,</span><br><span class="line">                (__force <span class="keyword">unsigned</span> <span class="keyword">long</span>)release_addr +</span><br><span class="line">                    <span class="keyword">sizeof</span>(*release_addr));</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Send an event to wake up the secondary CPU.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    sev();</span><br><span class="line">    iounmap(release_addr);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在代码中， <code>writeq_relaxed(pa_holding_pen, release_addr);</code> 操作很关键，它将 <code>secondary_holding_pen</code> 的物理地址写入到AP核的释放地址处（由 <code>release_addr</code> 指向）。因为 <code>secondary_holding_pen</code> 原本是内核中的一个符号，对应的是虚拟地址，故这里需要转化为物理地址写到相应的释放地址位置，以此来向AP核传递启动相关的关键信息。</p>
+<p>而下面的 <code>sev();</code> 语句，其作用是唤醒处于等待状态（执行了 <code>wfe</code> 指令后的等待状态）的AP核，告诉它相关启动准备工作已就绪，可以继续后续的启动流程了。</p>
+<p>我们再次回顾AP核睡眠等待相关情况：在汇编函数 <code>spin_table_secondary_jump</code> 中，AP核处于睡眠等待状态，被唤醒后会接着执行 <code>wfe</code> 指令之后的几行指令，会去判断 <code>spin_table_cpu_release_addr</code> 地址处的内容是否为0。而此时，由于BP核已经通过前面的操作往这个地址写入了有效的释放地址（也就是前面提到的 <code>secondary_holding_pen</code> 对应的物理地址相关信息），所以不会再跳回等待状态，而是会跳转到 <code>secondary_holding_pen</code> 处去执行后续代码。需要注意的是，这个 <code>secondary_holding_pen</code> 地址是物理地址，并且AP核在这个阶段还没有开启MMU，<strong>它还没有进入到虚拟地址的世界，依然是基于物理地址来执行相应指令的</strong>。</p>
+<h4 id="3-进入内核空间（再次自旋）"><a href="#3-进入内核空间（再次自旋）" class="headerlink" title="3. 进入内核空间（再次自旋）"></a>3. 进入内核空间（再次自旋）</h4><p>一旦AP核获得了释放地址，它会直接基于这个物理地址进入到内核相关的执行流程中去执行后续指令，开始融入整个系统的运行，逐步完成自身的启动过程，进而参与到多处理器系统的协同工作之中。</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm64/kernel/head.S</span></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * This provides a "holding pen" for platforms to hold all secondary</span></span><br><span class="line"><span class="comment">         * cores are held until we're ready for them to initialise.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line"><span class="function"><span class="title">SYM_FUNC_START</span><span class="params">(secondary_holding_pen)</span></span></span><br><span class="line">        bl        init_kernel_el                        <span class="comment">// w0=cpu_boot_mode</span></span><br><span class="line">        mrs        x2, mpidr_el1    <span class="comment">// 读取多处理器标识寄存器（MPIDR）在EL1异常级别下的值到x2寄存器，用于后续区分不同的CPU</span></span><br><span class="line">        mov_q        x1, MPIDR_HWID_BITMASK</span><br><span class="line">        and        x2, x2, x1    <span class="comment">// 通过与操作，MPIDR_HWID_BITMASK &amp; x2（MPIDR值）获取当前CPU的唯一标识</span></span><br><span class="line">        adr_l        x3, secondary_holding_pen_release</span><br><span class="line">pen:        ldr        x4, [x3]</span><br><span class="line">        cmp        x4, x2    <span class="comment">// 读取secondary_holding_pen_release的值，用于和当前CPU的标识进行比较</span></span><br><span class="line">        <span class="selector-tag">b</span><span class="selector-class">.eq</span>        secondary_startup    <span class="comment">// 如果相等（即当前CPU满足启动条件），跳转到secondary_startup处开始执行启动流程</span></span><br><span class="line">        wfe</span><br><span class="line">        <span class="selector-tag">b</span>        pen        <span class="comment">// 否则跳转到pen标签处，继续循环检查启动条件（读取内存地址值并比较）</span></span><br><span class="line"><span class="function"><span class="title">SYM_FUNC_END</span><span class="params">(secondary_holding_pen)</span></span></span><br></pre></td></tr></table></figure>
+<p>但是从代码来看这个发展与预想的有点不同，这里又加了个循环。首先他获取了当前 CPU 的唯一标识，以便区分不同的 CPU 个体，后续依靠这个标识来判断是否是当前 CPU 可以启动。</p>
+<p>然后获取 <code>secondary_holding_pen_release</code> 变量的值和当前 CPU 的标识（<code>x2</code> 寄存器的值）进行比较。如果二者相等，意味着当前 CPU 满足了启动条件，就会跳转到 <code>secondary_startup</code> 处去执行后续的启动流程，开始正式的初始化等操作。</p>
+<p>要是比较结果不相等，说明当前 CPU 还没达到启动条件，此时就会执行 <code>wfe</code> 指令，让 CPU 进入等待状态。之后跳回 <code>pen</code> 标签处，继续循环检查启动条件，也就是再次读取内存地址的值并和当前 CPU 标识进行比较，如此反复，直到满足启动条件才会跳出这个循环去执行后续的启动流程，使得多个AP核能有序地等待并在合适时机进入初始化及参与系统运行的阶段。</p>
+<h4 id="4-最终启动AP核"><a href="#4-最终启动AP核" class="headerlink" title="4. 最终启动AP核"></a>4. 最终启动AP核</h4><p>那么<code>secondary_holding_pen_release</code>何时会设置呢？答案是最终要启动AP核的时候。</p>
+<p>调用路径如下：</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">start_kernel</span><br><span class="line">  -&gt;arch_call_rest_init</span><br><span class="line">    -&gt;rest_init</span><br><span class="line">      -&gt;kernel_init</span><br><span class="line">        -&gt;kernel_init_freeable</span><br><span class="line">          -&gt;smp_init  <span class="comment">// kernel/smp.c  (这是AP核启动的函数)</span></span><br><span class="line">            -&gt;bringup_nonboot_cpus</span><br><span class="line">              -&gt;cpu_up</span><br><span class="line">                -&gt;_cpu_up</span><br><span class="line">                  -&gt;cpuhp_up_callbacks  <span class="comment">// kernel/cpu.c</span></span><br><span class="line">                    -&gt;__cpuhp_invoke_callback_range</span><br><span class="line">                      -&gt;cpuhp_invoke_callback <span class="comment">// cb = step-&gt;startup.single</span></span><br><span class="line">                        -&gt;cpuhp_hp_states[CPUHP_BRINGUP_CPU]</span><br><span class="line">                          -&gt;bringup_cpu</span><br><span class="line">                            -&gt;__cpu_up    <span class="comment">// arch/arm64/kernel/smp.c</span></span><br><span class="line">                              -&gt;boot_secondary</span><br><span class="line">                                -&gt;cpu_ops[cpu]-&gt;cpu_boot(cpu)</span><br><span class="line">                                  -&gt;smp_spin_table_cpu_boot <span class="comment">//arch/arm64/kernel/smp_spin_table.c</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="string">//</span> kernel/cpu.c</span><br><span class="line"><span class="string">//</span> bringup_cpu 函数间接调用方式参考</span><br><span class="line">/* Boot processor state steps */</span><br><span class="line">static struct cpuhp_step cpuhp_hp_states[] = &#123;</span><br><span class="line">    <span class="string">...</span> <span class="string">...</span></span><br><span class="line">    /* Kicks the plugged cpu into life */</span><br><span class="line">    [CPUHP_BRINGUP_CPU] = &#123;</span><br><span class="line">        <span class="string">.name</span>           = <span class="string">"cpu:bringup"</span>,</span><br><span class="line">        <span class="string">.startup.single</span>     = bringup_cpu,</span><br><span class="line">        <span class="string">.teardown.single</span>    = finish_cpu,</span><br><span class="line">        <span class="string">.cant_stop</span>      = <span class="literal">true</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">...</span> <span class="string">...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// arch/arm64/kernel/smp_spin_table.c</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Write secondary_holding_pen_release in a way that is guaranteed to be</span></span><br><span class="line"><span class="comment"> * visible to all observers, irrespective of whether they're taking part</span></span><br><span class="line"><span class="comment"> * in coherency or not.  This is necessary for the hotplug code to work</span></span><br><span class="line"><span class="comment"> * reliably.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">write_pen_release</span><span class="params">(u64 val)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">void</span> *start = (<span class="keyword">void</span> *)&amp;secondary_holding_pen_release;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="built_in">size</span> = <span class="keyword">sizeof</span>(secondary_holding_pen_release);</span><br><span class="line">    secondary_holding_pen_release = val;</span><br><span class="line">    dcache_clean_inval_poc((<span class="keyword">unsigned</span> <span class="keyword">long</span>)start, (<span class="keyword">unsigned</span> <span class="keyword">long</span>)start + <span class="built_in">size</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">smp_spin_table_cpu_boot</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> cpu)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Update the pen release flag.</span></span><br><span class="line"><span class="comment">     */</span> <span class="comment">// 将需要启动的CPU标识写入secondary_holding_pen_release</span></span><br><span class="line">    write_pen_release(cpu_logical_map(cpu));</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Send an event, causing the secondaries to read pen_release.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    sev();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里将AP核标识写到了<code>secondary_holding_pen_release</code>中，然后唤醒AP核，对应进入到secondary_startup，来做AP核的初始化工作（如设置ｍｍｕ，异常向量表等），最终进入自己的idle任务。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p><img src="4.webp" alt="图片"></p>
+<p>spin-table方式的SMP启动方式，从名字也可以看出他是通过让AP核处于自旋的等待，直至BP核在适当的时机将其唤醒，之后共同由内核调度。下面将简单总结下其主要的流程：</p>
+<ol>
+<li><p>BP核、AP核在上电后都开始工作，BP核负责完成整个系统的引导和初始化，并创建起多个进程；AP核一般运行到bootloader后进入自旋（wfe睡眠），等待被BP核唤醒；</p>
+</li>
+<li><p>BP核进入内核后会通过smp_spin_table_cpu_prepare方法设置AP核的释放地址为secondary_holding_pen这个内核函数，并通过sev指令唤醒AP核；</p>
+</li>
+<li><p>AP核跳转到secondary_holding_pen开始执行（进入内核世界），接着等待secondary_holding_pen_release变量与该CPU标识一致，否则进入自旋（wfe睡眠）；</p>
+</li>
+<li><p>BP核将基础的内核组件都初始化之后，调用smp_init开始真正启动AP核，通过smp_spin_table_cpu_boot方法将待启动的AP核CPU标识写入secondary_holding_pen_release中，并通过sev指令唤醒AP核；</p>
+</li>
+<li><p>AP核接着进入secondary_startup执行（设置自己异常向量表，初始化mmu等），最终在idle线程中执行wfi睡眠；（所有的AP核操作相同）</p>
+</li>
+<li><p>BP核继续执行初始化流程，直到启动init进程，而被启动的AP核都可以调度进程以及均衡负载；</p>
+</li>
+</ol>
+<p>下一篇《Linux SMP启动罗曼史（下）：PSCI的安全唤醒与TrustZone的密室协约》，我们将继续介绍向 PSCI 的演进。</p>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    
+                    <li class="next">
+                        <a href="/2025/01/06/硬核内核技术：irq_work通用硬中断回调机制首版特性分析/" data-toggle="tooltip" data-placement="top" title="硬核内核技术：irq_work通用硬中断回调机制首版特性分析">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#SMP-基础概念"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">SMP 基础概念</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#发展与历史"><span class="toc-nav-number">1.1.</span> <span class="toc-nav-text">发展与历史</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#多核启动的关键挑战"><span class="toc-nav-number">1.2.</span> <span class="toc-nav-text">多核启动的关键挑战</span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#"><span class="toc-nav-number">1.3.</span> <span class="toc-nav-text"> </span></a></li><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#本文分析基础"><span class="toc-nav-number">1.4.</span> <span class="toc-nav-text">本文分析基础</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#定义cpu"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">定义cpu</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#内核启动"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">内核启动</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#smp-prepare-cpus"><span class="toc-nav-number">3.1.</span> <span class="toc-nav-text">smp_prepare_cpus</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#启动参数与核数控制"><span class="toc-nav-number">3.1.1.</span> <span class="toc-nav-text">启动参数与核数控制</span></a></li></ol></li></ol></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#SMP启动方式"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">SMP启动方式</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-3"><a class="toc-nav-link" href="#spin-table"><span class="toc-nav-number">4.1.</span> <span class="toc-nav-text">spin-table</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#1-U-Boot-流程（等待唤醒）"><span class="toc-nav-number">4.1.1.</span> <span class="toc-nav-text">1. U-Boot 流程（等待唤醒）</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#2-唤醒AP核"><span class="toc-nav-number">4.1.2.</span> <span class="toc-nav-text">2. 唤醒AP核</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#3-进入内核空间（再次自旋）"><span class="toc-nav-number">4.1.3.</span> <span class="toc-nav-text">3. 进入内核空间（再次自旋）</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#4-最终启动AP核"><span class="toc-nav-number">4.1.4.</span> <span class="toc-nav-text">4. 最终启动AP核</span></a></li><li class="toc-nav-item toc-nav-level-4"><a class="toc-nav-link" href="#小结"><span class="toc-nav-number">4.1.5.</span> <span class="toc-nav-text">小结</span></a></li></ol></li></ol></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
