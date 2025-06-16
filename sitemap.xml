@@ -2,16 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://kernel.meizu.com/2025/06/16/contpte-ptep-get%25E7%259A%2584%25E4%25BC%2598%25E5%258C%2596/</loc>
+    <loc>https://kernel.meizu.com/2025/06/16/%25E9%25B8%25BF%25E8%2592%2599%25E5%25BE%25AE%25E5%2586%2585%25E6%25A0%25B8%25E8%25A7%25A3%25E8%25AF%25BB/</loc>
     
-    <lastmod>2025-06-16T06:06:25.438Z</lastmod>
+    <lastmod>2025-06-16T09:26:38.274Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2025/06/16/%25E9%25B8%25BF%25E8%2592%2599%25E5%25BE%25AE%25E5%2586%2585%25E6%25A0%25B8%25E8%25A7%25A3%25E8%25AF%25BB/</loc>
+    <loc>https://kernel.meizu.com/2025/06/16/contpte-ptep-get%25E7%259A%2584%25E4%25BC%2598%25E5%258C%2596/</loc>
     
-    <lastmod>2025-06-16T05:52:37.921Z</lastmod>
+    <lastmod>2025-06-16T06:06:25.438Z</lastmod>
     
   </url>
   
@@ -184,14 +184,7 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/08/12/linux-selinux-intro.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.561Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/09/19/android-design-pattern-singleton.html/</loc>
+    <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
     
@@ -205,7 +198,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
+    <loc>https://kernel.meizu.com/2016/08/12/linux-selinux-intro.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.561Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/09/19/android-design-pattern-singleton.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
     
@@ -233,13 +233,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/25/linux-dead-lock-detect-lockdep.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.557Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
@@ -247,7 +240,21 @@
   </url>
   
   <url>
+    <loc>https://kernel.meizu.com/2016/07/25/linux-dead-lock-detect-lockdep.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.557Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2016/08/21/linux-workqueue.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.557Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
     
@@ -275,13 +282,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.557Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2018/07/12/linux-time.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
@@ -303,14 +303,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/11/18/memory%2520management%2520-%2520ion.html/</loc>
+    <loc>https://kernel.meizu.com/2017/09/07/samsun-uboot-fastboot-command.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/09/07/samsun-uboot-fastboot-command.html/</loc>
+    <loc>https://kernel.meizu.com/2017/11/18/memory%2520management%2520-%2520ion.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     
@@ -380,14 +380,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/about/index.html</loc>
+    <loc>https://kernel.meizu.com/archive/index.html</loc>
     
     <lastmod>2024-12-25T03:04:33.541Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/archive/index.html</loc>
+    <loc>https://kernel.meizu.com/about/index.html</loc>
     
     <lastmod>2024-12-25T03:04:33.541Z</lastmod>
     
