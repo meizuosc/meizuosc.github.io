@@ -4,6 +4,25 @@
   
     
     <entry>
+      <title>鸿蒙微内核解读</title>
+      <link href="/2025/06/16/%E9%B8%BF%E8%92%99%E5%BE%AE%E5%86%85%E6%A0%B8%E8%A7%A3%E8%AF%BB/"/>
+      <url>/2025/06/16/%E9%B8%BF%E8%92%99%E5%BE%AE%E5%86%85%E6%A0%B8%E8%A7%A3%E8%AF%BB/</url>
+      
+        <content type="html"><![CDATA[<p>去年的存货拿出来发下，外行看内行，如有错漏，请指正。国内基础软件蓬勃发展，甚至车企也开源了自研操作系统。</p><p><img src="0.webp" alt=""></p><p><img src="1.webp" alt=""></p><p><img src="2.webp" alt=""></p><p><img src="3.webp" alt=""></p><p><img src="4.webp" alt=""></p><p><img src="5.webp" alt=""></p><p><img src="6.webp" alt=""></p><p><img src="7.webp" alt=""></p><p><img src="8.webp" alt=""></p><p><img src="9.webp" alt=""></p><p><img src="10.webp" alt=""></p><p><img src="11.webp" alt=""></p><p><img src="12.webp" alt=""></p><p><img src="13.webp" alt=""></p><p><img src="14.webp" alt=""></p><p><img src="15.webp" alt=""></p><p><img src="16.webp" alt=""></p><p><img src="17.webp" alt=""></p><p><img src="18.webp" alt=""></p><p><img src="19.webp" alt=""></p><p><img src="20.webp" alt=""></p><p><img src="21.webp" alt=""></p><p><img src="22.webp" alt=""></p><p><img src="23.webp" alt=""></p><p><img src="24.webp" alt=""></p><p><img src="25.webp" alt=""></p><p><img src="26.webp" alt=""></p><p><img src="27.webp" alt=""></p><p><img src="28.webp" alt=""></p><p><img src="29.webp" alt=""><br><img src="30.webp" alt=""></p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> 新闻 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Linux SMP启动罗曼史（下）：PSCI的安全唤醒与TrustZone的密室协约</title>
       <link href="/2025/04/10/Linux%20SMP%E5%90%AF%E5%8A%A8%E7%BD%97%E6%9B%BC%E5%8F%B2(%E4%B8%8B):PSCI%E7%9A%84%E5%AE%89%E5%85%A8%E5%94%A4%E9%86%92%E4%B8%8ETrustZone%E7%9A%84%E5%AF%86%E5%AE%A4%E5%8D%8F%E7%BA%A6/"/>
       <url>/2025/04/10/Linux%20SMP%E5%90%AF%E5%8A%A8%E7%BD%97%E6%9B%BC%E5%8F%B2(%E4%B8%8B):PSCI%E7%9A%84%E5%AE%89%E5%85%A8%E5%94%A4%E9%86%92%E4%B8%8ETrustZone%E7%9A%84%E5%AF%86%E5%AE%A4%E5%8D%8F%E7%BA%A6/</url>

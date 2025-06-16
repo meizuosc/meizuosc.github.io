@@ -342,9 +342,52 @@
 
     
 
+    
+
 
 
 <!-- Main Content -->
+
+    
+
+        <div class="post-preview">
+
+            <a href="/2016/07/11//linux-process-stop.html/">
+                <h2 class="post-title">
+                    Linux 进程中 Stop, Park, Freeze
+                </h2>
+                <h3 class="post-subtitle">
+                    
+                </h3>
+                <div class="post-content-preview">
+                    在调试内核的时候，经常会碰到几个相近的概念：进程 stop、进程 park、进程 freeze。这几个名词看起来都是停止进程，那么他们之间的区别和应用场景在分别是什么呢？下面就来分析一番。
+
+本文的代码分析基于 Linux kernel 3.18.22，最好的学习方法还是 “RTFSC”
+
+1. 进程 stop进程 stop 分成两种：用户进程 stop 和内核进程 stop。
+用户进程 s......
+                </div>
+            </a>
+            
+                <p class="post-meta" style="margin: 10px 0;">
+                    Posted by Peng Weilin on
+                    2016-07-11
+                </p>
+                <div class="tags">
+                    
+                      <a href="/tags/#kthread_stop" title="kthread_stop">kthread_stop</a>
+                    
+                      <a href="/tags/#kthread_park" title="kthread_park">kthread_park</a>
+                    
+                      <a href="/tags/#freeze_processes" title="freeze_processes">freeze_processes</a>
+                    
+                </div>
+            
+
+        </div>
+        <hr>
+
+    
 
     
 
@@ -680,42 +723,6 @@ Framework    这一......
 
     
 
-    
-
-        <div class="post-preview">
-
-            <a href="/2016/04/15//intro-wrapfs.html/">
-                <h2 class="post-title">
-                    WrapFS 简介
-                </h2>
-                <h3 class="post-subtitle">
-                    
-                </h3>
-                <div class="post-content-preview">
-                    初识 WrapFSWrapFS 是一种堆栈式文件系统，堆栈式文件系统的一个基本功能就是把操作和参数转换成底层文件系统的操作和参数。这就意味着我们会在 WrapFS 层上创建一个文件对象后会在底层文件对应着创建一个对象，要说明的是，WrapFS 层的这个文件对象只保存在内存里面，断电后会消失，真正文件里面的数据保存在底层文件系统里面。
-
-WrapFS 的意义从 WrapFS 的发明者有这样的回......
-                </div>
-            </a>
-            
-                <p class="post-meta" style="margin: 10px 0;">
-                    Posted by Li Yong on
-                    2016-04-15
-                </p>
-                <div class="tags">
-                    
-                      <a href="/tags/#Linux" title="Linux">Linux</a>
-                    
-                      <a href="/tags/#WrapFS" title="WrapFS">WrapFS</a>
-                    
-                </div>
-            
-
-        </div>
-        <hr>
-
-    
-
 
 
 <!-- Pager -->
@@ -980,6 +987,8 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
             
         
+            
+        
     </div>
 </section>
 
@@ -1049,6 +1058,10 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
     <ul>
       
         <li>
+          <a href="../../2025/06/16/%E9%B8%BF%E8%92%99%E5%BE%AE%E5%86%85%E6%A0%B8%E8%A7%A3%E8%AF%BB/">鸿蒙微内核解读</a>
+        </li>
+      
+        <li>
           <a href="../../2025/04/10/Linux%20SMP%E5%90%AF%E5%8A%A8%E7%BD%97%E6%9B%BC%E5%8F%B2(%E4%B8%8B):PSCI%E7%9A%84%E5%AE%89%E5%85%A8%E5%94%A4%E9%86%92%E4%B8%8ETrustZone%E7%9A%84%E5%AF%86%E5%AE%A4%E5%8D%8F%E7%BA%A6/">Linux SMP启动罗曼史（下）：PSCI的安全唤醒与TrustZone的密室协约</a>
         </li>
       
@@ -1062,10 +1075,6 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
       
         <li>
           <a href="../../2024/12/25/%E7%89%A9%E6%A0%BC%E8%80%8C%E5%90%8E%E7%9F%A5%E8%87%B3-WALT%E8%B0%83%E5%BA%A6%E5%99%A8%E4%B9%8BRTG/">物格而后知至：WALT调度器之RTG</a>
-        </li>
-      
-        <li>
-          <a href="../../2024/12/06/Submit-patch-implementations-to-the-Linux-kernel-community/">向 Linux 内核社区提交 patch 实操要点</a>
         </li>
       
     </ul>
@@ -1088,7 +1097,7 @@ WrapFS 的意义从 WrapFS 的发明者有这样的回......
         
     <h5>ARCHIVES</h5>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2025/04/">April 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2025/03/">March 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2025/01/">January 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/12/">December 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/07/">July 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/05/">May 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/03/">March 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="../2025/06/">June 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2025/04/">April 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2025/03/">March 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2025/01/">January 2025</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/12/">December 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/07/">July 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/05/">May 2024</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/03/">March 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2024/01/">January 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/12/">December 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/11/">November 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/10/">October 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2023/07/">July 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2019/01/">January 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/11/">November 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/07/">July 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2018/03/">March 2018</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/12/">December 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/11/">November 2017</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/09/">September 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/08/">August 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2017/03/">March 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/10/">October 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/09/">September 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/08/">August 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/07/">July 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/06/">June 2016</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/05/">May 2016</a><span class="archive-list-count">5</span></li><li class="archive-list-item"><a class="archive-list-link" href="../2016/04/">April 2016</a><span class="archive-list-count">2</span></li></ul>
     </div>
 
         <hr>
