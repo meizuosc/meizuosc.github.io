@@ -4,7 +4,7 @@
   <url>
     <loc>https://kernel.meizu.com/2025/06/16/contpte-ptep-get%25E7%259A%2584%25E4%25BC%2598%25E5%258C%2596/</loc>
     
-    <lastmod>2025-06-16T05:58:07.578Z</lastmod>
+    <lastmod>2025-06-16T06:06:25.438Z</lastmod>
     
   </url>
   
@@ -184,20 +184,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.561Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.561Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2016/08/12/linux-selinux-intro.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
@@ -206,6 +192,20 @@
   
   <url>
     <loc>https://kernel.meizu.com/2016/09/19/android-design-pattern-singleton.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.561Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/07/16/linux-thermal-framework-intro.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.561Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/06/19/nonlinear-regression.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
     
@@ -226,13 +226,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.557Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2016/07/11/linux-process-stop.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
@@ -247,14 +240,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/08/21/linux-workqueue.html/</loc>
+    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
+    <loc>https://kernel.meizu.com/2016/08/21/linux-workqueue.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
     
@@ -282,9 +275,23 @@
   </url>
   
   <url>
+    <loc>https://kernel.meizu.com/2017/03/06/18-40-19-dump_stack/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.557Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://kernel.meizu.com/2018/07/12/linux-time.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2016/08/06/bfs-porting.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     
   </url>
   
@@ -325,13 +332,6 @@
   
   <url>
     <loc>https://kernel.meizu.com/2023/07/07/Face-recognition-block-analysis/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://kernel.meizu.com/2016/08/06/bfs-porting.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     
