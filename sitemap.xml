@@ -205,14 +205,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/08/12/linux-selinux-intro.html/</loc>
+    <loc>https://kernel.meizu.com/2016/09/19/android-design-pattern-singleton.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/09/19/android-design-pattern-singleton.html/</loc>
+    <loc>https://kernel.meizu.com/2016/08/12/linux-selinux-intro.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.561Z</lastmod>
     
@@ -240,14 +240,14 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
+    <loc>https://kernel.meizu.com/2016/07/25/linux-dead-lock-detect-lockdep.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2016/07/25/linux-dead-lock-detect-lockdep.html/</loc>
+    <loc>https://kernel.meizu.com/2016/07/20/linux-tick-and-tickless.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.557Z</lastmod>
     
@@ -310,13 +310,6 @@
   </url>
   
   <url>
-    <loc>https://kernel.meizu.com/2017/09/07/samsun-uboot-fastboot-command.html/</loc>
-    
-    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://kernel.meizu.com/2017/11/18/memory%2520management%2520-%2520ion.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
@@ -325,6 +318,13 @@
   
   <url>
     <loc>https://kernel.meizu.com/2018/03/21/device-tree.html/</loc>
+    
+    <lastmod>2024-12-25T03:04:33.553Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://kernel.meizu.com/2017/09/07/samsun-uboot-fastboot-command.html/</loc>
     
     <lastmod>2024-12-25T03:04:33.553Z</lastmod>
     
