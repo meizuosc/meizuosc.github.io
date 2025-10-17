@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI" />
+    <meta name="baidu-site-verification" content="093lY4ziMu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="description" content="一个有内涵的技术分享平台">
+    <meta name="keyword"  content="meizu,kernel,魅族">
+    <link rel="shortcut icon" href="/img/ironman-draw.png">
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!--<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>-->
+    <title>
+        
+          动态内存：相机内存优化最佳实践 - 魅族内核团队
+        
+    </title>
+
+    <link rel="canonical" href="https://kernel.meizu.com/2025/10/17/动态内存:相机内存优化最佳实践/">
+
+    <!-- Bootstrap Core CSS -->
+    
+<link rel="stylesheet" href="../../../../css/bootstrap.min.css">
+
+
+    <!-- Custom CSS --> 
+    
+        
+<link rel="stylesheet" href="../../../../css/dusign-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/dusign-common-light.css">
+
+        
+<link rel="stylesheet" href="../../../../css/font-awesome.css">
+
+        
+<link rel="stylesheet" href="../../../../css/toc.css">
+
+        <!-- background effects end -->
+    
+    
+    <!-- Pygments Highlight CSS -->
+    
+<link rel="stylesheet" href="../../../../css/highlight.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/widget.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/rocket.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/signature.css">
+
+
+    
+<link rel="stylesheet" href="../../../../css/fonts.googleapis.css">
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+    <!-- photography -->
+    
+<link rel="stylesheet" href="../../../../css/photography.css">
+
+
+    <!-- ga & ba script hoook -->
+    <script></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<!-- hack iOS CSS :active style -->
+<body ontouchstart="">
+
+    <!-- background effects start -->
+    
+    <!-- background effects end -->
+
+	<!-- Modified by Yu-Hsuan Yen -->
+<!-- Post Header -->
+<style type="text/css">
+    header.intro-header{
+        
+            
+                background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../../../../img/default.jpg')
+                /*post*/
+            
+        
+    }
+    
+</style>
+
+<header class="intro-header" >
+    <!-- Signature -->
+    <div id="signature">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                
+                    <div class="post-heading">
+                        <div class="tags">
+                            
+                        </div>
+                        <h1>动态内存：相机内存优化最佳实践</h1>
+                        <h2 class="subheading"></h2>
+                        <span class="meta">
+                            Posted by Sida on
+                            2025-10-17
+                        </span>
+
+                        
+
+                    </div>
+                
+
+                </div>
+            </div>
+        </div>      
+    </div>
+
+    
+    <div class="waveWrapper">
+        <div class="wave wave_before" style="background-image: url('/img/wave-light.png')"></div>
+        <div class="wave wave_after" style="background-image: url('/img/wave-light.png')"></div>
+    </div>
+    
+</header>
+
+	
+    <!-- Navigation -->
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">魅族内核团队</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <!-- Known Issue, found by Hux:
+            <nav>'s height woule be hold on by its content.
+            so, when navbar scale out, the <nav> will cover tags.
+            also mask any touch event of tags, unfortunately.
+        -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+
+                    
+
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/about/">About</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/archive/">Archives</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/categories/">Categories</a>
+                        </li>
+                        
+                    
+
+                        
+                        <li>
+                            <a href="/tags/">Tags</a>
+                        </li>
+                        
+                    
+                    
+                    
+                </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+<script>
+    // Drop Bootstarp low-performance Navbar
+    // Use customize navbar with high-quality material design animation
+    // in high-perf jank-free CSS3 implementation
+    var $body   = document.body;
+    var $toggle = document.querySelector('.navbar-toggle');
+    var $navbar = document.querySelector('#huxblog_navbar');
+    var $collapse = document.querySelector('.navbar-collapse');
+
+    $toggle.addEventListener('click', handleMagic)
+    function handleMagic(e){
+        if ($navbar.className.indexOf('in') > 0) {
+        // CLOSE
+            $navbar.className = " ";
+            // wait until animation end.
+            setTimeout(function(){
+                // prevent frequently toggle
+                if($navbar.className.indexOf('in') < 0) {
+                    $collapse.style.height = "0px"
+                }
+            },400)
+        }else{
+        // OPEN
+            $collapse.style.height = "auto"
+            $navbar.className += " in";
+        }
+    }
+</script>
+
+
+    <!-- Main Content -->
+    <!-- Post Content -->
+<article>
+    <div class="container">
+        <div class="row">
+
+            <!-- Post Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                post-container">
+
+                <p><img src="0.webp" alt=""></p>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p><img src="1.webp" alt=""></p>
+<h1 id="小米15系列上手体验：能效给力，系统大优化！"><a href="#小米15系列上手体验：能效给力，系统大优化！" class="headerlink" title="小米15系列上手体验：能效给力，系统大优化！"></a>小米15系列上手体验：能效给力，系统大优化！</h1><p><a href="https://www.bilibili.com/video/BV1WWyDYvEr8/?spm\_id\_from=333.1391.0.0&amp;vd\_source=d40c628083484b38118269fc7a813647" target="_blank" rel="noopener">https://www.bilibili.com/video/BV1WWyDYvEr8/?spm\_id\_from=333.1391.0.0&amp;vd\_source=d40c628083484b38118269fc7a813647</a></p>
+<p>在小米 15 的评测视频里看到动态内存特性，其中说的是 4/16/32/64K，甚至相机可以使用超大内存页面：2MB。近 2 年来，上游 Linux 内核社区非常热门的优化赛道就是大页内存，甚至说，各家手机终端厂商都推出了动态大页等特性（各家有各家的方案）。要知道，苹果早早就用上了 16K 页粒度，而 Andoird 阵营一直使用 4K 页粒度，直到  Android 15 才开始推进 16K 页粒度（静态），然而周期漫长，应用生态兼容困难，一部分应用无法运行。需要重新编译内核和应用。更大的页粒度可以大幅减少地址转换的开销和缺页异常次数。下面，我们针对图中的相机大页内存这一个点，讲讲可行的方案。</p>
+<h1 id="原理简介"><a href="#原理简介" class="headerlink" title="原理简介"></a>原理简介</h1><p>内存优化的一个重要方法论，就是对于性能和稳定性要求高的模块，独自维护专属的内存池，如 gpu / wlan 等驱动。基于 dma-buf 框架的 systemp heap 分配接口的优点：</p>
+<ul>
+<li><p>提供标准化的内存共享基础设施</p>
+</li>
+<li><p>实现真正的零拷贝数据传输通道</p>
+</li>
+<li><p>简化多设备多子系统协同工作的复杂性</p>
+</li>
+<li><p>保证内存 dma 能力和缓存一致性</p>
+</li>
+</ul>
+<p>camera 作为内存大户，需要从 dma-buf 中分配大量的 system_heap 内存，在内存紧缺时 system_heap 大部分内存可能已被其他进程占用，导致 camera 内存分配速度变慢。随着使用时间的增加，系统内存碎片化也变得严重，camera 需要大量的内存用于 dma 传输，碎片化的内存用于 dma 传输效率很低。这些内存问题使得相机开启速度、相机界面流畅度、扫码开启速度等用户体验受到一定的影响。</p>
+<p>为了在低内存和碎片化严重的场景下 camera 也能有较好的使用体验，在 system_heap 中单独开辟一块 camera_pool 内存池专门为 camera 预留一部分内存，camera 相关的进程可以从中直接获取内存，而不需要走 alloc_page。同时 camera_pool 内存池中预留了更多的大页来保证 camera 可以使用更多连续的物理内存用于 dma 传输，使数据的传输速度更快。</p>
+<h1 id="实现方案"><a href="#实现方案" class="headerlink" title="实现方案"></a>实现方案</h1><p>原生 system heap 使用轻量页池动态缓存，在分配内存时如果页池中有空闲页则获取没有则走 alloc_page 申请新的页；不区分应用程序，内存分配先到先得；没有专门对大页进行优先处理。通过创建 camera_pool 内存池来针对上述特征进行改进，优化 camera 的内存分配，同时预留了小部分内存供 display 使用。</p>
+<p>在系统初始化时 camera_pool 从系统中分配 576MB，其中 512MB 用于 camera，64MB 用于 display 和其他应用。按照复合大页 2MB、64KB、4KB 三种大小按需分配给应用。在 camera 服务和 display 服务启动时将其 pid 记录到 camera_pool 中，只有相应服务子线程分配 dma-buf 时，才可以从中分配。在 system heap 分配和回收内存的函数中插入 camera_pool 相应接口，camera 服务和 display 服务优先通过接口从 camera_pool 内存池中获取和释放内存。</p>
+<p>camera_pool 注册了shrink 接口，在系统内存非常紧缺时将 pool 的一部分内存回收返回给 buddy 系统，尽可能减少对系统的负面影响。回收时优先回收 4KB 页，再到 64KB 页，最后是 2MB 页，尽可能给大页更多的存活机会。 同时 camera_pool 的一个工作线程会通过水位和实际使用量，在需要时动态填充 camera_pool。</p>
+<p>随着相机使用，可能存在 camera_pool 中 2MB 和 64KB 大页内存不断被分走，同时不断被填充 4KB 的单页内存，最终导致 camera_pool 内 4KB 的碎片化内存越来越多，这样也会导致分配和使用效率变低。通过限制其中 4KB 的总容量最多为 100MB，64KB 的最多 200MB，可以最大程度保证 camera_pool 中的大页数量。</p>
+<p><img src="2.webp" alt=""></p>
+<p><img src="3.webp" alt=""></p>
+<p><img src="4.webp" alt=""></p>
+<h1 id="收益测试"><a href="#收益测试" class="headerlink" title="收益测试"></a>收益测试</h1><p>为了测试结果更贴近现实，在每次相机测试前都经过随机内存老化，来模拟用户日常随机使用的情况。内存紧缺场景的老化停止条件设置为 FreeMem 约 400M，swap 使用率 80%，cpu 负载不超过 10%。在不同测试样例下对比开启和关闭 camera_pool 时的内存分配速度和打开相机到画面出现清晰图像的耗时。</p>
+<h2 id="1-内存紧缺场景-camera-内存分配速度提升-10-倍"><a href="#1-内存紧缺场景-camera-内存分配速度提升-10-倍" class="headerlink" title="1. 内存紧缺场景 camera 内存分配速度提升 10 倍"></a>1. 内存紧缺场景 camera 内存分配速度提升 10 倍</h2><p>针对内存宽松和内存紧缺场景，分别对比开启和关闭 camera_pool 功能的内存分配速度。在内存宽松场景下内存分配速度相差不大，因为 system_heap 和系统内存的剩余量充足，即使没有 camera_pool 也能基本满足内存需求，走 alloc_page 从系统分配内存也很快。而在内存紧缺场景下，开启 camera_pool 平均内存分配速度提升10倍以上。!<br><a href="5.webp"></a></p>
+<h2 id="2-三方相机打开速度提升-18"><a href="#2-三方相机打开速度提升-18" class="headerlink" title="2. 三方相机打开速度提升 18%"></a>2. 三方相机打开速度提升 18%</h2><p>开启 camera_pool 后相机清晰成像时间从 1870 ms 减少到 1532 ms，提升约 18% 。关闭 camera_pool 时相机受系统内存和 system_heap 内存状态的影响较大，相机打开速度存在较大浮动，而开启 camera_pool 时相机的启动时间则相对稳定。</p>
+<p><img src="6.webp" alt=""></p>
+<h2 id="3-微信扫一扫打开速度提升-14"><a href="#3-微信扫一扫打开速度提升-14" class="headerlink" title="3.  微信扫一扫打开速度提升 14%"></a>3.  微信扫一扫打开速度提升 14%</h2><p>点击微信扫一扫到出现清晰图像时间，开启 camera_pool 平均为 690ms，不开启为 810ms，提升 14%</p>
+<p><img src="7.webp" alt=""></p>
+<h2 id="4-系统扫一扫打开速度提升10"><a href="#4-系统扫一扫打开速度提升10" class="headerlink" title="4. 系统扫一扫打开速度提升10%"></a>4. 系统扫一扫打开速度提升10%</h2><p>flyme 系统自带的扫一扫工具清晰成像时间，开启 camera_pool 平均为 799ms，不开启为 885ms，提升 10%</p>
+<p><img src="8.webp" alt=""></p>
+<h2 id="5-浏览器扫一扫打开速度提升6-8"><a href="#5-浏览器扫一扫打开速度提升6-8" class="headerlink" title="5. 浏览器扫一扫打开速度提升6.8%"></a>5. 浏览器扫一扫打开速度提升6.8%</h2><p>flyme 系统自带浏览器扫一扫清晰成像时间，开启 camera_pool 平均为 695ms，不开启为 746ms，提升 6.8</p>
+<p><img src="9.webp" alt=""></p>
+<h1 id="损耗测试"><a href="#损耗测试" class="headerlink" title="损耗测试"></a>损耗测试</h1><h2 id="1-后台保活测试"><a href="#1-后台保活测试" class="headerlink" title="1. 后台保活测试"></a>1. 后台保活测试</h2><p>由于 camera_pool 预留了 512M 内存给 camera，理论上可能会影响后台保活数量，但由于注册了 shrink 接口，在系统内存紧缺的时候会从 camera_pool 中回收一部分内存，所以对系统内存的影响有限。运行保活模型测试，对比开启和关闭 camera_pool 时保活数，测试结果为开启和关闭 camera_pool 时保活数量基本一致，开启 camera_pool 对保活数负面影响很小。</p>
+<h2 id="2-大量-app-冷启动测试"><a href="#2-大量-app-冷启动测试" class="headerlink" title="2. 大量 app 冷启动测试"></a>2. 大量 app 冷启动测试</h2><p>对大量 app 冷启动时间进行统计，对比开启和关闭 camera_pool 时 app 的冷启动时间，测试结果为开启 camera_pool 对其他 app 冷启动速度几乎没有影响。</p>
+<h1 id="收益小结"><a href="#收益小结" class="headerlink" title="收益小结"></a>收益小结</h1><p>通过创建相机专用的内存池来提升相机内存分配速度，在相机开启和成像以及流畅度方面有显著的优化效果。同时通过对相机内存池进行合理的回收及填充，来保证对系统整体内存的影响降到最低。</p>
+<ul>
+<li><p>相机平均内存分配速度提升10倍以上</p>
+</li>
+<li><p>相机打开到清晰成像的时间提升约18%，复杂场景打开相机时间更稳定，波动更小</p>
+</li>
+<li><p>未对系统冷启动、连续应用启动、保活等内存使用场景有负面作用</p>
+</li>
+</ul>
+<h1 id=""><a href="#" class="headerlink" title=" "></a> </h1><h1 id="特性优势"><a href="#特性优势" class="headerlink" title="特性优势"></a>特性优势</h1><ul>
+<li><p>性能优化：能过预分配减少实时分配的延时</p>
+</li>
+<li><p>场景感知：特别针对 camera / display 等实时性要求高的场景优化</p>
+</li>
+<li><p>资源管理：智能的内存水位管理和回收策略</p>
+</li>
+<li><p>可观测性：完整的监控和调试接口</p>
+</li>
+</ul>
+
+                
+                <hr>
+                <!-- Pager -->
+                <ul class="pager">
+                    
+                    
+                    <li class="next">
+                        <a href="/2025/06/16/contpte-ptep-get的优化/" data-toggle="tooltip" data-placement="top" title="contpte_ptep_get的优化">Next Post &rarr;</a>
+                    </li>
+                    
+                </ul>
+
+                <!-- tip start -->
+                
+
+                
+                <div class="comment_notes">
+                    <p>
+                        This is copyright.
+                    </p>
+                </div>
+                
+                <!-- tip end -->
+
+                <!-- Music start-->
+                
+                <!-- Music end -->
+
+                <!-- Sharing -->
+                
+                <div class="social-share"  data-wechat-qrcode-helper="" align="center"></div>
+                <!--  css & js -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+                
+                <!-- Sharing -->
+
+                <!-- gitment start -->
+                
+                <!-- gitment end -->
+
+                <!-- 来必力City版安装代码 -->
+                
+                <!-- City版安装代码已完成 -->
+
+                <!-- disqus comment start -->
+                
+                <!-- disqus comment end -->
+            </div>
+            
+            <!-- Tabe of Content -->
+            <!-- Table of Contents -->
+
+    
+      
+        <aside id="sidebar">
+          <div id="toc" class="toc-article">
+          <strong class="toc-title">Contents</strong>
+          
+            
+              <ol class="toc-nav"><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#前言"><span class="toc-nav-number">1.</span> <span class="toc-nav-text">前言</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#小米15系列上手体验：能效给力，系统大优化！"><span class="toc-nav-number">2.</span> <span class="toc-nav-text">小米15系列上手体验：能效给力，系统大优化！</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#原理简介"><span class="toc-nav-number">3.</span> <span class="toc-nav-text">原理简介</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#实现方案"><span class="toc-nav-number">4.</span> <span class="toc-nav-text">实现方案</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#收益测试"><span class="toc-nav-number">5.</span> <span class="toc-nav-text">收益测试</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-内存紧缺场景-camera-内存分配速度提升-10-倍"><span class="toc-nav-number">5.1.</span> <span class="toc-nav-text">1. 内存紧缺场景 camera 内存分配速度提升 10 倍</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-三方相机打开速度提升-18"><span class="toc-nav-number">5.2.</span> <span class="toc-nav-text">2. 三方相机打开速度提升 18%</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#3-微信扫一扫打开速度提升-14"><span class="toc-nav-number">5.3.</span> <span class="toc-nav-text">3.  微信扫一扫打开速度提升 14%</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#4-系统扫一扫打开速度提升10"><span class="toc-nav-number">5.4.</span> <span class="toc-nav-text">4. 系统扫一扫打开速度提升10%</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#5-浏览器扫一扫打开速度提升6-8"><span class="toc-nav-number">5.5.</span> <span class="toc-nav-text">5. 浏览器扫一扫打开速度提升6.8%</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#损耗测试"><span class="toc-nav-number">6.</span> <span class="toc-nav-text">损耗测试</span></a><ol class="toc-nav-child"><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#1-后台保活测试"><span class="toc-nav-number">6.1.</span> <span class="toc-nav-text">1. 后台保活测试</span></a></li><li class="toc-nav-item toc-nav-level-2"><a class="toc-nav-link" href="#2-大量-app-冷启动测试"><span class="toc-nav-number">6.2.</span> <span class="toc-nav-text">2. 大量 app 冷启动测试</span></a></li></ol></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#收益小结"><span class="toc-nav-number">7.</span> <span class="toc-nav-text">收益小结</span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#"><span class="toc-nav-number">8.</span> <span class="toc-nav-text"> </span></a></li><li class="toc-nav-item toc-nav-level-1"><a class="toc-nav-link" href="#特性优势"><span class="toc-nav-number">9.</span> <span class="toc-nav-text">特性优势</span></a></li></ol>
+            
+          
+          </div>
+        </aside>
+      
+    
+
+                
+            <!-- Sidebar Container -->
+            <div class="
+                col-lg-8 col-lg-offset-2
+                col-md-10 col-md-offset-1
+                sidebar-container">
+
+                <!-- Featured Tags -->
+                
+                <section>
+                    <!-- no hr -->
+                    <h5><a href="/tags/">FEATURED TAGS</a></h5>
+                    <div class="tags">
+                       
+                    </div>
+                </section>
+                
+
+                <!-- Friends Blog -->
+                
+                <hr>
+                <h5>FRIENDS</h5>
+                <ul class="list-inline">
+
+                    
+                        <li><a href="#" target="_blank">Other</a></li>
+                    
+                </ul>
+                
+            </div>
+        </div>
+    </div>
+</article>
+
+
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+<!-- anchor-js, Doc:http://bryanbraun.github.io/anchorjs/ -->
+<script>
+    async("https://cdn.bootcss.com/anchor-js/1.1.1/anchor.min.js",function(){
+        anchors.options = {
+          visible: 'hover',
+          placement: 'left',
+          icon: 'ℬ'
+        };
+        anchors.add().remove('.intro-header h1').remove('.subheading').remove('.sidebar-container h5');
+    })
+</script>
+
+
+<style  type="text/css">
+    /* place left on bigger screen */
+    @media all and (min-width: 800px) {
+        .anchorjs-link{
+            position: absolute;
+            left: -0.75em;
+            font-size: 1.1em;
+            margin-top : -0.1em;
+        }
+    }
+</style>
+
+
+
+    <!-- Footer -->
+    <!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <ul class="list-inline text-center">
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                </ul>
+                <p class="copyright text-muted">
+                    Copyright &copy; meizu 2025 
+                    <br>
+                    Powered by 
+                    <a href="https://github.com/dusign/hexo-theme-snail" target="_blank" rel="noopener">
+                        <i>hexo-theme-snail</i>
+                    </a> | 
+                    <iframe name="star" style="margin-left: 2px; margin-bottom:-5px;" frameborder="0" scrolling="0"
+                        width="100px" height="20px"
+                        src="https://ghbtns.com/github-btn.html?user=dusign&repo=hexo-theme-snail&type=star&count=true">
+                    </iframe>
+                </p>
+            </div>
+        </div>
+    </div>
+
+</footer>
+
+<!-- jQuery -->
+
+<script src="../../../../js/jquery.min.js"></script>
+
+
+<!-- Bootstrap Core JavaScript -->
+
+<script src="../../../../js/bootstrap.min.js"></script>
+
+
+<!-- Custom Theme JavaScript -->
+
+<script src="../../../../js/hux-blog.min.js"></script>
+
+
+<!-- Search -->
+
+<script src="../../../../js/search.js"></script>
+
+
+<!-- async load function -->
+<script>
+    function async(u, c) {
+      var d = document, t = 'script',
+          o = d.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      o.src = u;
+      if (c) { o.addEventListener('load', function (e) { c(null, e); }, false); }
+      s.parentNode.insertBefore(o, s);
+    }
+</script>
+
+
+<!-- jquery.tagcloud.js -->
+<script>
+    // only load tagcloud.js in tag.html
+    if($('#tag_cloud').length !== 0){
+        async("https://kernel.meizu.com/js/jquery.tagcloud.js",function(){
+            $.fn.tagcloud.defaults = {
+                //size: {start: 1, end: 1, unit: 'em'},
+                color: {start: '#bbbbee', end: '#0085a1'},
+            };
+            $('#tag_cloud a').tagcloud();
+        })
+    }
+</script>
+
+<!--fastClick.js -->
+<script>
+    async("https://cdn.bootcss.com/fastclick/1.0.6/fastclick.min.js", function(){
+        var $nav = document.querySelector("nav");
+        if($nav) FastClick.attach($nav);
+    })
+</script>
+
+
+<!-- Google Analytics -->
+
+
+<script>
+    // dynamic User by Hux
+    var _gaId = 'UA-XXXXXXXX-X';
+    var _gaDomain = 'yoursite';
+
+    // Originial
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', _gaId, _gaDomain);
+    ga('send', 'pageview');
+</script>
+
+
+
+
+<!-- Baidu Tongji -->
+
+
+<!-- Search -->
+
+    <script type="text/javascript">      
+        var search_path = "search.xml";
+        if (search_path.length == 0) {
+            search_path = "search.xml";
+        }
+    var path = "/" + search_path;
+    searchFunc(path, 'local-search-input', 'local-search-result');
+    </script>
+
+
+<!-- busuanzi -->
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+
+	<a id="rocket" href="#top" class=""></a>
+	<script type="text/javascript" src="/js/totop.js?v=1.0.0" async=""></script>
+    <script type="text/javascript" src="/js/toc.js?v=1.0.0" async=""></script>
+
+    
+        <!-- background effects line -->
+        
+
+        
+            <script type="text/javascript" src="/js/mouse-click.js" content='[&quot;🌱&quot;,&quot;just do it&quot;,&quot;🍀&quot;]' color='[&quot;rgb(121,93,179)&quot; ,&quot;rgb(76,180,231)&quot; ,&quot;rgb(184,90,154)&quot;]'></script>
+        
+
+        <!-- background effects end -->
+    
+
+    <!--<script size="50" alpha='0.3' zIndex="-999" src="/js/ribbonStatic.js"></script>-->
+    
+        <script src="/js/ribbonDynamic.js"></script>
+    
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
